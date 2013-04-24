@@ -53,7 +53,7 @@ And the what command would then find the file, and show a long ls for it
 	$ what up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
 
-If you add the verbose flag ('-v') the contents of that file are show too
+If you add the verbose flag ('-v') the contents of that file are shown too
 
 	$ what -v up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
