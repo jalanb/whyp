@@ -144,6 +144,21 @@ def environment_paths():
 	return environment_value('PATH').split(':')
 
 
+def contractuser(path):
+	"""Replace the home directory in that path with ~
+
+	This is the opposite of os.path.expanduser()
+
+	>>> contractuser(os.path.expanduser('~/.bashrc')) == '~/.bashrc'
+	True
+	"""
+	home_symbol = '~'
+	home = os.path.expanduser(home_symbol)
+	if path.startswith(home):
+		return path.replace(home, home_symbol)
+	return path
+
+
 def items_in(path):
 	"""A list of all items in the given path
 

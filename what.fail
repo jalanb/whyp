@@ -1,0 +1,78 @@
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 16, in what.test
+Failed example:
+    aliases = what.get_aliases()
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[2]>", line 1, in <module>
+        aliases = what.get_aliases()
+      File "/Users/jab/.jab/python/what/what.py", line 90, in new_method
+        cache.append(method())
+      File "/Users/jab/.jab/python/what/what.py", line 100, in get_aliases
+        lines = [l.rstrip() for l in file(path_to_aliases())]
+    IOError: [Errno 2] No such file or directory: '/tmp/aliases'
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 23, in what.test
+Failed example:
+    '..' in aliases and 'ap' in aliases
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[3]>", line 1, in <module>
+        '..' in aliases and 'ap' in aliases
+    NameError: name 'aliases' is not defined
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 27, in what.test
+Failed example:
+    aliases['ap'] == 'ack --python'
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[4]>", line 1, in <module>
+        aliases['ap'] == 'ack --python'
+    NameError: name 'aliases' is not defined
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 34, in what.test
+Failed example:
+    functions = what.get_functions()
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[5]>", line 1, in <module>
+        functions = what.get_functions()
+      File "/Users/jab/.jab/python/what/what.py", line 90, in new_method
+        cache.append(method())
+      File "/Users/jab/.jab/python/what/what.py", line 115, in get_functions
+        lines = [l.rstrip() for l in file(path_to_functions())]
+    IOError: [Errno 2] No such file or directory: '/tmp/functions'
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 37, in what.test
+Failed example:
+    'what' in functions.keys()
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[6]>", line 1, in <module>
+        'what' in functions.keys()
+    NameError: name 'functions' is not defined
+**********************************************************************
+File "/Users/jab/.jab/python/what/what.test", line 43, in what.test
+Failed example:
+    print functions['what']
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/local/lib/python2.7/doctest.py", line 1254, in __run
+        compileflags, 1) in test.globs
+      File "<doctest what.test[7]>", line 1, in <module>
+        print functions['what']
+    NameError: name 'functions' is not defined
+**********************************************************************
+1 items had failures:
+   6 of   9 in what.test
+***Test Failed*** 6 failures.
