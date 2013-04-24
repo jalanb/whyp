@@ -1,0 +1,15 @@
+The what module
+===============
+
+	>>> import what
+	>>> print what.__doc__
+	Show the text behind commands
+	...
+
+Sripping quotes
+---------------
+
+	>>> what.strip_quotes('"x"') == what.strip_quotes("'x'") == what.strip_quotes('x')
+	True
+	>>> not what.strip_quotes('') and not what.strip_quotes(None)
+	True

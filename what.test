@@ -1,0 +1,61 @@
+The what module
+===============
+
+	>>> import what
+	>>> print what.__doc__
+	Show the text behind commands
+	...
+
+The tests in this file depend on known aliases and functions
+	You may need to change them to get them working on your machine
+
+Read aliases
+------------
+
+Read in a dictionary of all known aliases
+	>>> aliases = what.get_aliases()
+
+And check some known values
+	These 2 aliases seem rather basic, but may not work on someone else's machine
+	If you do not have them, may I recommend:
+		$ alias ..='cd ..'
+		$ alias ap='ack --python'
+	>>> '..' in aliases and 'ap' in aliases
+	True
+
+Each alias should give some kind of command
+	>>> aliases['ap'] == 'ack --python'
+	True
+
+Read functions
+--------------
+
+Similarly we can read in known functions
+	>>> functions = what.get_functions()
+
+Which gives a dictionary
+	>>> 'what' in functions.keys()
+	True
+
+Which contains some (longer) commands
+	Seems safe to assume that the what function is defined
+	As that is the recommended way to run the script
+	>>> print functions['what']
+	what ()
+	{
+	    alias > /tmp/aliases;
+	    declare -f > /tmp/functions;
+	    python .../what.py $*;
+	    rm -f /tmp/aliases /tmp/functions
+	}
+
+Read commands
+-------------
+
+And we can get files from the bash $PATH
+
+Such files will vary across machines,
+	but it is safe to assume that python is one of them
+	and that it is in a "bin" directory
+	>>> print what.files_in_bash_path()['python'] 
+	/.../bin/python
