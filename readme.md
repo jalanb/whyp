@@ -64,7 +64,7 @@ Running the command without any command will test it
 	$ what
 
 The author has tested the script
-	* on OSX using python 2.5, 2.6 and 2.7 and bash 3.2.48
-	* on CentOS using python 2.4 and 2.7 and bash 3.2.25
-	* on Ubuntu 10.04 using python 2.7 and bash
+	0. on OSX using python 2.5, 2.6 and 2.7 and bash 3.2.48
+	0. on CentOS using python 2.4 and 2.7 and bash 3.2.25
+	0. on Ubuntu 10.04 using python 2.7 and bash
 
