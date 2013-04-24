@@ -42,16 +42,19 @@ Then the what command can show that up is a function.
 	}
 
 The up command could also be written as a file
+
 	$ unset up
 	$ echo "#! /bin/bash" > ~/bin/up
 	$ echo "cd .." >> ~/bin/up
 	$ chmod +x ~/bin/up
 
 And the what command would then find the file, and show a long ls for it
+
 	$ what up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
 
-If you add the verbose flag ('-v') the contents of that file are show too  
+If you add the verbose flag ('-v') the contents of that file are show too
+
 	$ what -v up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
 	#! /bin/bash
