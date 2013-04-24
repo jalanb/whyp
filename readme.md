@@ -21,7 +21,7 @@ what searches within aliases, functions and files to show the sources. For examp
 
 Then the what command can show that up is an alias
 
-$ what up
+	$ what up
 	alias up='cd ..'
 
 Let's re-write up as a function
