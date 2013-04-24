@@ -6,15 +6,8 @@ It assumes aliases and functions have been written to files before starting
 	(because we cannot reliably get them from sub-shells called hence)
 
 (c) J Alan Brogan 2013
-	This source file is released under the MIT license
+	The source is released under the MIT license
 	See http://jalanb.mit-license.org/ for more information
-
-
-This script has been tested
-	on OSX using python 2.5, 2.6 and 2.7 and bash 3.2.48
-	on CentOS using python 2.4 and 2.7 and bash 3.2.25
-	on Ubuntu 10.04 using python 2.7 and bash
-
 """
 
 
@@ -22,8 +15,9 @@ import os
 import re
 import sys
 import stat
-import commands
 import doctest
+import commands
+import optparse
 
 
 def path_to_aliases():
@@ -34,6 +28,11 @@ def path_to_aliases():
 def path_to_functions():
 	"""The functions have been written to this file before this script starts"""
 	return '/tmp/functions'
+
+
+def get_verbosity():
+	"""Whether more info should be shown"""
+	return False
 
 
 def environment_value(key):
@@ -254,6 +253,8 @@ def show_command_in_path(command):
 	"""Show a command which is a file in $PATH"""
 	path_to_command = files_in_bash_path()[command]
 	run_bash_command('%s -l %r' % (Bash.ls, path_to_command))
+	if not get_verbosity():
+		return
 	if script_language(path_to_command) in shown_languages():
 		run_bash_command('%s %r' % (Bash.view_file, str(path_to_command)))
 
@@ -284,6 +285,24 @@ def nearby_file(extension):
 	return os.path.splitext(__file__)[0] + extension
 
 
+def read_command_line():
+	"""Look for options from user on the command line for this script"""
+	parser = optparse.OptionParser('Usage: what [options] command\n\n%s' % __doc__)
+	parser.add_option('-a', '--aliases', help='path to file which holds aliases')
+	parser.add_option('-f', '--functions', help='path to file which holds functions')
+	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
+	options, args = parser.parse_args()
+	# plint does not seem to notice that methods are globals
+	# pylint: disable-msg=W0601
+	global get_verbosity
+	get_verbosity = lambda: options.verbose
+	global path_to_aliases
+	path_to_aliases = lambda: options.aliases
+	global path_to_functions
+	path_to_functions = lambda: options.functions
+	return args
+
+
 def test():
 	"""Run any doctests in this script or associated test scripts"""
 	options = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
@@ -302,17 +321,17 @@ def test():
 	return 0
 
 
-def main(words):
+def main():
 	"""Run the program"""
+	args = read_command_line()
 	result = 0
-	for word in words:
-		result |= show_command(word)
+	for arg in args:
+		result |= show_command(arg)
 	return result
 
 
 if __name__ == '__main__':
-	args = sys.argv[1:]
-	if not args:
+	if len(sys.argv) == 1:
 		sys.exit(test())
 	else:
-		sys.exit(main(args))
+		sys.exit(main())
