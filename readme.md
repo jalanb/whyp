@@ -1,5 +1,5 @@
-kd
-==
+what
+====
 
 what is intended as a replacement for which, to show the source of commands available in bash
 
