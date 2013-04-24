@@ -61,6 +61,7 @@ Testing
 -------
 
 Running the command without any command will test it
+
 	$ what
 
 The author has tested the script
