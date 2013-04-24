@@ -36,7 +36,7 @@ def get_verbosity():
 
 
 def environment_value(key):
-	"""A value from the bash environment, defaults to empty string
+	"""A value from the shell environment, defaults to empty string
 
 	>>> environment_value('_') == sys.executable
 	True
@@ -46,19 +46,24 @@ def environment_value(key):
 
 class Bash:
 	"""This class is a namespace to hold bash commands to be used later"""
+	# pylint wants an __init__(), but I don't
 	# pylint: disable-msg=W0232
 	view_file = 'vat'  # This is my alias for https://github.com/vim-scripts/vimcat, YMMV
 	declare_f = 'declare -f'  # This is a bash builtin
 	ls = 'ls'  # This is often in path, and more often aliased
 
 
-def run_bash_command(command):
+def replace_alias(command):
+	"""Replace any alias with its value at start of the command"""
+	if ' ' not in command:
+		return command
+	command, arguments = command.split(' ', 1)
+	return '%s %s' % (get_alias(command), arguments)
+
+
+def show_output_of_shell_command(command):
 	"""Run the given command"""
-	if ' ' in command:
-		command, arguments = command.split(' ', 1)
-	else:
-		arguments = ''
-	command = '%s %s' % (get_alias(command), arguments)
+	command = replace_alias(command)
 	status, output = commands.getstatusoutput(command)
 	if status == 0:
 		print output
@@ -190,10 +195,10 @@ def is_executable(path_to_file):
 
 
 @memoize
-def files_in_bash_path():
-	"""Gives a dictionary of all executable files in the bash PATH
+def files_in_environment_path():
+	"""Gives a dictionary of all executable files in the shell environment's PATH
 
-	>>> files_in_bash_path()['python'] == sys.executable
+	>>> files_in_environment_path()['python'] == sys.executable
 	True
 	"""
 	result = {}
@@ -209,12 +214,12 @@ def files_in_bash_path():
 
 def shown_languages():
 	"""A list of languages which we are interested in viewing directly"""
-	return ['python', 'bash']
+	return ['python', 'bash', 'sh']
 
 
 def show_function(command):
 	"""Show a function to the user"""
-	run_bash_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
+	show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
 		path_to_functions(), Bash.declare_f, command, Bash.view_file))
 
 
@@ -251,12 +256,12 @@ def script_language(path_to_file):
 
 def show_command_in_path(command):
 	"""Show a command which is a file in $PATH"""
-	path_to_command = files_in_bash_path()[command]
-	run_bash_command('%s -l %r' % (Bash.ls, path_to_command))
+	path_to_command = files_in_environment_path()[command]
+	show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
 	if not get_verbosity():
 		return
 	if script_language(path_to_command) in shown_languages():
-		run_bash_command('%s %r' % (Bash.view_file, str(path_to_command)))
+		show_output_of_shell_command('%s %r' % (Bash.view_file, str(path_to_command)))
 
 
 def show_command(command):
@@ -271,7 +276,7 @@ def show_command(command):
 			show_command(sub_command)
 	if command in get_functions():
 		show_function(command)
-	if command in files_in_bash_path():
+	if command in files_in_environment_path():
 		show_command_in_path(command)
 	return 0
 
