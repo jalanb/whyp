@@ -5,34 +5,29 @@ what is intended as a replacement for which, to show the source of commands avai
 
 The script searches within aliases, functions and files to show the sources. For example, let's imagine you set up an alias to make cd'ing to the parent directory easier, e.g.
 
-	```shell
 	$ alias up='cd ..'
-	```
 
 Then the what command can show that up is an alias
-	```shell
-	$ what up
+
+$ what up
 	alias up='cd ..'
-	```
 
 Let's re-write up as a function
-	```shell
+
 	$ unalias up
 	$ up ()
 	> {
 	> cd ..
 	> }
-	```
 
 Then the what command can show that up is a function
-	```shell
+
 	$ what up
 	#! /bin/bash
 	up ()
 	{
 		    cd ..
 	}
-	```
 
 Installation
 ------------
