@@ -32,7 +32,8 @@ Let's re-write up as a function
 	> cd ..
 	> }
 
-Then the what command can show that up is a function
+Then the what command can show that up is a function.
+It also adds a shebang line to allow easier output to a script file
 
 	$ what up
 	#! /bin/bash
