@@ -232,8 +232,11 @@ def shown_languages():
 
 def show_function(command):
 	"""Show a function to the user"""
-	show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
-		get_options().functions, Bash.declare_f, command, Bash.view_file))
+	if not get_options().verbose:
+		print 'declare -f', command
+	else:
+		show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
+			get_options().functions, Bash.declare_f, command, Bash.view_file))
 
 
 def shebang_command(path_to_file):
@@ -262,7 +265,7 @@ def shebang_language(path_to_file):
 	run_command = shebang_command(path_to_file)
 	command_words = re.split('[ /]', run_command)
 	try:
-		last_word = command_words
+		last_word = command_words[-1]
 	except IndexError:
 		last_word = None
 	return last_word
@@ -277,7 +280,7 @@ def script_language(path_to_file):
 	>>> script_language('what.py') == 'python' and script_language('script.sh') == 'bash'
 	True
 	"""
-	for get_language in [shebang_command, extension_language]:
+	for get_language in [shebang_language, extension_language]:
 		language = get_language(path_to_file)
 		if language:
 			return language
@@ -286,27 +289,41 @@ def script_language(path_to_file):
 def show_command_in_path(command):
 	"""Show a command which is a file in $PATH"""
 	path_to_command = files_in_environment_path()[command]
+	show_path_to_command(path_to_command)
+
+
+def show_path_to_command(path_to_command):
+	"""Show a command which is a file at that path"""
 	show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
-	if not get_options().verbosity:
+	if not get_options().verbose:
 		return
 	if script_language(path_to_command) in shown_languages():
 		show_output_of_shell_command('%s %r' % (Bash.view_file, str(path_to_command)))
 
 
+def show_alias(command):
+	"""Show a command defined by alias"""
+	aliases = get_aliases()
+	print 'alias %s=%r' % (command, aliases[command])
+	if not get_options().verbose:
+		return
+	sub_command = aliases[command].split()[0].strip()
+	if os.path.dirname(sub_command) in environment_paths():
+		show_command(os.path.basename(sub_command))
+	else:
+		show_command(sub_command)
+
+
 def show_command(command):
 	"""Show the text behind a command"""
-	aliases = get_aliases()
-	if command in aliases:
-		print 'alias %s=%r' % (command, aliases[command])
-		sub_command = aliases[command].split()[0].strip()
-		if os.path.dirname(sub_command) in environment_paths():
-			show_command(os.path.basename(sub_command))
-		else:
-			show_command(sub_command)
+	if command in get_aliases():
+		show_alias(command)
 	if command in get_functions():
 		show_function(command)
 	if command in files_in_environment_path():
 		show_command_in_path(command)
+	if os.path.isfile(command):
+		show_path_to_command(command)
 	return 0
 
 

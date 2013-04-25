@@ -25,6 +25,16 @@ Then the what command can show that up is an alias
 	$ what up
 	alias up='cd ..'
 
+If you add the verbose flag, -v, then it will look "into the alias" and run what on that command too. In this example "cd" turns out to be a file, so that is shown too
+	$ what up -v
+	alias up='cd ..'
+	-r-xr-xr-x 15 root wheel 190 Mar 25 18:03 /usr/bin/cd
+
+	#!/bin/sh
+	# $FreeBSD: src/usr.bin/alias/generic.sh,v 1.2 2005/10/24 22:32:19 cperciva Exp $
+	# This file is in the public domain.
+	builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
+
 Let's re-write up as a function
 
 	$ unalias up
@@ -36,6 +46,10 @@ Let's re-write up as a function
 Then the what command can show that up is a function.
 
 	$ what up
+	declare -f up
+
+If you add the verbose flag, -v, then the source of the function is shown
+	$ what up -v
 	#! /bin/bash
 	up ()
 	{
@@ -54,7 +68,7 @@ And the what command would then find the file, and show a long ls for it
 	$ what up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
 
-If you add the verbose flag ('-v') the contents of that file are shown too
+If you add the verbose flag, -v, then the source of that file is shown too
 
 	$ what -v up
 	-rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
