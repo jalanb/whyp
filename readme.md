@@ -61,6 +61,11 @@ If you add the verbose flag ('-v') the contents of that file are shown too
 	#! /bin/bash
 	cd ..
 
+If you add the errors flag ('-e') then the script will hide some errors shown in bash commands.
+	Some commands can show errors, but give a successful return code.
+	With '-e' the script runs, and hides these error messages.
+	Without '-e' the script fails and shows the error (this is default)
+
 whap
 ----
 

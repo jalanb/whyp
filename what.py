@@ -20,14 +20,9 @@ import optparse
 import subprocess
 
 
-def path_to_aliases():
-	"""The aliases have been written to this file before this script starts"""
-	return '/tmp/aliases'
-
-
-def path_to_functions():
-	"""The functions have been written to this file before this script starts"""
-	return '/tmp/functions'
+def get_options():
+	"""The values of options set by user on command line"""
+	return None
 
 
 def get_verbosity():
@@ -79,7 +74,10 @@ def show_output_of_shell_command(command):
 	stdout, stderr = process.communicate()
 	if not process.returncode:
 		print stdout
-		return
+		if get_options().hide_errors:
+			return
+		if not stderr:
+			return
 	raise BashError('''
 	command: %r
 	status: %s
@@ -117,7 +115,7 @@ def memoize(method):
 @memoize
 def get_aliases():
 	"""Read a dictionary of aliases from a file"""
-	lines = [l.rstrip() for l in file(path_to_aliases())]
+	lines = [l.rstrip() for l in file(get_options().aliases)]
 	alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
 	alias_strings = [l.split('=', 1) for l in alias_lines]
 	alias_commands = [(name, strip_quotes(command)) for (name, command) in alias_strings]
@@ -132,7 +130,7 @@ def get_alias(string):
 @memoize
 def get_functions():
 	"""Read a dictionary of functions from a known file"""
-	lines = [l.rstrip() for l in file(path_to_functions())]
+	lines = [l.rstrip() for l in file(get_options().functions)]
 	name = function_lines = None
 	functions = {}
 	for line in lines:
@@ -240,7 +238,7 @@ def shown_languages():
 def show_function(command):
 	"""Show a function to the user"""
 	show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
-		path_to_functions(), Bash.declare_f, command, Bash.view_file))
+		get_options().functions, Bash.declare_f, command, Bash.view_file))
 
 
 def shebang_command(path_to_file):
@@ -294,7 +292,7 @@ def show_command_in_path(command):
 	"""Show a command which is a file in $PATH"""
 	path_to_command = files_in_environment_path()[command]
 	show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
-	if not get_verbosity():
+	if not get_options().verbosity:
 		return
 	if script_language(path_to_command) in shown_languages():
 		show_output_of_shell_command('%s %r' % (Bash.view_file, str(path_to_command)))
@@ -329,18 +327,15 @@ def nearby_file(extension):
 def read_command_line():
 	"""Look for options from user on the command line for this script"""
 	parser = optparse.OptionParser('Usage: what [options] command\n\n%s' % __doc__)
-	parser.add_option('-a', '--aliases', help='path to file which holds aliases')
-	parser.add_option('-f', '--functions', help='path to file which holds functions')
+	parser.add_option('-a', '--aliases', help='path to file which holds aliases', default='/tmp/aliases')
+	parser.add_option('-e', '--hide_errors', help='hide error messages from commands with successful status', action='store_true')
+	parser.add_option('-f', '--functions', help='path to file which holds functions', default='/tmp/functions')
 	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
 	options, args = parser.parse_args()
 	# plint does not seem to notice that methods are globals
 	# pylint: disable-msg=W0601
-	global get_verbosity
-	get_verbosity = lambda: options.verbose
-	global path_to_aliases
-	path_to_aliases = lambda: options.aliases
-	global path_to_functions
-	path_to_functions = lambda: options.functions
+	global get_options
+	get_options = lambda: options
 	return args
 
 
