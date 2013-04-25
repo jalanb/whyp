@@ -25,11 +25,6 @@ def get_options():
 	return None
 
 
-def get_verbosity():
-	"""Whether more info should be shown"""
-	return False
-
-
 def environment_value(key):
 	"""A value from the shell environment, defaults to empty string
 
