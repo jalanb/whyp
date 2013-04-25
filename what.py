@@ -16,8 +16,8 @@ import re
 import sys
 import stat
 import doctest
-import commands
 import optparse
+import subprocess
 
 
 def path_to_aliases():
@@ -44,6 +44,11 @@ def environment_value(key):
 	return os.environ.get(key, '')
 
 
+class BashError(ValueError):
+	"""Use this class to have a more appropriate name appear in tracebacks"""
+	pass
+
+
 class Bash:
 	"""This class is a namespace to hold bash commands to be used later"""
 	# pylint wants an __init__(), but I don't
@@ -61,14 +66,25 @@ def replace_alias(command):
 	return '%s %s' % (get_alias(command), arguments)
 
 
+def bash_executable():
+	"""The first executable called 'bash' in the $PATH"""
+	return files_in_environment_path()['bash']
+
+
 def show_output_of_shell_command(command):
-	"""Run the given command"""
+	"""Run the given command using bash"""
 	command = replace_alias(command)
-	status, output = commands.getstatusoutput(command)
-	if status == 0:
-		print output
-		return True
-	raise ValueError(output)
+	bash_command = [bash_executable(), '-c', command]
+	process = subprocess.Popen(bash_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	stdout, stderr = process.communicate()
+	if not process.returncode:
+		print stdout
+		return
+	raise BashError('''
+	command: %r
+	status: %s
+	stderr: %s
+	stdout: %s''' % (command, process.returncode, stderr, stdout))
 
 
 def strip_quotes(string):
