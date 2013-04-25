@@ -88,7 +88,7 @@ def strip_quotes(string):
 
 def memoize(method):
 	"""Cache the return value of the method, which takes no arguments"""
-	cache = []
+	cache = []  # using a list to workaround some flagrant warnings from pylint
 	def new_method():
 		if not cache:
 			cache.append(method())
@@ -100,7 +100,7 @@ def memoize(method):
 
 @memoize
 def get_aliases():
-	"""Read a dictionary of aliases read from a known file"""
+	"""Read a dictionary of aliases from a file"""
 	lines = [l.rstrip() for l in file(path_to_aliases())]
 	alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
 	alias_strings = [l.split('=', 1) for l in alias_lines]
@@ -140,7 +140,7 @@ def get_functions():
 
 
 def environment_paths():
-	"""A list of path in the environment's PATH
+	"""A list of paths in the environment's PATH
 
 	>>> '/bin' in environment_paths()
 	True
@@ -170,7 +170,7 @@ def items_in(path):
 	True
 	"""
 	try:
-		return [os.path.join(path, name) for name in os.listdir(path)]
+		return [(name, os.path.join(path, name)) for name in os.listdir(path)]
 	except OSError:
 		return []
 
@@ -181,7 +181,7 @@ def files_in(path):
 	>>> '/bin/bash' in files_in('/bin')
 	True
 	"""
-	return [f for f in items_in(path) if os.path.isfile(f)]
+	return [(f, p) for (f, p) in items_in(path) if os.path.isfile(p)]
 
 
 def is_executable(path_to_file):
@@ -194,6 +194,11 @@ def is_executable(path_to_file):
 	return bool(os.stat(path_to_file).st_mode & executable_bits)
 
 
+def executables_in(path):
+	"""A list of all executable files in the given path"""
+	return [(f, p) for (f, p) in items_in(path) if is_executable(p)]
+
+
 @memoize
 def files_in_environment_path():
 	"""Gives a dictionary of all executable files in the shell environment's PATH
@@ -201,19 +206,15 @@ def files_in_environment_path():
 	>>> files_in_environment_path()['python'] == sys.executable
 	True
 	"""
-	result = {}
+	result = set([])
 	for path in environment_paths():
-		for path_to_file in files_in(path):
-			filename = os.path.basename(path_to_file)
-			if filename in result:
-				continue
-			if is_executable(path_to_file):
-				result[filename] = path_to_file
-	return result
+		for filename, path_to_file in executables_in(path):
+			result.add((filename, path_to_file))
+	return dict(result)
 
 
 def shown_languages():
-	"""A list of languages which we are interested in viewing directly"""
+	"""A list of languages whose source files we are interested in viewing"""
 	return ['python', 'bash', 'sh']
 
 
@@ -223,8 +224,11 @@ def show_function(command):
 		path_to_functions(), Bash.declare_f, command, Bash.view_file))
 
 
-def shebang(path_to_file):
-	"""Guess the language used to run a file from its first line"""
+def shebang_command(path_to_file):
+	"""Get the shebang line of that file
+
+	Which is the first line, if that line starts with #!
+	"""
 	try:
 		first_line = file(path_to_file).readlines()[0]
 		if first_line.startswith('#!'):
@@ -232,6 +236,24 @@ def shebang(path_to_file):
 	except (IndexError, IOError):
 		pass
 	return ''
+
+
+def extension_language(path_to_file):
+	"""Guess the language used to run a file from its extension"""
+	_, extension = os.path.splitext(path_to_file)
+	known_languages = {'.py': 'python', '.sh': 'bash'}
+	return known_languages.get(extension, None)
+
+
+def shebang_language(path_to_file):
+	"""Guess the language used to run a file from its shebang line"""
+	run_command = shebang_command(path_to_file)
+	command_words = re.split('[ /]', run_command)
+	try:
+		last_word = command_words
+	except IndexError:
+		last_word = None
+	return last_word
 
 
 def script_language(path_to_file):
@@ -243,15 +265,10 @@ def script_language(path_to_file):
 	>>> script_language('what.py') == 'python' and script_language('script.sh') == 'bash'
 	True
 	"""
-	run_command = shebang(path_to_file)
-	if run_command:
-		try:
-			return re.split('[ /]', run_command)[-1]
-		except IndexError:
-			pass
-	known_extensions = {'.py': 'python', '.sh': 'bash'}
-	_, extension = os.path.splitext(path_to_file)
-	return known_extensions.get(extension, '')
+	for get_language in [shebang_command, extension_language]:
+		language = get_language(path_to_file)
+		if language:
+			return language
 
 
 def show_command_in_path(command):
