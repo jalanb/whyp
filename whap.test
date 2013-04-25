@@ -1,0 +1,7 @@
+The whap module
+===============
+
+	>>> import whap
+	>>> print whap.__doc__
+	This small script offers a python equivalent to "which"
+	...

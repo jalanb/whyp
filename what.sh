@@ -20,3 +20,7 @@ what ()
 	rm -f $PATH_TO_FUNCTIONS
 }
 
+whap ()
+{
+	python $JAB/python/what/whap.py $*
+}
