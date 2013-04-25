@@ -191,7 +191,10 @@ def is_executable(path_to_file):
 	True
 	"""
 	executable_bits = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
-	return bool(os.stat(path_to_file).st_mode & executable_bits)
+	try:
+		return bool(os.stat(path_to_file).st_mode & executable_bits)
+	except OSError:
+		return False
 
 
 def executables_in(path):

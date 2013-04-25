@@ -85,6 +85,4 @@ Running a command without any arguments will test it
 The author has tested the script
 * on OSX using python 2.5, 2.6 and 2.7 and bash 3.2.48
 * on CentOS using python 2.4 and 2.7 and bash 3.2.25
-* on Ubuntu 10.04 using python 2.7 and bash
-
-
+* on Ubuntu 10.04 using python 2.6 and bash 4.1.5
