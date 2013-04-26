@@ -317,16 +317,19 @@ def show_alias(command):
 
 
 def show_command(command):
-	"""Show the text behind a command"""
-	if command in get_aliases():
-		show_alias(command)
-	if command in get_functions():
-		show_function(command)
-	if command in files_in_environment_path():
-		show_command_in_path(command)
-	if os.path.isfile(command):
-		show_path_to_command(command)
-	return 0
+	"""Show whatever is behind a command"""
+	methods  = [
+		(lambda x: x in get_aliases(), show_alias),
+		(lambda x: x in get_functions(), show_function),
+		(lambda x: x in files_in_environment_path(), show_command_in_path),
+		(lambda x: os.path.isfile(x), show_path_to_command),
+	]
+	for found, show in methods:
+		if found(command):
+			if not get_options().quiet:
+				show(command)
+			return 0
+	return 1
 
 
 def nearby_file(extension):
@@ -344,6 +347,7 @@ def read_command_line():
 	parser.add_option('-a', '--aliases', help='path to file which holds aliases', default='/tmp/aliases')
 	parser.add_option('-e', '--hide_errors', help='hide error messages from commands with successful status', action='store_true')
 	parser.add_option('-f', '--functions', help='path to file which holds functions', default='/tmp/functions')
+	parser.add_option('-q', '--quiet', help='do not show any output', action='store_true')
 	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
 	options, args = parser.parse_args()
 	# plint does not seem to notice that methods are globals

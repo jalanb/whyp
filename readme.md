@@ -75,8 +75,13 @@ If you add the verbose flag, -v, then the source of that file is shown too
 	#! /bin/bash
 	cd ..
 
+If you add the quiet flag, -q, then no output is shown, which can be useful when using what in scripts
+
+	$ if what -q ls; then echo yes; else echo no; fi
+	yes
+
 If you add the errors flag ('-e') then the script will hide some errors shown in bash commands.
-	Some commands can show errors, but give a successful return code.
+	Some bash commands can show errors, but give a successful return code.
 	With '-e' the script runs, and hides these error messages.
 	Without '-e' the script fails and shows the error (this is default)
 
