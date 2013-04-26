@@ -4,7 +4,9 @@ This script is intended to replace the standard which command
 It should look for commands in aliases, bash functions, and the bash $PATH
 It assumes aliases and functions have been written to files before starting
 	(because we cannot reliably get them from sub-shells called hence)
+"""
 
+_copyright = """
 (c) J Alan Brogan 2013
 	The source is released under the MIT license
 	See http://jalanb.mit-license.org/ for more information
