@@ -16,11 +16,19 @@ what ()
 	alias > $PATH_TO_ALIASES
 	declare -f > $PATH_TO_FUNCTIONS
 	python $JAB/python/what/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS $*;
+	local return_value=$?
 	rm -f $PATH_TO_ALIASES
 	rm -f $PATH_TO_FUNCTIONS
+	return $return_value
 }
 
 whap ()
 {
-	python $JAB/python/what/whap.py $*
+	local executable=python
+	if [[ $1 =~ [23].[0-9] ]]
+	then
+		executable=python$1
+		shift
+	fi
+	$executable $JAB/python/what/whap.py $*
 }
