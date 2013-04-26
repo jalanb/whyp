@@ -5,3 +5,37 @@ The whap module
 	>>> print whap.__doc__
 	This small script offers a python equivalent to "which"
 	...
+
+More modules for testing
+------------------------
+
+	>>> import os
+
+Paths to modules
+----------------
+
+Here's one python file we know exists:
+	>>> os.path.isfile(whap.__file__)
+	True
+
+	>>> directory = os.path.dirname(whap.__file__)
+	>>> filename = os.path.basename(whap.__file__)
+
+Depending on current status, that might be whap.py or whap.pyc
+	>>> name, ext = os.path.splitext(filename)
+	>>> ext in ['.py', '.pyc']
+	True
+
+This method gives the file in the directory,
+	but always prefers source over compiled
+	>>> print whap.path_to_module(directory, 'whap')
+	/.../whap.py
+
+Paths to packages
+-----------------
+
+Hard to test this, as no guarantee there are any known packages around
+	best to go with one of the standard python packages
+	>>> directory = os.path.dirname(os.__file__)
+	>>> print whap.path_to_sub_directory(directory, 'compiler')
+	/.../compiler
