@@ -3,6 +3,7 @@ what
 
 what is intended as a replacement for which, to show the source of commands available in bash
 whap is intended as an equivalent command for python, to show whence modules and packages are imported
+whet makes it easier to name a command from the bash history, then re-edit it
 
 Installation
 ------------
@@ -98,10 +99,65 @@ Note that the whap command uses whatever the default installation of python is, 
 	$ whap 2.7 os
 	-rw-r--r-- 1 root root 26300 Aug 12  2012 /usr/local/lib/python2.7/os.py
 
+whet
+----
+
+The English meaning of "whet" is "to sharpen, as by grinding or friction, to hone", and the `whet` command assists this for bash commands by making it easier to copy commands from your history into a function, then re-edit it until you are happy with it, then save it to a file.
+	
+What it does in particular depends on the number of arguments, which would usually increase on each call.
+
+	$ ls not.a.real.file
+	ls: not.a.real.file: No such file or directory
+	$ whet
+
+The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".) So there is now a function called "fred"
+
+	$ type fred
+	fred is a function
+	fred ()
+	{
+		ls not.a.real.file
+	}
+
+And that function replays the last command (the "ls" in the example)
+	$ fred
+	ls: not.a.real.file: No such file or directory
+	
+You can pass a number of parameters, which `whet` will interpret sensibly. A number can be used to take a different command from the history, so this example will take the 7th last command
+	$ whet 7
+
+A name can be used for the function replace the default "fred". For example we could create a function called stuff from the last command
+	$ whet stuff
+	$ type stuff
+	stuff is a function
+	stuff ()
+	{
+		whet 7
+	}
+
+If you use a name of an existing function then that function will be editted (using the editor specified by $EDITOR). When the editor exits that script is re-sourced, so any changes are loaded back into bash.
+
+And you can also supply a filename, so that any edits happen in that file, e.g.
+
+	$ whet stuff script.sh
+
+Again - if that script already exists it will be re-used.
+
+So the normal usage of whet is to run a command at the bash prompt until it is getting too big to edit easily using just "<up><left><left><left>...", then run the function, edit it with whet, re-run the function, re-edit, until it is good enough, and save it too a file, for example
+	$ ls
+	$ ls ../../../
+	$ whet 
+	$ fred
+	$ whet fred
+	$ fred
+	$ whet fred
+	$ fred
+	$ whet fred my_ls.sh
+
 Testing
 -------
 
-Running a command without any arguments will test it
+Running commands without any arguments will test them
 
 	$ what
 	$ whap
