@@ -177,7 +177,7 @@ def contractuser(path):
 def items_in(path):
 	"""A list of all items in the given path
 
-	>>> '/usr/local' in items_in('/usr')
+	>>> ('local', '/usr/local') in items_in('/usr')
 	True
 	"""
 	try:
@@ -189,7 +189,7 @@ def items_in(path):
 def files_in(path):
 	"""A list of all files in the given path
 
-	>>> '/bin/bash' in files_in('/bin')
+	>>> ('bash', '/bin/bash') in files_in('/bin')
 	True
 	"""
 	return [(f, p) for (f, p) in items_in(path) if os.path.isfile(p)]
@@ -220,10 +220,14 @@ def files_in_environment_path():
 	>>> files_in_environment_path()['python'] == sys.executable
 	True
 	"""
-	result = set([])
+	known_filenames = set()
+	result = {}
 	for path in environment_paths():
 		for filename, path_to_file in executables_in(path):
-			result.add((filename, path_to_file))
+			if filename in known_filenames:
+				continue
+			known_filenames.add(filename)
+			result[filename] = path_to_file
 	return dict(result)
 
 
@@ -235,7 +239,7 @@ def shown_languages():
 def show_function(command):
 	"""Show a function to the user"""
 	if not get_options().verbose:
-		print 'declare -f', command
+		print command, 'is a function'
 	else:
 		show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
 			get_options().functions, Bash.declare_f, command, Bash.view_file))
@@ -322,7 +326,7 @@ def show_command(command):
 		(lambda x: x in get_aliases(), show_alias),
 		(lambda x: x in get_functions(), show_function),
 		(lambda x: x in files_in_environment_path(), show_command_in_path),
-		(lambda x: os.path.isfile(x), show_path_to_command),
+		(os.path.isfile, show_path_to_command),
 	]
 	for found, show in methods:
 		if found(command):
@@ -349,12 +353,12 @@ def read_command_line():
 	parser.add_option('-f', '--functions', help='path to file which holds functions', default='/tmp/functions')
 	parser.add_option('-q', '--quiet', help='do not show any output', action='store_true')
 	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
-	options, args = parser.parse_args()
+	options, arguments = parser.parse_args()
 	# plint does not seem to notice that methods are globals
 	# pylint: disable-msg=W0601
 	global get_options
 	get_options = lambda: options
-	return args
+	return arguments
 
 
 def test():
@@ -375,17 +379,17 @@ def test():
 	return 0
 
 
-def main():
+def main(commands):
 	"""Run the program"""
-	args = read_command_line()
 	result = 0
-	for arg in args:
+	for arg in commands:
 		result |= show_command(arg)
 	return result
 
 
 if __name__ == '__main__':
-	if len(sys.argv) == 1:
+	args = read_command_line()
+	if not args:
 		sys.exit(test())
 	else:
-		sys.exit(main())
+		sys.exit(main(args))

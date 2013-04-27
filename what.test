@@ -9,6 +9,8 @@ The what module
 The tests in this file depend on known aliases and functions
 	You may need to change them to get them working on your machine
 
+	>>> _ = what.read_command_line()
+
 Read aliases
 ------------
 
@@ -48,8 +50,10 @@ Which contains some (longer) commands
 	    alias > $PATH_TO_ALIASES;
 	    declare -f > $PATH_TO_FUNCTIONS;
 	    python $JAB/python/what/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS $*;
-	    rm -f $PATH_TO_ALIASES;
-	    rm -f $PATH_TO_FUNCTIONS
+        local return_value=$?;
+        rm -f $PATH_TO_ALIASES;
+        rm -f $PATH_TO_FUNCTIONS;
+        return $return_value
 	}
 
 Read commands
@@ -60,5 +64,5 @@ And we can get files from the bash $PATH
 Such files will vary across machines,
 	but it is safe to assume that python is one of them
 	and that it is in a "bin" directory
-	>>> print what.files_in_bash_path()['python'] 
+	>>> print what.files_in_environment_path()['python'] 
 	/.../bin/python
