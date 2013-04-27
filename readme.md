@@ -8,7 +8,7 @@ whet makes it easier to name a command from the bash history, then re-edit it
 Installation
 ------------
 
-For convenience a bash function is provided, which can be set up like
+For convenience bash functions are provided, which can be set up like
 
     $ source what.sh
 
