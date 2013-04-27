@@ -97,7 +97,7 @@ The `whap` command tries to find where python will import files from, for exampl
 	$ whap os
 	-rw-r--r-- 1 root root 24258 Sep 19  2006 /usr/lib/python2.4/os.py
 
-Note that the whap command uses whatever the default installation of python is, hence in the example above it found the module used for the python2.4 installation. The python version can also be used specified as an argument to find imports for other python installations. Such a version argument must be the first argument.
+Note that the whap command uses whatever the default installation of python is, hence in the example above it found the module used for the python2.4 installation. The python version can also be specified as an argument to find imports for other python installations. Such a version argument must be the first argument.
 
 	$ whap 2.7 os
 	-rw-r--r-- 1 root root 26300 Aug 12  2012 /usr/local/lib/python2.7/os.py
@@ -107,14 +107,11 @@ whet
 
 The English meaning of "whet" is "to sharpen, as by grinding or friction, to hone", and the `whet` command assists this for bash commands by making it easier to copy commands from your history into a function, then re-edit it until you are happy with it, then save it to a file.
 	
-What it does in particular depends on the number of arguments, which would usually increase on each call.
+What it does in particular depends on the number of arguments, which would usually increase on each call. The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".) So there is now a function called "fred"
 
 	$ ls not.a.real.file
 	ls: not.a.real.file: No such file or directory
 	$ whet
-
-The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".) So there is now a function called "fred"
-
 	$ type fred
 	fred is a function
 	fred ()
