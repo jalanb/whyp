@@ -107,7 +107,9 @@ whet
 
 The English meaning of "whet" is "to sharpen, as by grinding or friction, to hone", and the `whet` command assists this for bash commands by making it easier to copy commands from your history into a function, then re-edit it until you are happy with it, then save it to a file.
 	
-What it does in particular depends on the number of arguments, which would usually increase on each call. The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".) So there is now a function called "fred"
+What it does in particular depends on the number of arguments, which would usually increase on each call.
+
+The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".)
 
 	$ ls not.a.real.file
 	ls: not.a.real.file: No such file or directory
@@ -119,7 +121,7 @@ What it does in particular depends on the number of arguments, which would usual
 		ls not.a.real.file
 	}
 
-And that function replays the last command (the "ls" in the example)
+And that function replays the last command (the `ls` in the example)
 
 	$ fred
 	ls: not.a.real.file: No such file or directory
@@ -146,7 +148,7 @@ And you can also supply a filename, so that any edits happen in that file, e.g.
 
 Again - if that script already exists it will be re-used.
 
-So the normal usage of whet is to run a command at the bash prompt until it is getting too big to edit easily using just "<up><left><left><left>...", then run the function, edit it with whet, re-run the function, re-edit, until it is good enough, and save it too a file, for example
+So the normal usage of whet is to run a command at the bash prompt until it is getting too big to edit easily using just "<up><left><left><left>...", then run the function, edit it with whet, re-run the function, re-edit, until it is good enough, and save it to a file, for example
 
 	$ ls
 	$ ls ../../../
