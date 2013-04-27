@@ -27,6 +27,7 @@ Then the what command can show that up is an alias
 	alias up='cd ..'
 
 If you add the verbose flag, -v, then it will look "into the alias" and run what on that command too. In this example "cd" turns out to be a file, so that is shown too
+
 	$ what up -v
 	alias up='cd ..'
 	-r-xr-xr-x 15 root wheel 190 Mar 25 18:03 /usr/bin/cd
@@ -50,6 +51,7 @@ Then the what command can show that up is a function.
 	declare -f up
 
 If you add the verbose flag, -v, then the source of the function is shown
+
 	$ what up -v
 	#! /bin/bash
 	up ()
@@ -120,13 +122,16 @@ The command on its own puts the last line from bash history into a function call
 	}
 
 And that function replays the last command (the "ls" in the example)
+
 	$ fred
 	ls: not.a.real.file: No such file or directory
 	
 You can pass a number of parameters, which `whet` will interpret sensibly. A number can be used to take a different command from the history, so this example will take the 7th last command
+
 	$ whet 7
 
 A name can be used for the function replace the default "fred". For example we could create a function called stuff from the last command
+
 	$ whet stuff
 	$ type stuff
 	stuff is a function
@@ -144,6 +149,7 @@ And you can also supply a filename, so that any edits happen in that file, e.g.
 Again - if that script already exists it will be re-used.
 
 So the normal usage of whet is to run a command at the bash prompt until it is getting too big to edit easily using just "<up><left><left><left>...", then run the function, edit it with whet, re-run the function, re-edit, until it is good enough, and save it too a file, for example
+
 	$ ls
 	$ ls ../../../
 	$ whet 
