@@ -170,7 +170,9 @@ _show_history_command ()
 	local words=$(fc -ln -$history_index -$history_index)
 	for word in $words
 	do
-		_existing_alias $word && word="\\$word"
+		if [[ ${word:0:1} != "-" ]]
+		then _existing_alias $word && word="\\$word"
+		fi
 		[[ -z $line ]] && line=$word || line="$line $word" 
 	done
 	echo $line
