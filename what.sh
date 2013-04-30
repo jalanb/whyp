@@ -27,6 +27,26 @@ what ()
 	return $return_value
 }
 
+vw ()
+{
+	local __doc__="Edit the first argument if it is a text file"
+	if [[ $(type -t $1) == "file" ]]
+	then
+		local file=$(type -p $1)
+		if file $file | grep -q text
+		then $EDITOR $file
+		else echo $file is not text
+		fi
+	else type $1
+	fi
+}
+
+wv ()
+{
+	local __doc__="run what verbosely on all the arguments"
+	what -v "$*"
+}
+
 whap ()
 {
 	local __doc__="find what python will import for a string"
