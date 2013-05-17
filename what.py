@@ -112,7 +112,10 @@ def memoize(method):
 @memoize
 def get_aliases():
 	"""Read a dictionary of aliases from a file"""
-	lines = [l.rstrip() for l in file(get_options().aliases)]
+	try:
+		lines = [l.rstrip() for l in file(get_options().aliases)]
+	except IOError:
+		return {}
 	alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
 	alias_strings = [l.split('=', 1) for l in alias_lines]
 	alias_commands = [(name, strip_quotes(command)) for (name, command) in alias_strings]
@@ -127,7 +130,10 @@ def get_alias(string):
 @memoize
 def get_functions():
 	"""Read a dictionary of functions from a known file"""
-	lines = [l.rstrip() for l in file(get_options().functions)]
+	try:
+		lines = [l.rstrip() for l in file(get_options().functions)]
+	except IOError:
+		return {}
 	name = function_lines = None
 	functions = {}
 	for line in lines:
@@ -348,11 +354,12 @@ def nearby_file(extension):
 def read_command_line():
 	"""Look for options from user on the command line for this script"""
 	parser = optparse.OptionParser('Usage: what [options] command\n\n%s' % __doc__)
-	parser.add_option('-a', '--aliases', help='path to file which holds aliases', default='/tmp/aliases')
 	parser.add_option('-e', '--hide_errors', help='hide error messages from commands with successful status', action='store_true')
-	parser.add_option('-f', '--functions', help='path to file which holds functions', default='/tmp/functions')
+	parser.add_option('-f', '--file', help='show real path to file (if it is a file)', action='store_true')
 	parser.add_option('-q', '--quiet', help='do not show any output', action='store_true')
 	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
+	parser.add_option('-A', '--aliases', help='path to file which holds aliases', default='/tmp/aliases')
+	parser.add_option('-F', '--functions', help='path to file which holds functions', default='/tmp/functions')
 	options, arguments = parser.parse_args()
 	# plint does not seem to notice that methods are globals
 	# pylint: disable-msg=W0601
