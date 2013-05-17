@@ -30,7 +30,6 @@ what ()
 vw ()
 {
 	local __doc__="Edit the first argument if it is a text file"
-	set -x
 	if [[ $(type -t $1) == "file" ]]
 	then
 		local file=$(python $JAB/python/what/what.py -f $1)
@@ -42,7 +41,6 @@ vw ()
 		fi
 	else type $1
 	fi
-	set +x
 }
 
 wv ()
