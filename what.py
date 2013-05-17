@@ -374,18 +374,22 @@ def read_command_line():
 def test():
 	"""Run any doctests in this script or associated test scripts"""
 	options = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
-	failures, _ = doctest.testmod(
+	all_failures, all_tests = 0, 0
+	failures, tests = doctest.testmod(
 		sys.modules[__name__],
 		optionflags=options,
 	)
+	all_failures += failures
+	all_tests += tests
 	for extension in ['.test', '.tests']:
-		failures, _ = doctest.testfile(
+		failures, tests = doctest.testfile(
 			nearby_file(extension),
 			optionflags=options,
 			module_relative=False,
 		)
-		if failures:
-			return failures
+		all_failures += failures
+		all_tests += tests
+	print 'Ran', all_tests, 'tests,', all_failures, 'failures'
 	return 0
 
 
