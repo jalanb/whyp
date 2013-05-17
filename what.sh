@@ -30,15 +30,19 @@ what ()
 vw ()
 {
 	local __doc__="Edit the first argument if it is a text file"
+	set -x
 	if [[ $(type -t $1) == "file" ]]
 	then
-		local file=$(type -p $1)
+		local file=$(python $JAB/python/what/what.py -f $1)
 		if file $file | grep -q text
 		then $EDITOR $file
-		else echo $file is not text
+		else
+			echo $file is not text
+			file $file
 		fi
 	else type $1
 	fi
+	set +x
 }
 
 wv ()
