@@ -90,7 +90,7 @@ _read_whet_args ()
 	for arg in $*
 	do
 		if _is_script_name $arg
-		then local path_to_file=$arg
+		then path_to_file=$arg
 		elif _is_number $arg
 		then history_index=$arg
 		elif _is_identifier $arg
@@ -196,4 +196,32 @@ _is_identifier ()
 {
 	local __doc__="Whether the first argument is alphanumeric and underscores"
 	[[ "$1" =~ ^[[:alnum:]_]+$ ]]
+}
+
+_debug_declare_function ()
+{ 
+    local __doc__='Find where the first argument was loaded from'
+    shopt -s extdebug
+    declare -F $1
+    shopt -u extdebug
+}
+
+_parse_declaration () 
+{ 
+    function=$1;
+    shift;
+    line=$1;
+    shift;
+    filename="$*";
+}
+
+edit_function ()
+{
+	_parse_declaration $(_debug_declare_function $*)
+    $EDITOR "$filename" +$line
+}
+
+functions ()
+{
+	declare -F | sed -Ee "s/declare -[afFirtx]+ //" | grep -v ^_
 }
