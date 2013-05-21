@@ -27,9 +27,9 @@ what ()
 	return $return_value
 }
 
-vw ()
+ww ()
 {
-	local __doc__="Edit the first argument if it is a text file"
+	local __doc__="Edit the first argument if it is a text file, or function"
 	if [[ $(type -t $1) == "file" ]]
 	then
 		local file=$(python $JAB/python/what/what.py -f $1)
@@ -39,6 +39,10 @@ vw ()
 			echo $file is not text
 			file $file
 		fi
+	elif _existing_function $1
+	then
+		_de_declare_function $1
+		_edit_function
 	else type $1
 	fi
 }
@@ -67,6 +71,7 @@ whet ()
 	local function=
 	local history_index=1
 	local path_to_file=
+    local line_number=
 	_read_whet_args $* || return $?
 	if [[ -z $function ]]
 	then
@@ -75,6 +80,7 @@ whet ()
 	fi
 	if _existing_function $function
 	then
+		_de_declare_function $function
 		_edit_function
 	else
 		_create_function
@@ -135,11 +141,16 @@ _edit_function ()
 {
 	local __doc__="Edit a function in a file"
 	_make_path_to_file_exist
-	local regexp="^$function[[:space:]]*()[[:space:]]*$"
-	if ! grep -q $regexp $path_to_file
-	then declare -f $function >> $path_to_file
+	if [[ -n "$line_number" ]]
+	then
+		$EDITOR $path_to_file +$line_number
+	else
+		local regexp="^$function[[:space:]]*()[[:space:]]*$"
+		if ! grep -q $regexp $path_to_file
+		then declare -f $function >> $path_to_file
+		fi
+		$EDITOR $path_to_file +/$regexp
 	fi
-	$EDITOR $path_to_file +/$regexp
 	source $path_to_file
 	[[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
@@ -210,18 +221,13 @@ _parse_declaration ()
 { 
     function=$1;
     shift;
-    line=$1;
+    line_number=$1;
     shift;
-    filename="$*";
+    path_to_file="$*";
 }
 
-edit_function ()
+_de_declare_function ()
 {
-	_parse_declaration $(_debug_declare_function $*)
-    $EDITOR "$filename" +$line
-}
-
-functions ()
-{
-	declare -F | sed -Ee "s/declare -[afFirtx]+ //" | grep -v ^_
+	local __doc__='Set symbols for the file and line of a function'
+	_parse_declaration $(_debug_declare_function $1)
 }
