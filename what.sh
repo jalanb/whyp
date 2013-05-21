@@ -15,7 +15,7 @@ _heading_lines=13 # Text before here is copied to new files
 
 what ()
 {
-	local __doc__="find what will be executed for a command string"
+	local __doc__='find what will be executed for a command string'
 	PATH_TO_ALIASES=/tmp/aliases
 	PATH_TO_FUNCTIONS=/tmp/functions
 	alias > $PATH_TO_ALIASES
@@ -29,7 +29,7 @@ what ()
 
 ww ()
 {
-	local __doc__="Edit the first argument if it is a text file, or function"
+	local __doc__='Edit the first argument if it is a text file, or function'
 	if [[ $(type -t $1) == "file" ]]
 	then _edit_file $1
 	elif _is_existing_function $1
@@ -42,13 +42,13 @@ ww ()
 
 wv ()
 {
-	local __doc__="run what verbosely on all the arguments"
+	local __doc__='run what verbosely on all the arguments'
 	what -v "$*"
 }
 
 whap ()
 {
-	local __doc__="find what python will import for a string"
+	local __doc__='find what python will import for a string'
 	local executable=python
 	if [[ $1 =~ [23].[0-9] ]]
 	then
@@ -60,7 +60,7 @@ whap ()
 
 whet ()
 {
-	local __doc__="whet makes it easier to name a command, then re-edit it"
+	local __doc__='whet makes it easier to name a command, then re-edit it'
 	local function=
 	local history_index=1
 	local path_to_file=
@@ -85,7 +85,7 @@ whet ()
 
 _read_whet_args ()
 {
-	local __doc__="evalute the args to the whet function by type, not position"
+	local __doc__='evalute the args to the whet function by type, not position'
 	for arg in $*
 	do
 		if _is_script_name $arg
@@ -102,7 +102,7 @@ _read_whet_args ()
 
 _create_function ()
 {
-	local __doc__="Make a new function with a command in shell history"
+	local __doc__='Make a new function with a command in shell history'
 	local doc="copied from $(basename $SHELL) history on $(date)"
 	local history_command=$(_show_history_command)
 	eval "$function() { local __doc__='$doc'; $history_command; }" 2>/dev/null
@@ -110,13 +110,13 @@ _create_function ()
 
 _write_new_file ()
 {
-	local __doc__="Copy the head of this script to file"
+	local __doc__='Copy the head of this script to file'
 	head -n $heading_lines $BASH_SOURCE > $path_to_file
 }
 
 _make_path_to_file_exist ()
 {
-	local __doc__="make sure the required file exists, either an existing file, a new file, or a temp file"
+	local __doc__='make sure the required file exists, either an existing file, a new file, or a temp file'
 	if [[ -n $path_to_file ]]
 	then
 		if [[ -f $path_to_file ]]
@@ -132,7 +132,7 @@ _make_path_to_file_exist ()
 
 _edit_function ()
 {
-	local __doc__="Edit a function in a file"
+	local __doc__='Edit a function in a file'
 	_make_path_to_file_exist
 	if [[ -n "$line_number" ]]
 	then
@@ -150,19 +150,19 @@ _edit_function ()
 
 _is_existing_function ()
 {
-	local __doc__="Whether the first argument is in use as a function"
+	local __doc__='Whether the first argument is in use as a function'
 	[[ "$(type -t $1)" == "function" ]]
 }
 
 _existing_alias ()
 {
-	local __doc__="Whether the first argument is in use as a alias"
+	local __doc__='Whether the first argument is in use as a alias'
 	[[ "$(type -t $1)" == "alias" ]]
 }
 
 _existing_command ()
 {
-	local __doc__="Whether the name is in use as an alias, executable, ..."
+	local __doc__='Whether the name is in use as an alias, executable, ...'
 	if _is_existing_function $1
 	then return 1
 	else type $1 2>/dev/null
@@ -171,7 +171,7 @@ _existing_command ()
 
 _show_history_command ()
 {
-	local __doc__="Get a command from the end of current bash history"
+	local __doc__='Get a command from the end of current bash history'
 	local line=
 	local words=$(fc -ln -$history_index -$history_index)
 	for word in $words
@@ -186,19 +186,19 @@ _show_history_command ()
 
 _is_script_name ()
 {
-	local __doc__="Whether the first argument ends in .sh, or is a file"
+	local __doc__='Whether the first argument ends in .sh, or is a file'
 	[[ "$1" =~ \.sh$ || -f $1 ]]
 }
 
 _is_number ()
 {
-	local __doc__="Whether the first argument has only digits"
+	local __doc__='Whether the first argument has only digits'
 	[[ "$1" =~ ^[0-9]+$ ]]
 }
 
 _is_identifier ()
 {
-	local __doc__="Whether the first argument is alphanumeric and underscores"
+	local __doc__='Whether the first argument is alphanumeric and underscores'
 	[[ "$1" =~ ^[[:alnum:]_]+$ ]]
 }
 
@@ -212,6 +212,7 @@ _debug_declare_function ()
 
 _parse_declaration () 
 { 
+	local __doc__='extract the ordered arguments from a debug declare'
     function=$1;
     shift;
     line_number=$1;
@@ -227,11 +228,12 @@ _de_declare_function ()
 
 _edit_file ()
 {
+	local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
 	local file=$(python $JAB/python/what/what.py -f $1)
 	if file $file | grep -q text
 	then $EDITOR $file
 	else
-		echo $file is not text
-		file $file
+		echo $file is not text >&2
+		file $file >&2
 	fi
 }
