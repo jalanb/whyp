@@ -31,15 +31,8 @@ ww ()
 {
 	local __doc__="Edit the first argument if it is a text file, or function"
 	if [[ $(type -t $1) == "file" ]]
-	then
-		local file=$(python $JAB/python/what/what.py -f $1)
-		if file $file | grep -q text
-		then $EDITOR $file
-		else
-			echo $file is not text
-			file $file
-		fi
-	elif _existing_function $1
+	then _edit_file $1
+	elif _is_existing_function $1
 	then
 		_de_declare_function $1
 		_edit_function
@@ -78,7 +71,7 @@ whet ()
 		unset fred
 		function=fred
 	fi
-	if _existing_function $function
+	if _is_existing_function $function
 	then
 		_de_declare_function $function
 		_edit_function
@@ -155,7 +148,7 @@ _edit_function ()
 	[[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
 
-_existing_function ()
+_is_existing_function ()
 {
 	local __doc__="Whether the first argument is in use as a function"
 	[[ "$(type -t $1)" == "function" ]]
@@ -170,7 +163,7 @@ _existing_alias ()
 _existing_command ()
 {
 	local __doc__="Whether the name is in use as an alias, executable, ..."
-	if _existing_function $1
+	if _is_existing_function $1
 	then return 1
 	else type $1 2>/dev/null
 	fi
@@ -230,4 +223,15 @@ _de_declare_function ()
 {
 	local __doc__='Set symbols for the file and line of a function'
 	_parse_declaration $(_debug_declare_function $1)
+}
+
+_edit_file ()
+{
+	local file=$(python $JAB/python/what/what.py -f $1)
+	if file $file | grep -q text
+	then $EDITOR $file
+	else
+		echo $file is not text
+		file $file
+	fi
 }
