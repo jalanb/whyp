@@ -345,13 +345,13 @@ def show_command(command):
 	return 1
 
 
-def nearby_file(extension):
-	"""Return the name of this module, changed to use that extension
+def nearby_file(named_file, extension):
+	"""Return the name of that file, changed to use that extension
 
-	>>> os.path.basename(nearby_file('.txt')) == 'what.txt'
+	>>> os.path.basename(nearby_file('what.pyc', '.txt')) == 'what.txt'
 	True
 	"""
-	return os.path.splitext(__file__)[0] + extension
+	return os.path.splitext(named_file)[0] + extension
 
 
 def read_command_line():
@@ -375,15 +375,19 @@ def test():
 	"""Run any doctests in this script or associated test scripts"""
 	options = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
 	all_failures, all_tests = 0, 0
+	main_module = sys.modules['__main__']
 	failures, tests = doctest.testmod(
-		sys.modules[__name__],
+		main_module,
 		optionflags=options,
 	)
 	all_failures += failures
 	all_tests += tests
 	for extension in ['.test', '.tests']:
+		main_test = nearby_file(main_module.__file__, extension)
+		if not os.path.isfile(main_test):
+			continue
 		failures, tests = doctest.testfile(
-			nearby_file(extension),
+			main_test,
 			optionflags=options,
 			module_relative=False,
 		)

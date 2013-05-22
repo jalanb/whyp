@@ -80,16 +80,21 @@ def built_in(name):
 	return '(built-in)' in str(sys.modules[name])
 
 
-def main(args):
+def main(strings):
 	"""Run the program"""
-	for arg in args:
-		if built_in(arg):
-			print 'builtin', arg
+	for string in strings:
+		if built_in(string):
+			print 'builtin', string
 		for path in sys.path:
-			path_to_arg = path_to_python(path, arg)
-			if path_to_arg:
-				os.system('ls -ld %s' % path_to_arg)
+			path_to_string = path_to_python(path, string)
+			if path_to_string:
+				os.system('ls -ld %s' % path_to_string)
 
 
 if __name__ == '__main__':
-	main(sys.argv[1:])
+	args = sys.argv[1:]
+	if not args:
+		from what import test
+		sys.exit(test())
+	else:
+		sys.exit(main(args))
