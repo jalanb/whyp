@@ -27,7 +27,7 @@ what ()
 	return $return_value
 }
 
-ww ()
+we ()
 {
 	local __doc__='Edit the first argument if it is a text file, or function'
 	if [[ $(type -t $1) == "file" ]]
@@ -61,6 +61,7 @@ whap ()
 whet ()
 {
 	local __doc__='whet makes it easier to name a command, then re-edit it'
+	local unamed_function=fred
 	local function=
 	local history_index=1
 	local path_to_file=
@@ -68,8 +69,8 @@ whet ()
 	_read_whet_args $* || return $?
 	if [[ -z $function ]]
 	then
-		unset fred
-		function=fred
+		unset $unamed_function
+		function=$unamed_function
 	fi
 	if _is_existing_function $function
 	then
@@ -77,6 +78,7 @@ whet ()
 		_edit_function
 	else
 		_create_function
+		_edit_function
 	fi
 }
 		
@@ -111,7 +113,7 @@ _create_function ()
 _write_new_file ()
 {
 	local __doc__='Copy the head of this script to file'
-	head -n $heading_lines $BASH_SOURCE > $path_to_file
+	head -n $_heading_lines $BASH_SOURCE > $path_to_file
 }
 
 _make_path_to_file_exist ()
@@ -124,6 +126,11 @@ _make_path_to_file_exist ()
 			cp $path_to_file $path_to_file~
 		else
 			_write_new_file $path_to_file
+			if [[ $function == $unamed_function ]]
+			then
+				line_number=$(wc -l $path_to_file)
+				declare -f $unamed_function >> $path_to_file
+			fi
 		fi
 	else
 		path_to_file=$(mktemp /tmp/function.XXXXXX)
