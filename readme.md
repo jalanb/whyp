@@ -18,17 +18,22 @@ Daily use
 ---------
 
 Simplified versions of the commands outlined below are provided for quick use
+ These versions are designed to be simple to use, so are short and clustered near the w key.
     
- * w (for "what")
-
 ```shell
 	$ w cd
 ```
   will show what the cd command is (alias, function or file?)
- * ww (for "what -v")
- * we (to edit a command)
+ 
+```shell
+	$ ww cd
+```
+  will show more about the command (definition of the alias or conents of the function/file)
 
-These versions are designed to be simple to use, so are short and clustered near the w key.
+```shell
+	$ we cd
+```
+  will edit the command
 
 what
 ----
