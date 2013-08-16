@@ -247,7 +247,7 @@ def show_function(command):
 	if not get_options().verbose:
 		print command, 'is a function'
 	else:
-		show_output_of_shell_command(". %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
+		show_output_of_shell_command("shopt -s extglob; . %s; %s %s  | sed '1 i\\\n#! /bin/bash\n' | %s" % (
 			get_options().functions, Bash.declare_f, command, Bash.view_file))
 
 
