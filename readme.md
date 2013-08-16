@@ -17,7 +17,7 @@ Then one can use `what` as a replacement for which, or `whap` to find whence pyt
 Daily use
 ---------
 
-Simplified versions of the basic commands outlined below are provided for quick use
+Simplified versions of the commands outlined below are provided for quick use
     
 	* w (for "what")
 	* ww (for "what -v")
