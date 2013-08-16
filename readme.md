@@ -19,9 +19,11 @@ Daily use
 
 Simplified versions of the commands outlined below are provided for quick use
     
-	* w (for "what")
-	* ww (for "what -v")
-	* we (to edit a command)
+ * w (for "what")
+	$ w cd
+  will show what the cd command is (alias, function or file?)
+ * ww (for "what -v")
+ * we (to edit a command)
 
 These versions are designed to be simple to use, so are short and clustered near the w key.
 
