@@ -36,11 +36,14 @@ we ()
 	then
 		_de_declare_function $1
 		_edit_function
+	elif _is_existing_alias $1
+	then
+		_edit_alias $1
 	else type $1
 	fi
 }
 
-wv ()
+ww ()
 {
 	local __doc__='run what verbosely on all the arguments'
 	what -v "$*"
@@ -82,6 +85,25 @@ whet ()
 	fi
 }
 		
+what_source ()
+{
+	local __doc__="Source a file (which might set some aliases) and remember that file"
+	if [ -z "$1" -o ! -f "$1" ]
+	then
+		echo Cannot source \"$1\". It is not a file. >&2
+		return
+	fi
+	if [ -z "$SOURCED_FILES" ]
+	then export SOURCED_FILES=$1
+	else
+		if ! echo $SOURCED_FILES | tr ':' '\n' | grep -x -c -q $1
+		then
+			SOURCED_FILES="$SOURCED_FILES:$1"
+		fi
+	fi
+	source $1
+}
+
 # Methods starting with underscores are intended for use in this file only
 #	(a convention borrowed from python)
 
@@ -161,7 +183,23 @@ _is_existing_function ()
 	[[ "$(type -t $1)" == "function" ]]
 }
 
-_existing_alias ()
+_edit_alias ()
+{
+	local __doc__='Edit an alias in the file $ALIASES, if that file exists'
+	test -n "$SOURCED_FILES" || return
+	OLD_IFS=$IFS
+	IFS=:; for sourced_file in $SOURCED_FILES
+	do
+		if grep -q "alias $1" $sourced_file
+		then
+			$EDITOR $sourced_file +/"alias $1"
+		fi
+	done
+	IFS=$OLD_IFS
+	type $1
+}
+
+_is_existing_alias ()
 {
 	local __doc__='Whether the first argument is in use as a alias'
 	[[ "$(type -t $1)" == "alias" ]]
@@ -184,7 +222,7 @@ _show_history_command ()
 	for word in $words
 	do
 		if [[ ${word:0:1} != "-" ]]
-		then _existing_alias $word && word="\\$word"
+		then _is_existing_alias $word && word="\\$word"
 		fi
 		[[ -z $line ]] && line=$word || line="$line $word" 
 	done
