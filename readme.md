@@ -14,6 +14,17 @@ For convenience bash functions are provided, which can be set up like
 
 Then one can use `what` as a replacement for which, or `whap` to find whence python imports
 
+Daily use
+---------
+
+Simplified versions of the basic commands outlined below are provided for quick use
+    
+	* w (for "what")
+	* ww (for "what -v")
+	* we (to edit a command)
+
+These versions are designed to be simple to use, so are short and clustered near the w key.
+
 what
 ----
 
