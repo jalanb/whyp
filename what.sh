@@ -90,7 +90,9 @@ what_source ()
 	local __doc__="Source a file (which might set some aliases) and remember that file"
 	if [ -z "$1" -o ! -f "$1" ]
 	then
-		echo Cannot source \"$1\". It is not a file. >&2
+		if [[ -z $2 || $2 != "optional" ]]
+		then echo Cannot source \"$1\". It is not a file. >&2
+		fi
 		return
 	fi
 	if [ -z "$SOURCED_FILES" ]
