@@ -13,6 +13,8 @@ _license="This script is released under the MIT license, see http://jalanb.mit-l
 #
 _heading_lines=13 # Text before here is copied to new files
 
+WHAT_DIR=$(dirname $BASH_SOURCE)
+
 what ()
 {
 	local __doc__='find what will be executed for a command string'
@@ -20,7 +22,7 @@ what ()
 	PATH_TO_FUNCTIONS=/tmp/functions
 	alias > $PATH_TO_ALIASES
 	declare -f > $PATH_TO_FUNCTIONS
-	python $JAB/python/what/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS $*;
+	python $WHAT_DIR/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS $*;
 	local return_value=$?
 	rm -f $PATH_TO_ALIASES
 	rm -f $PATH_TO_FUNCTIONS
@@ -58,7 +60,7 @@ whap ()
 		executable=python$1
 		shift
 	fi
-	$executable $JAB/python/what/whap.py $*
+	$executable $WHAT_DIR/whap.py $*
 }
 
 whet ()
@@ -276,7 +278,7 @@ _de_declare_function ()
 _edit_file ()
 {
 	local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
-	local file=$(python $JAB/python/what/what.py -f $1)
+	local file=$(python $WHAT_DIR/what.py -f $1)
 	if file $file | grep -q text
 	then $EDITOR $file
 	else
