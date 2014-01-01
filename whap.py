@@ -42,19 +42,15 @@ def is_matching_file_in(path, name, glob):
 
 
 def path_to_module(path, name):
-    """Whether the name matches a python file in the given path
+    """Whether the name matches a python source or compiled file in that path
 
     If source and compiled files are found, give the source
     """
     glob = '%s.py*' % name
-    python_files = [f
-                    for f in directory_list(path)
-                    if is_matching_file_in(path, f, glob)]
+    python_files = [f for f in directory_list(path) if is_matching_file_in(path, f, glob)]
     if not python_files:
         return None
-    source_files = [f
-                    for f in python_files
-                    if os.path.splitext(f)[-1] == '.py']
+    source_files = [f for f in python_files if os.path.splitext(f)[-1] == '.py']
     python_file = source_files and source_files[0] or python_files[0]
     return os.path.join(path, python_file)
 
@@ -67,7 +63,7 @@ def path_to_sub_directory(path, name):
 
 
 def path_to_python(path, name):
-    """Path to a module or sub-dir of the given path, with that name"""
+    """Path to either a module or sub-dir of that path, with that name"""
     result = path_to_sub_directory(path, name)
     if result:
         return result
