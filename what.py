@@ -60,7 +60,7 @@ def replace_alias(command):
 
 def bash_executable():
 	"""The first executable called 'bash' in the $PATH"""
-	return files_in_environment_path()['bash']
+	return file_in_environment_path('bash')
 
 
 def show_output_of_shell_command(command):
@@ -237,9 +237,21 @@ def files_in_environment_path():
 	return dict(result)
 
 
-def shown_languages():
+def file_in_environment_path(string):
+	"""Gives the path to string, or string.exe
+
+	>>> file_in_environment_path('python') == sys.executable
+	True
+	"""
+	try:
+		return files_in_environment_path()[string]
+	except KeyError:
+		return file_in_environment_path('%s.exe' % string)
+
+
+def showable(language):
 	"""A list of languages whose source files we are interested in viewing"""
-	return ['python', 'bash', 'sh']
+	return language in ['python', 'python2', 'python3', 'bash', 'sh']
 
 
 def show_function(command):
@@ -300,7 +312,7 @@ def script_language(path_to_file):
 
 def show_command_in_path(command):
 	"""Show a command which is a file in $PATH"""
-	path_to_command = files_in_environment_path()[command]
+	path_to_command = file_in_environment_path(command)
 	show_path_to_command(path_to_command)
 
 
@@ -312,7 +324,8 @@ def show_path_to_command(path_to_command):
 	show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
 	if not get_options().verbose:
 		return
-	if script_language(path_to_command) in shown_languages():
+	language = script_language(path_to_command)
+	if showable(language):
 		show_output_of_shell_command('%s %r' % (Bash.view_file, str(path_to_command)))
 
 
@@ -363,7 +376,11 @@ def read_command_line():
 	parser.add_option('-v', '--verbose', help='whether to show more info, such as file contents', action='store_true')
 	parser.add_option('-A', '--aliases', help='path to file which holds aliases', default='/tmp/aliases')
 	parser.add_option('-F', '--functions', help='path to file which holds functions', default='/tmp/functions')
+	parser.add_option('-U', '--debugging', help='debug with pudb', action='store_true')
 	options, arguments = parser.parse_args()
+	if options.debugging:
+		import pudb
+		pudb.set_trace()
 	# plint does not seem to notice that methods are globals
 	# pylint: disable-msg=W0601
 	global get_options
