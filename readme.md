@@ -2,7 +2,9 @@ what
 ====
 
 what is intended as a replacement for which, to show the source of commands available in bash
+
 whap is intended as an equivalent command for python, to show whence modules and packages are imported
+
 whet makes it easier to name a command from the bash history, then re-edit it
 
 Installation
@@ -12,7 +14,7 @@ For convenience bash functions are provided, which can be set up like
 
     $ source what.sh
 
-Then one can use `what` as a replacement for which, or `whap` to find whence python imports
+Then one can use `what` as a replacement for which, or `whap` to find whence python imports modules
 
 Daily use
 ---------
