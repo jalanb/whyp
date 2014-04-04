@@ -48,7 +48,7 @@ we ()
 ww ()
 {
 	local __doc__='run what verbosely on all the arguments'
-	what -v "$*"
+	what -v "$*" || echo "Not found \"$*\""
 }
 
 whap ()
@@ -177,6 +177,7 @@ _edit_function ()
 		fi
 		$EDITOR $path_to_file +/$regexp
 	fi
+	ls -l $path_to_file
 	source $path_to_file
 	[[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
