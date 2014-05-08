@@ -29,6 +29,22 @@ what ()
 	return $return_value
 }
 
+w ()
+{
+    #what "$@"
+	local __doc__='Edit the first argument if it is a text file, or function'
+	if [[ $(type -t $1) == "file" ]]
+	then ls -l $1
+	elif _is_existing_function $1
+	then
+		_de_declare_function $1
+        echo $1 is a function in $path_to_file +$line_number
+	elif _is_existing_alias $1
+	then alias $1
+	else type $1
+	fi
+}
+
 we ()
 {
 	local __doc__='Edit the first argument if it is a text file, or function'
