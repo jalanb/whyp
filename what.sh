@@ -34,7 +34,9 @@ w ()
     #what "$@"
 	local __doc__='Edit the first argument if it is a text file, or function'
 	if [[ $(type -t $1) == "file" ]]
-	then ls -l $1
+    then ls -l $(readlink -f $(which $1))
+    elif which $1 > /dev/null 2>&1
+    then ls -l $(readlink -f $(which $1))
 	elif _is_existing_function $1
 	then
 		_de_declare_function $1
