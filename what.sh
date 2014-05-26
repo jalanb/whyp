@@ -22,7 +22,7 @@ what ()
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
-    python $WHAT_DIR/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS $*;
+    python $WHAT_DIR/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     local return_value=$?
     rm -f $PATH_TO_ALIASES
     rm -f $PATH_TO_FUNCTIONS
@@ -71,7 +71,7 @@ we ()
 ww ()
 {
     local __doc__='run what verbosely on all the arguments'
-    what -v "$*" || echo "Not found \"$*\""
+    what -v "$@" || echo "Not found \"$*\""
 }
 
 whap ()
