@@ -45,8 +45,7 @@ class Bash(object):
     """This class is a namespace to hold bash commands to be used later"""
     # pylint wants an __init__(), but I don't
     # pylint: disable-msg=W0232
-    view_file = 'vat'  # My alias for https://github.com/vim-scripts/vimcat
-                       # YMMV
+    view_file = 'vimcat'  # https://github.com/vim-scripts/vimcat, YMMV
     declare_f = 'declare -f'  # This is a bash builtin
     ls = 'ls'  # This is often in path, and more often aliased
 
