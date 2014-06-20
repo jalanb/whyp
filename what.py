@@ -44,7 +44,7 @@ class BashError(ValueError):
 class Bash(object):
     """This class is a namespace to hold bash commands to be used later"""
     # pylint wants an __init__(), but I don't
-    # pylint: disable-msg=W0232
+    # pylint: disable=no-init
     view_file = 'vimcat'  # https://github.com/vim-scripts/vimcat, YMMV
     declare_f = 'declare -f'  # This is a bash builtin
     ls = 'ls'  # This is often in path, and more often aliased
@@ -400,7 +400,7 @@ def read_command_line():
         import pudb
         pudb.set_trace()
     # plint does not seem to notice that methods are globals
-    # pylint: disable-msg=W0601
+    # pylint: disable=global-variable-undefined
     global get_options
     get_options = lambda: options
     return arguments
