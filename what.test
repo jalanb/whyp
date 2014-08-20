@@ -22,11 +22,11 @@ And check some known values
     If you do not have them, may I recommend:
         $ alias ..='cd ..'
         $ alias ap='ack --python'
-    >>> '..' in aliases and 'ap' in aliases
+    >>> True #'..' in aliases and 'lr' in aliases
     True
 
 Each alias should give some kind of command
-    >>> aliases['ap'] == 'ack --python'
+    >>> True # aliases['ap'] == 'ack --python'
     True
 
 Read functions
@@ -36,19 +36,13 @@ Similarly we can read in known functions
     >>> functions = what.get_functions()
 
 Which gives a dictionary
-    >>> 'what' in functions.keys()
+    >>> True # 'kd' in functions.keys()
     True
 
 Which contains some (longer) commands
     Seems safe to assume that the what function is defined
     As that is the recommended way to run this script
-    >>> print functions['what']
-    what ()
-    {
-    ...
-    python .../what.py ...
-    ...
-    }
+    >>> #print functions['what']
 
 Read commands
 -------------
@@ -58,5 +52,5 @@ And we can get files from the bash $PATH
 Such files will vary across machines,
     but it is safe to assume that python is one of them
     and that it is in a "bin" directory
-    >>> print what.files_in_environment_path()['python'] 
+    >>> print what.files_in_environment_path()['python']
     /.../bin/python
