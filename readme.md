@@ -1,11 +1,11 @@
 what
 ====
 
-what is intended as a replacement for which, to show the source of commands available in bash
+what is intended as a replacement for which, to show the source of aliases, functions and executable available in bash
 
 whap is intended as an equivalent command for python, to show whence modules and packages are imported
 
-whet makes it easier to name a command from the bash history, then re-edit it
+we (what's edit) makes it easier to edit a command whether alias, function or file
 
 Installation
 ------------
