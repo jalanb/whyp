@@ -54,7 +54,7 @@ w ()
 
 we ()
 {
-    local __doc__='Edit the first argument if it is a text file, or function'
+    local __doc__='Edit the first argument if it is a text file, function or alias'
     if [[ $(type -t $1) == "file" ]]
     then _edit_file $1
     elif _is_existing_function $1
