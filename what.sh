@@ -32,7 +32,7 @@ what ()
 w ()
 {
     #what "$@"
-    local __doc__='Edit the first argument if it is a text file, or function'
+    local __doc__='Show whether the first argument is a text file, alias or function'
     if _is_existing_alias $1
     then alias $1
     elif _is_existing_function $1
