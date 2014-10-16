@@ -18,6 +18,7 @@ _copyright = """
 import os
 import sys
 import fnmatch
+import importlib
 
 
 def directory_list(path):
@@ -47,7 +48,9 @@ def path_to_module(path, name):
     If source and compiled files are found, give the source
     """
     glob = '%s.py*' % name
-    python_files = [f for f in directory_list(path) if is_matching_file_in(path, f, glob)]
+    python_files = [f
+                    for f in directory_list(path)
+                    if is_matching_file_in(path, f, glob)]
     if not python_files:
         return None
     source_files = [f for f in python_files if os.path.splitext(f)[-1] == '.py']
@@ -80,15 +83,24 @@ def built_in(name):
     return '(built-in)' in str(sys.modules[name])
 
 
+def path_to_import(string):
+    module = importlib.import_module(string)
+    if module:
+        path_to_file = module.__file__
+        if '.egg/' in path_to_file:
+            return path_to_file.split('.egg/')[0] + '.egg'
+        return path_to_file
+    return None
+
+
 def main(strings):
     """Run the program"""
     for string in strings:
         if built_in(string):
             print 'builtin', string
-        for path in sys.path:
-            path_to_string = path_to_python(path, string)
-            if path_to_string:
-                os.system('ls -ld %s' % path_to_string)
+        path_to_imported_module = path_to_import(string)
+        if path_to_imported_module:
+            os.system('ls -ld %s' % path_to_imported_module)
 
 
 if __name__ == '__main__':
