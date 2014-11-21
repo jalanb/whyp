@@ -78,7 +78,11 @@ whap ()
 {
     local __doc__='find what python will import for a string'
     local executable=python
-    if [[ $1 =~ [23].[0-9] ]]
+    if [[ -e $1 ]]
+    then
+        executable=$1
+        shift
+    elif [[ $1 =~ [23].[0-9] ]]
     then
         executable=python$1
         shift
