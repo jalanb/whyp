@@ -53,7 +53,9 @@ def path_to_module(path, name):
                     if is_matching_file_in(path, f, glob)]
     if not python_files:
         return None
-    source_files = [f for f in python_files if os.path.splitext(f)[-1] == '.py']
+    source_files = [f
+                    for f in python_files
+                    if os.path.splitext(f)[-1] == '.py']
     python_file = source_files and source_files[0] or python_files[0]
     return os.path.join(path, python_file)
 
@@ -84,7 +86,11 @@ def built_in(name):
 
 
 def path_to_import(string):
-    module = importlib.import_module(string)
+    try:
+        module = importlib.import_module(string)
+    except ImportError as e:
+        print >> sys.stderr, e
+        return None
     if module:
         path_to_file = module.__file__
         if '.egg/' in path_to_file:
