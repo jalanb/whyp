@@ -78,7 +78,7 @@ whap ()
 {
     local __doc__='find what python will import for a string'
     local executable=python
-    if [[ -e $1 ]]
+    if [[ -f $1 && -x $1 ]]
     then
         executable=$1
         shift
