@@ -414,11 +414,14 @@ def read_command_line():
     parser.add_option('-F', '--functions', default='/tmp/functions',
                       help='path to file which holds functions')
     parser.add_option('-U', '--debugging', action='store_true',
-                      help='debug with pudb')
+                      help='debug with pudb (or pdb if pudb is not available)')
     options, arguments = parser.parse_args()
     if options.debugging:
-        import pudb
-        pudb.set_trace()
+        try:
+            import pudb as pdb
+        except ImportError:
+            import pdb
+        pdb.set_trace()
     # plint does not seem to notice that methods are globals
     # pylint: disable=global-variable-undefined
     global get_options
