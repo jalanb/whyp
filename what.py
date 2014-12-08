@@ -41,11 +41,31 @@ class BashError(ValueError):
     pass
 
 
+def pager():
+    """Try to use vimcat as a pager, otherwise less
+
+    vimcat is a provided by https://github.com/vim-scripts/vimcat
+        This file is also provide by a github repo
+        Hence assumption: vimcat is at ../../vim-scripts/vimcat
+    vimcat originated at https://github.com/rkitover/vimpager
+        So try ../../vimpager/vimcat too
+    """
+    parent = os.path.dirname
+    path_to_hub = parent(parent(__file__))
+    path_to_vimcat = os.path.join(path_to_hub, 'vim-scripts/vimcat')
+    if os.path.isfile(path_to_vimcat):
+        return path_to_vimcat
+    path_to_vimcat = os.path.join(path_to_hub, 'vimpager/vimcat')
+    if os.path.isfile(path_to_vimcat):
+        return path_to_vimcat
+    return 'less'
+
+
 class Bash(object):
     """This class is a namespace to hold bash commands to be used later"""
     # pylint wants an __init__(), but I don't
     # pylint: disable=no-init
-    view_file = 'vimcat'  # https://github.com/vim-scripts/vimcat, YMMV
+    view_file = pager()
     declare_f = 'declare -f'  # This is a bash builtin
     ls = 'ls'  # This is often in path, and more often aliased
 
@@ -264,7 +284,7 @@ def show_function(command):
         commands = ' | '.join([
             "shopt -s extglob; . %s; %s %s" % (
                 get_options().functions, Bash.declare_f, command),
-            "sed '1 i\\\n#! /bin/bash\n'",
+            "sed '1 i#! /bin/bash\n'",
             Bash.view_file
         ])
         show_output_of_shell_command(commands)
