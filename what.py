@@ -50,15 +50,17 @@ def pager():
     vimcat originated at https://github.com/rkitover/vimpager
         So try ../../vimpager/vimcat too
     """
+    path_to_vimcat = file_in_environment_path('vimcat')
+    if os.path.isfile(path_to_vimcat):
+        return path_to_vimcat
     parent = os.path.dirname
     path_to_hub = parent(parent(__file__))
-    path_to_vimcat = os.path.join(path_to_hub, 'vim-scripts/vimcat')
-    if os.path.isfile(path_to_vimcat):
-        return path_to_vimcat
-    path_to_vimcat = os.path.join(path_to_hub, 'vimpager/vimcat')
-    if os.path.isfile(path_to_vimcat):
-        return path_to_vimcat
-    return 'less'
+    vimcat_dirs = ['vimcat', 'vimpager', 'vim-scripts']
+    for vimcat_dir in vimcat_dirs:
+        path_to_vimcat = os.path.join(path_to_hub, vimcat_dir, 'vimcat')
+        if os.path.isfile(path_to_vimcat):
+            return path_to_vimcat
+    return file_in_environment_path('less')
 
 
 class Bash(object):
