@@ -63,15 +63,6 @@ def pager():
     return file_in_environment_path('less')
 
 
-class Bash(object):
-    """This class is a namespace to hold bash commands to be used later"""
-    # pylint wants an __init__(), but I don't
-    # pylint: disable=no-init
-    view_file = pager()
-    declare_f = 'declare -f'  # This is a bash builtin
-    ls = 'ls'  # This is often in path, and more often aliased
-
-
 def replace_alias(command):
     """Replace any alias with its value at start of the command"""
     if ' ' not in command:
@@ -271,6 +262,15 @@ def file_in_environment_path(string):
         return files_in_environment_path()[string]
     except KeyError:
         return file_in_environment_path('%s.exe' % string)
+
+
+class Bash(object):
+    """This class is a namespace to hold bash commands to be used later"""
+    # pylint wants an __init__(), but I don't
+    # pylint: disable=no-init
+    view_file = pager()
+    declare_f = 'declare -f'  # This is a bash builtin
+    ls = 'ls'  # This is often in path, and more often aliased
 
 
 def showable(language):
