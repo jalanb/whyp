@@ -38,7 +38,7 @@ w ()
     elif _is_existing_function $1
     then
         _de_declare_function $1
-        echo $1 is a function in $path_to_file +$line_number
+        echo vim $path_to_file +$line_number +/$1
     elif which $1 > /dev/null 2>&1
     then
         real_file=$(readlink -f $(which $1))
