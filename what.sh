@@ -13,6 +13,8 @@ _license="This script is released under the MIT license, see http://jalanb.mit-l
 #
 _heading_lines=13 # Text before here is copied to new files
 
+WHAT_SOURCED=1
+
 WHAT_DIR=$(dirname $BASH_SOURCE)
 
 what ()
@@ -87,7 +89,7 @@ whap ()
         executable=python$1
         shift
     fi
-    $executable $WHAT_DIR/whap.py $*
+    $executable $WHAT_DIR/whap.py "$@"
 }
 
 whet ()
@@ -137,6 +139,16 @@ what_source ()
 
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from python)
+
+w_source ()
+{
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || what_source $1
+}
+
+source_path ()
+{
+    test -f $1 && w_source $1 || return 1
+}
 
 _read_whet_args ()
 {
@@ -205,7 +217,7 @@ _edit_function ()
         $EDITOR $path_to_file +/$regexp
     fi
     ls -l $path_to_file
-    source $path_to_file
+    w_source $path_to_file
     [[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
 
