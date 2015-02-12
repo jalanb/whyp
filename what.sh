@@ -134,7 +134,7 @@ what_source ()
             SOURCED_FILES="$SOURCED_FILES:$1"
         fi
     fi
-    source $1
+    source "$@"
 }
 
 # Methods starting with underscores are intended for use in this file only
@@ -142,12 +142,12 @@ what_source ()
 
 w_source ()
 {
-    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || what_source $1
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || what_source "$@"
 }
 
 source_path ()
 {
-    test -f $1 && w_source $1 || return 1
+    test -f $1 && w_source "$@" || return 1
 }
 
 _read_whet_args ()
