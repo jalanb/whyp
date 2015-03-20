@@ -87,10 +87,11 @@ def path_to_import(string):
         print(e, file=sys.stderr)
         return None
     if module:
-        path_to_file = module.__file__
-        if '.egg/' in path_to_file:
-            return path_to_file.split('.egg/')[0] + '.egg'
-        return path_to_file
+        pyc = module.__file__
+        if '.egg/' in pyc:
+            return pyc.split('.egg/')[0] + '.egg'
+        py = os.path.realpath(os.path.splitext(pyc)[0] + '.py')
+        return py if os.path.isfile(py) else pyc
     return None
 
 
