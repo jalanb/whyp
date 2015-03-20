@@ -8,13 +8,8 @@ If a name is found more than once each is listed
     (but python will only import one, probably the first listed)
 """
 
-_copyright = """
-(c) J Alan Brogan 2013
-    The source is released under the MIT license
-    See http://jalanb.mit-license.org/ for more information
-"""
 
-
+from __future__ import print_function
 import os
 import sys
 import fnmatch
@@ -89,7 +84,7 @@ def path_to_import(string):
     try:
         module = importlib.import_module(string)
     except ImportError as e:
-        print >> sys.stderr, e
+        print(e, file=sys.stderr)
         return None
     if module:
         path_to_file = module.__file__
@@ -103,7 +98,7 @@ def main(strings):
     """Run the program"""
     for string in strings:
         if built_in(string):
-            print 'builtin', string
+            print('builtin', string)
         path_to_imported_module = path_to_import(string)
         if path_to_imported_module:
             os.system('ls -ld %s' % path_to_imported_module)
