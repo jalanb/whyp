@@ -1,8 +1,7 @@
 #! /bin/bash
 
 # This script is intended to be sourced, not run
-if [[ $0 == $BASH_SOURCE ]]
-then
+if [[ $0 == $BASH_SOURCE ]]; then
     echo "This file should be run as"
     echo "  source $0"
     echo "and should not be run as"
@@ -35,21 +34,19 @@ w ()
 {
     #what "$@"
     local __doc__='Show whether the first argument is a text file, alias or function'
-    if _is_existing_alias $1
-    then alias $1
-    elif _is_existing_function $1
-    then
+    if _is_existing_alias $1; then
+        alias $1
+    elif _is_existing_function $1; then
         _de_declare_function $1
         echo vim $path_to_file +$line_number +/$1
-    elif which $1 > /dev/null 2>&1
-    then
+    elif which $1 > /dev/null 2>&1; then
         real_file=$(readlink -f $(which $1))
-        if [[ $real_file != $1 ]]
-        then echo "$1 -> $real_file"
+        if [[ $real_file != $1 ]]; then
+            echo "$1 -> $real_file"
         fi
         ls -l $(readlink -f $(which $1))
-    elif [[ $(type -t $1) == "file" ]]
-    then ls -l $(readlink -f $(which $1))
+    elif [[ $(type -t $1) == "file" ]]; then
+        ls -l $(readlink -f $(which $1))
     else type $1
     fi
 }
@@ -57,14 +54,12 @@ w ()
 we ()
 {
     local __doc__='Edit the first argument if it is a text file, function or alias'
-    if [[ $(type -t $1) == "file" ]]
-    then _edit_file $1
-    elif _is_existing_function $1
-    then
+    if [[ $(type -t $1) == "file" ]]; then
+        _edit_file $1
+    elif _is_existing_function $1; then
         _de_declare_function $1
         _edit_function
-    elif _is_existing_alias $1
-    then
+    elif _is_existing_alias $1; then
         _edit_alias $1
     else type $1
     fi
@@ -80,12 +75,10 @@ whap ()
 {
     local __doc__='find what python will import for a string'
     local executable=python
-    if [[ -f $1 && -x $1 ]]
-    then
+    if [[ -f $1 && -x $1 ]]; then
         executable=$1
         shift
-    elif [[ $1 =~ [23].[0-9] ]]
-    then
+    elif [[ $1 =~ [23].[0-9] ]]; then
         executable=python$1
         shift
     fi
@@ -101,13 +94,11 @@ whet ()
     local path_to_file=
     local line_number=
     _read_whet_args $* || return $?
-    if [[ -z $function ]]
-    then
+    if [[ -z $function ]]; then
         unset $unamed_function
         function=$unamed_function
     fi
-    if _is_existing_function $function
-    then
+    if _is_existing_function $function; then
         _de_declare_function $function
         _edit_function
     else
@@ -119,18 +110,16 @@ whet ()
 what_source ()
 {
     local __doc__="Source a file (which might set some aliases) and remember that file"
-    if [ -z "$1" -o ! -f "$1" ]
-    then
-        if [[ -z $2 || $2 != "optional" ]]
-        then echo Cannot source \"$1\". It is not a file. >&2
+    if [ -z "$1" -o ! -f "$1" ]; then
+        if [[ -z $2 || $2 != "optional" ]]; then
+            echo Cannot source \"$1\". It is not a file. >&2
         fi
         return
     fi
-    if [ -z "$SOURCED_FILES" ]
-    then export SOURCED_FILES=$1
+    if [ -z "$SOURCED_FILES" ]; then
+        export SOURCED_FILES=$1
     else
-        if ! echo $SOURCED_FILES | tr ':' '\n' | grep -x -c -q $1
-        then
+        if ! echo $SOURCED_FILES | tr ':' '\n' | grep -x -c -q $1; then
             SOURCED_FILES="$SOURCED_FILES:$1"
         fi
     fi
@@ -155,12 +144,11 @@ _read_whet_args ()
     local __doc__='evalute the args to the whet function by type, not position'
     for arg in $*
     do
-        if _is_script_name $arg
-        then path_to_file=$arg
-        elif _is_number $arg
-        then history_index=$arg
-        elif _is_identifier $arg
-        then
+        if _is_script_name $arg; then
+            path_to_file=$arg
+        elif _is_number $arg; then
+            history_index=$arg
+        elif _is_identifier $arg; then
             _existing_command $arg && return 1
             function=$arg
         fi
@@ -184,15 +172,12 @@ _write_new_file ()
 _make_path_to_file_exist ()
 {
     local __doc__='make sure the required file exists, either an existing file, a new file, or a temp file'
-    if [[ -n $path_to_file ]]
-    then
-        if [[ -f $path_to_file ]]
-        then
+    if [[ -n $path_to_file ]]; then
+        if [[ -f $path_to_file ]]; then
             cp $path_to_file $path_to_file~
         else
             _write_new_file $path_to_file
-            if [[ $function == $unamed_function ]]
-            then
+            if [[ $function == $unamed_function ]]; then
                 line_number=$(wc -l $path_to_file)
                 declare -f $unamed_function >> $path_to_file
             fi
@@ -206,13 +191,12 @@ _edit_function ()
 {
     local __doc__='Edit a function in a file'
     _make_path_to_file_exist
-    if [[ -n "$line_number" ]]
-    then
+    if [[ -n "$line_number" ]]; then
         $EDITOR $path_to_file +$line_number
     else
         local regexp="^$function[[:space:]]*()[[:space:]]*$"
-        if ! grep -q $regexp $path_to_file
-        then declare -f $function >> $path_to_file
+        if ! grep -q $regexp $path_to_file; then
+            declare -f $function >> $path_to_file
         fi
         $EDITOR $path_to_file +/$regexp
     fi
@@ -234,8 +218,7 @@ _edit_alias ()
     OLD_IFS=$IFS
     IFS=:; for sourced_file in $SOURCED_FILES
     do
-        if grep -q "alias $1" $sourced_file
-        then
+        if grep -q "alias $1" $sourced_file; then
             $EDITOR $sourced_file +/"alias $1"
         fi
     done
@@ -252,8 +235,8 @@ _is_existing_alias ()
 _existing_command ()
 {
     local __doc__='Whether the name is in use as an alias, executable, ...'
-    if _is_existing_function $1
-    then return 1
+    if _is_existing_function $1; then
+        return 1
     else type $1 2>/dev/null
     fi
 }
@@ -265,8 +248,8 @@ _show_history_command ()
     local words=$(fc -ln -$history_index -$history_index)
     for word in $words
     do
-        if [[ ${word:0:1} != "-" ]]
-        then _is_existing_alias $word && word="\\$word"
+        if [[ ${word:0:1} != "-" ]]; then
+            _is_existing_alias $word && word="\\$word"
         fi
         [[ -z $line ]] && line=$word || line="$line $word"
     done
@@ -319,8 +302,8 @@ _edit_file ()
 {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
     local file=$(python $WHAT_DIR/what.py -f $1)
-    if file $file | grep -q text
-    then $EDITOR $file
+    if file $file | grep -q text; then
+        $EDITOR $file
     else
         echo $file is not text >&2
         file $file >&2
