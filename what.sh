@@ -30,24 +30,15 @@ what ()
     return $return_value
 }
 
-w ()
-{
-    #what "$@"
-    local __doc__='Show whether the first argument is a text file, alias or function'
-    if _is_existing_alias $1; then
-        alias $1
-    elif _is_existing_function $1; then
-        _de_declare_function $1
-        echo vim $path_to_file +$line_number +/$1
-    elif which $1 > /dev/null 2>&1; then
-        real_file=$(readlink -f $(which $1))
-        if [[ $real_file != $1 ]]; then
-            echo "$1 -> $real_file"
-        fi
+w () {
+    local __doc__='run what verbosely on all the arguments'
+    if [[ $(type -t $1) == "file" ]]; then
         ls -l $(readlink -f $(which $1))
-    elif [[ $(type -t $1) == "file" ]]; then
-        ls -l $(readlink -f $(which $1))
-    else type $1
+        local half=$(( $LINES / 2 ))
+        local lines=${2:-$half}
+        what -v --file $1 | head -n $lines
+    else
+        what -v "$@" || echo "Not found \"$*\""
     fi
 }
 
@@ -65,10 +56,31 @@ we ()
     fi
 }
 
-ww ()
+wf ()
 {
-    local __doc__='run what verbosely on all the arguments'
-    what -v "$@" || echo "Not found \"$*\""
+    local __doc__="if w args then look in the files"
+    for arg in "$@"; do
+        if [[ $(type -t "$arg") == "file" ]]; then
+            grep --color -nH --binary-files=without-match $arg
+        fi
+    done
+}
+
+ww () {
+    local __doc__='Show whether the first argument is a text file, alias or function'
+    if _is_existing_alias $1; then
+        alias $1
+    elif _is_existing_function $1; then
+        _de_declare_function $1
+        echo vim $path_to_file +$line_number +/$1
+    elif which $1 > /dev/null 2>&1; then
+        real_file=$(readlink -f $(which $1))
+        if [[ $real_file != $1 ]]; then
+            echo "$1 -> $real_file"
+        fi
+        ls -l $(readlink -f $(which $1))
+    else type $1
+    fi
 }
 
 whap ()
