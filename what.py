@@ -20,6 +20,7 @@ import stat
 import doctest
 import optparse
 import subprocess
+from bdb import BdbQuit
 
 
 def get_options():
@@ -470,4 +471,7 @@ if __name__ == '__main__':
     if not args:
         sys.exit(test())
     else:
-        sys.exit(main(args))
+        try:
+            sys.exit(main(args))
+        except BdbQuit:
+            sys.exit(os.EX_OK)

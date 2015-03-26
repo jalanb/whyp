@@ -16,8 +16,7 @@ WHAT_SOURCED=1
 
 WHAT_DIR=$(dirname $BASH_SOURCE)
 
-what ()
-{
+what () {
     local __doc__='find what will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
@@ -97,8 +96,7 @@ whap ()
     $executable $WHAT_DIR/whap.py "$@"
 }
 
-whet ()
-{
+whet () {
     local __doc__='whet makes it easier to name a command, then re-edit it'
     local unamed_function=fred
     local function=
@@ -119,8 +117,7 @@ whet ()
     fi
 }
 
-what_source ()
-{
+source_what () {
     local __doc__="Source a file (which might set some aliases) and remember that file"
     if [ -z "$1" -o ! -f "$1" ]; then
         if [[ -z $2 || $2 != "optional" ]]; then
@@ -141,18 +138,15 @@ what_source ()
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from python)
 
-w_source ()
-{
-    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || what_source "$@"
+w_source () {
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || source_what "$@"
 }
 
-source_path ()
-{
+source_path () {
     test -f $1 && w_source "$@" || return 1
 }
 
-_read_whet_args ()
-{
+_read_whet_args () {
     local __doc__='evalute the args to the whet function by type, not position'
     for arg in $*
     do
@@ -167,22 +161,19 @@ _read_whet_args ()
     done
 }
 
-_create_function ()
-{
+_create_function () {
     local __doc__='Make a new function with a command in shell history'
     local doc="copied from $(basename $SHELL) history on $(date)"
     local history_command=$(_show_history_command)
     eval "$function() { local __doc__='$doc'; $history_command; }" 2>/dev/null
 }
 
-_write_new_file ()
-{
+_write_new_file () {
     local __doc__='Copy the head of this script to file'
     head -n $_heading_lines $BASH_SOURCE > $path_to_file
 }
 
-_make_path_to_file_exist ()
-{
+_make_path_to_file_exist () {
     local __doc__='make sure the required file exists, either an existing file, a new file, or a temp file'
     if [[ -n $path_to_file ]]; then
         if [[ -f $path_to_file ]]; then
@@ -199,8 +190,7 @@ _make_path_to_file_exist ()
     fi
 }
 
-_edit_function ()
-{
+_edit_function () {
     local __doc__='Edit a function in a file'
     _make_path_to_file_exist
     if [[ -n "$line_number" ]]; then
@@ -217,14 +207,12 @@ _edit_function ()
     [[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
 
-_is_existing_function ()
-{
+_is_existing_function () {
     local __doc__='Whether the first argument is in use as a function'
     [[ "$(type -t $1)" == "function" ]]
 }
 
-_edit_alias ()
-{
+_edit_alias () {
     local __doc__='Edit an alias in the file $ALIASES, if that file exists'
     test -n "$SOURCED_FILES" || return
     OLD_IFS=$IFS
@@ -238,14 +226,12 @@ _edit_alias ()
     type $1
 }
 
-_is_existing_alias ()
-{
+_is_existing_alias () {
     local __doc__='Whether the first argument is in use as a alias'
     [[ "$(type -t $1)" == "alias" ]]
 }
 
-_existing_command ()
-{
+_existing_command () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
     if _is_existing_function $1; then
         return 1
@@ -253,8 +239,7 @@ _existing_command ()
     fi
 }
 
-_show_history_command ()
-{
+_show_history_command () {
     local __doc__='Get a command from the end of current bash history'
     local line=
     local words=$(fc -ln -$history_index -$history_index)
@@ -268,34 +253,29 @@ _show_history_command ()
     echo $line
 }
 
-_is_script_name ()
-{
+_is_script_name () {
     local __doc__='Whether the first argument ends in .sh, or is a file'
     [[ "$1" =~ \.sh$ || -f $1 ]]
 }
 
-_is_number ()
-{
+_is_number () {
     local __doc__='Whether the first argument has only digits'
     [[ "$1" =~ ^[0-9]+$ ]]
 }
 
-_is_identifier ()
-{
+_is_identifier () {
     local __doc__='Whether the first argument is alphanumeric and underscores'
     [[ "$1" =~ ^[[:alnum:]_]+$ ]]
 }
 
-_debug_declare_function ()
-{
+_debug_declare_function () {
     local __doc__='Find where the first argument was loaded from'
     shopt -s extdebug
     declare -F $1
     shopt -u extdebug
 }
 
-_parse_declaration ()
-{
+_parse_declaration () {
     local __doc__='extract the ordered arguments from a debug declare'
     function=$1;
     shift;
@@ -304,14 +284,12 @@ _parse_declaration ()
     path_to_file="$*";
 }
 
-_de_declare_function ()
-{
+_de_declare_function () {
     local __doc__='Set symbols for the file and line of a function'
     _parse_declaration $(_debug_declare_function $1)
 }
 
-_edit_file ()
-{
+_edit_file () {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
     local file=$(python $WHAT_DIR/what.py -f $1)
     if file $file | grep -q text; then
