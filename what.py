@@ -369,6 +369,8 @@ def show_alias(command):
     if not get_options().verbose:
         return
     sub_command = aliases[command].split()[0].strip()
+    if sub_command == command:
+        return
     if os.path.dirname(sub_command) in environment_paths():
         show_command(os.path.basename(sub_command))
     else:
