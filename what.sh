@@ -32,10 +32,9 @@ what () {
 w () {
     local __doc__='run what verbosely on all the arguments'
     if [[ $(type -t $1) == "file" ]]; then
-        ls -l $(readlink -f $(which $1))
         local half=$(( $LINES / 2 ))
         local lines=${2:-$half}
-        what -v --file $1 | head -n $lines
+        what -v $1 | head -n $lines
     else
         what -v "$@" || echo "Not found \"$*\""
     fi
