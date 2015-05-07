@@ -40,8 +40,7 @@ w () {
     fi
 }
 
-we ()
-{
+we () {
     local __doc__='Edit the first argument if it is a text file, function or alias'
     if [[ $(type -t $1) == "file" ]]; then
         _edit_file $1
@@ -54,8 +53,7 @@ we ()
     fi
 }
 
-wf ()
-{
+wf () {
     local __doc__="if w args then look in the files"
     for arg in "$@"; do
         if [[ $(type -t "$arg") == "file" ]]; then
@@ -81,8 +79,7 @@ ww () {
     fi
 }
 
-whap ()
-{
+whap () {
     local __doc__='find what python will import for a string'
     local executable=python
     if [[ -f $1 && -x $1 ]]; then
