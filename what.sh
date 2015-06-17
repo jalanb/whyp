@@ -214,8 +214,8 @@ _edit_alias () {
     OLD_IFS=$IFS
     IFS=:; for sourced_file in $SOURCED_FILES
     do
-        if grep -q "alias $1" $sourced_file; then
-            $EDITOR $sourced_file +/"alias $1"
+        if grep -q "alias $1=" $sourced_file; then
+            $EDITOR $sourced_file +/"alias $1="
         fi
     done
     IFS=$OLD_IFS
