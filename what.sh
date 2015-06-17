@@ -132,7 +132,7 @@ source_what () {
 }
 
 # Methods starting with underscores are intended for use in this file only
-#   (a convention borrowed from python)
+#   (a convention borrowed from Python)
 
 w_source () {
     [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || source_what "$@"
