@@ -8,7 +8,7 @@ if [[ $0 == $BASH_SOURCE ]]; then
     echo "  sh $0"
 fi
 #
-_license="This script is released under the MIT license, see http://jalanb.mit-license.org/"
+_license="This script is released under the MIT license, see accompanying LICENSE file"
 #
 _heading_lines=13 # Text before here is copied to new files
 
