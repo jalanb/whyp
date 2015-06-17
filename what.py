@@ -287,7 +287,7 @@ def show_function(command):
         commands = ' | '.join([
             "shopt -s extglob; . %s; %s %s" % (
                 get_options().functions, Bash.declare_f, command),
-            "sed '1 i#! /bin/bash\n'",
+            "sed '1 i\\\n#! /usr/bin/env bash\n'",
             Bash.view_file
         ])
         show_output_of_shell_command(commands)

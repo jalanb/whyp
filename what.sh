@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 # This script is intended to be sourced, not run
 if [[ $0 == $BASH_SOURCE ]]; then
