@@ -262,6 +262,8 @@ def file_in_environment_path(string):
     try:
         return files_in_environment_path()[string]
     except KeyError:
+        if string.endswith('.exe'):
+            return ''
         return file_in_environment_path('%s.exe' % string)
 
 
