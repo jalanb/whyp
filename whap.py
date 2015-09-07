@@ -126,8 +126,12 @@ def Use_debugger(_args):
 def parse_args(methods):
     """Parse out command line arguments"""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('items', metavar='items', type=str, nargs='+',
-                        help='items to be used')
+    parser.add_argument('modules', metavar='modules', type=str, nargs='+',
+                        help='Python modules to be used')
+    parser.add_argument('-e', '--edit', action='store_true',
+                        help='Edit the files')
+    parser.add_argument('-l', '--list', action='store_true',
+                        help='List the files (ls -l)')
     parser.add_argument('-v', '--version', action='store_true',
                         help='Show version')
     parser.add_argument('-U', '--Use_debugger', action='store_true',
@@ -145,9 +149,13 @@ def script(args):
             continue
         path_to_imported_module = path_to_import(module)
         if path_to_imported_module:
-            os.system('ls -ld %s' % path_to_imported_module)
             paths.add(path_to_imported_module)
-    command = 'echo'
+    if args.edit:
+        command = 'vim -p'
+    elif args.list:
+        command = 'ls -l'
+    else:
+        command = 'echo'
     paths = ' '.join(sorted([str(_) for _ in paths]))
     print(command, paths)
     return bool(paths)

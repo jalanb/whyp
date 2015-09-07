@@ -89,7 +89,7 @@ whap () {
         executable=python$1
         shift
     fi
-    $executable $WHAT_DIR/whap.py "$@"
+    $($executable $WHAT_DIR/whap.py "$@")
 }
 
 whet () {
