@@ -10,6 +10,11 @@ we (what's edit) makes it easier to edit a command whether alias, function or fi
 Installation
 ------------
 
+Clone the repo
+
+    $ git clone https://github.com/jalanb/what.git
+    $ cd what
+
 For convenience bash functions are provided, which can be set up like
 
     $ source what.sh
