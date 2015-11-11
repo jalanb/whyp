@@ -130,6 +130,8 @@ source_what () {
     fi
     source "$@"
 }
+alias .=source_what
+alias require=source_what
 
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from Python)
