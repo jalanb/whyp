@@ -132,19 +132,22 @@ whet () {
 
 source_what () {
     local __doc__="Source a file (which might set some aliases) and remember that file"
-    if [ -z "$1" -o ! -f "$1" ]; then
+    local _filename="$1"
+    if [ -z "$_filename" -o ! -f "$_filename" ]; then
         if [[ -z $2 || $2 != "optional" ]]; then
-            echo Cannot source \"$1\". It is not a file. >&2
+            echo Cannot source \"$_filename\". It is not a file. >&2
         fi
         return
     fi
+    # echo SOURCED_FILES= $SOURCED_FILES
     if [ -z "$SOURCED_FILES" ]; then
-        export SOURCED_FILES=$1
+        export SOURCED_FILES=$_filename
     else
-        if ! echo $SOURCED_FILES | tr ':' '\n' | grep -x -c -q $1; then
-            SOURCED_FILES="$SOURCED_FILES:$1"
+        if ! echo $SOURCED_FILES | tr ':' ' ' | grep -x -c -q $_filename; then
+            SOURCED_FILES="$SOURCED_FILES:$_filename"
         fi
     fi
+    export SOURCED_FILES
     source "$@"
 }
 alias .=source_what
