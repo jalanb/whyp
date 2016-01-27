@@ -152,10 +152,6 @@ source_what () {
 }
 alias .=source_what
 
-require () {
-    source_what "$@"
-}
-
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from Python)
 
