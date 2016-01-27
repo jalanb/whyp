@@ -29,15 +29,25 @@ what () {
     return $return_value
 }
 
+head_what () {
+    return what -v $1 | head -n ${2:-$(( $LINES / 2 ))}
+}
+
 w () {
-    local __doc__='run what verbosely on all the arguments'
-    if [[ $(type -t $1) == "file" ]]; then
-        local half=$(( $LINES / 2 ))
-        local lines=${2:-$half}
-        what -v $1 | head -n $lines
-    else
-        what -v "$@" || echo "Not found \"$*\""
-    fi
+    PASS=0
+    FAIL=1
+    local __doc__='what(all arguments (whether they like it or not))'
+    [[ -z "$@" ]] && return $FAIL
+    [[ $1 == -q ]] && return what "$@"
+    [[ $(type -t $1) == "file" ]] && return head_what $1
+    what -v "$@" && return $PASS
+    w ${1:0:${#1}-1} && return $PASS
+    echo 'what not "'"$@"'"' >&2
+    return $FAIL
+}
+
+wa () {
+    we "$@"
 }
 
 we () {
