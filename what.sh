@@ -13,8 +13,11 @@ _license="This script is released under the MIT license, see accompanying LICENS
 _heading_lines=13 # Text before here is copied to new files
 
 WHAT_SOURCED=1
+export WHAT_SOURCED
+[[ -n $SOURCED_FILES ]] || SOURCED_FILES=$(readlink -f $BASH_SOURCE)
 
-WHAT_DIR=$(dirname $BASH_SOURCE)
+WHAT=$BASH_SOURCE
+export WHAT_DIR=$(dirname $(readlink -f $WHAT))
 
 what () {
     local __doc__='find what will be executed for a command string'
@@ -99,7 +102,11 @@ whap () {
         executable=python$1
         shift
     fi
-    $($executable $WHAT_DIR/whap.py "$@")
+    if [[ $* =~ -U ]]; then
+        $executable $WHAT_DIR/whap.py "$@"
+    else
+        $($executable $WHAT_DIR/whap.py "$@")
+    fi
 }
 
 whet () {
