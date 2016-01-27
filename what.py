@@ -114,15 +114,23 @@ def strip_quotes(string):
 
 def memoize(method):
     """Cache the return value of the method, which takes no arguments"""
-    cache = []  # use a list to workaround some warnings from pylint
+    from collections import defaultdict
+    from pprintpp import pprint as pp
+    def ppd(_):
+        return pp(dir())
 
-    def new_method():
-        if not cache:
-            cache.append(method())
-        return cache[0]
-    new_method.__doc__ = method.__doc__
-    new_method.__name__ = 'memoized_%s' % method.__name__
-    return new_method
+
+    cache = defaultdict(list)
+
+    def call_method(*args, **kwargs):
+        result=method(*args, **kwargs)
+        name = method.func_name
+        item = method, result
+        cache[name].append(item)
+        return result
+    call_method.__doc__ = method.__doc__
+    call_method.__name__ = 'memoized_%s' % method.__name__
+    return call_method
 
 
 @memoize
@@ -156,7 +164,8 @@ def get_functions():
         if line == '{':
             continue
         elif line == '}':
-            functions[name] = function_lines[:]
+            if function_lines:
+                functions[name] = function_lines[:]
         else:
             words = line.split()
             if not words:
@@ -260,12 +269,12 @@ def file_in_environment_path(string):
     True
     """
     try:
-        return files_in_environment_path()[string]
+        files = files_in_environment_path()
+        return files[string]
     except KeyError:
         if string.endswith('.exe'):
             return ''
         return file_in_environment_path('%s.exe' % string)
-
 
 class Bash(object):
     """This class is a namespace to hold bash commands to be used later"""

@@ -85,21 +85,6 @@ def built_in(name):
     return '(built-in)' in str(sys.modules[name])
 
 
-def path_to_import(string):
-    try:
-        module = importlib.import_module(string)
-    except ImportError as e:
-        print(e, file=sys.stderr)
-        return None
-    if module:
-        pyc = module.__file__
-        if '.egg/' in pyc:
-            return pyc.split('.egg/')[0] + '.egg'
-        py = os.path.realpath(os.path.splitext(pyc)[0] + '.py')
-        return py if os.path.isfile(py) else pyc
-    return None
-
-
 def run_args(args, methods):
     """Run any methods eponymous with args"""
     if not args:
@@ -139,6 +124,36 @@ def parse_args(methods):
     args = parser.parse_args()
     run_args(args, methods)
     return args
+
+
+from contextlib import contextmanager
+
+@contextmanager
+def look_here(name):
+    here = os.getcwd()
+    remove_here = False
+    if not here in sys.path:
+        sys.path.insert(0, here)
+        remove_here = True
+    yield
+    if remove_here:
+        sys.path.remove(here)
+
+
+def path_to_import(string):
+    with look_here(string):
+        try:
+            module = importlib.import_module(string)
+        except ImportError as e:
+            print(e, file=sys.stderr)
+            return None
+    if module:
+        pyc = module.__file__
+        if '.egg/' in pyc:
+            return pyc.split('.egg/')[0] + '.egg'
+        py = os.path.realpath(os.path.splitext(pyc)[0] + '.py')
+        return py if os.path.isfile(py) else pyc
+    return None
 
 
 def script(args):
