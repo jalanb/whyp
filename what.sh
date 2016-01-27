@@ -215,13 +215,13 @@ _edit_function () {
     local __doc__='Edit a function in a file'
     _make_path_to_file_exist
     if [[ -n "$line_number" ]]; then
-        $EDITOR $path_to_file +$line_number
+        ${EDITOR:-vim} $path_to_file +$line_number
     else
         local regexp="^$function[[:space:]]*()[[:space:]]*$"
         if ! grep -q $regexp $path_to_file; then
             declare -f $function >> $path_to_file
         fi
-        $EDITOR $path_to_file +/$regexp
+        ${EDITOR:-vim} $path_to_file +/$regexp
     fi
     ls -l $path_to_file
     w_source $path_to_file
@@ -241,7 +241,7 @@ _edit_alias () {
     do
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
-            $EDITOR $sourced_file +$line_number
+            ${EDITOR:-vim} $sourced_file +$line_number
         fi
     done
     IFS=$OLD_IFS
@@ -315,9 +315,11 @@ _edit_file () {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
     local file=$(python $WHAT_DIR/what.py -f $1)
     if file $file | grep -q text; then
-        $EDITOR $file
+        ${EDITOR:-vim} $file
     else
         echo $file is not text >&2
         file $file >&2
     fi
 }
+
+# echo "from what/what.sh"
