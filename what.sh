@@ -32,20 +32,22 @@ what () {
     return $return_value
 }
 
-head_what () {
-    return what -v $1 | head -n ${2:-$(( $LINES / 2 ))}
+what_file () {
+    what -f -v $1 | head -n ${2:-$(( $LINES / 2 ))}
 }
 
 w () {
+    local __doc__='what(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
-    local __doc__='what(all arguments (whether they like it or not))'
     [[ -z "$@" ]] && return $FAIL
     [[ $1 == -q ]] && return what "$@"
-    [[ $(type -t $1) == "file" ]] && return head_what $1
+    if [[ $(type -t $1) == "file" ]]; then
+        what_file $1
+        return $PASS
+    fi
     what -v "$@" && return $PASS
     w ${1:0:${#1}-1} && return $PASS
-    echo 'what not "'"$@"'"' >&2
     return $FAIL
 }
 
