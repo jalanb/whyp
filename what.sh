@@ -59,10 +59,10 @@ we () {
     local __doc__='Edit the first argument if it is a text file, function or alias'
     if [[ $(type -t $1) == "file" ]]; then
         _edit_file $1
-    elif _is_existing_function $1; then
+    elif is_existing_function $1; then
         _de_declare_function $1
         _edit_function
-    elif _is_existing_alias $1; then
+    elif is_existing_alias $1; then
         _edit_alias $1
     else type $1
     fi
@@ -79,9 +79,9 @@ wf () {
 
 ww () {
     local __doc__='Show whether the first argument is a text file, alias or function'
-    if _is_existing_alias $1; then
+    if is_existing_alias $1; then
         alias $1
-    elif _is_existing_function $1; then
+    elif is_existing_function $1; then
         _de_declare_function $1
         echo vim $path_to_file +$line_number +/$1
     elif which $1 > /dev/null 2>&1; then
@@ -123,7 +123,7 @@ whet () {
         unset $unamed_function
         function=$unamed_function
     fi
-    if _is_existing_function $function; then
+    if is_existing_function $function; then
         _de_declare_function $function
         _edit_function
     else
@@ -226,7 +226,7 @@ _edit_function () {
     [[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
 
-_is_existing_function () {
+is_existing_function () {
     local __doc__='Whether the first argument is in use as a function'
     [[ "$(type -t $1)" == "function" ]]
 }
@@ -246,14 +246,14 @@ _edit_alias () {
     type $1
 }
 
-_is_existing_alias () {
+is_existing_alias () {
     local __doc__='Whether the first argument is in use as a alias'
     [[ "$(type -t $1)" == "alias" ]]
 }
 
 _existing_command () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
-    if _is_existing_function $1; then
+    if is_existing_function $1; then
         return 1
     else type $1 2>/dev/null
     fi
@@ -266,7 +266,7 @@ _show_history_command () {
     for word in $words
     do
         if [[ ${word:0:1} != "-" ]]; then
-            _is_existing_alias $word && word="\\$word"
+            is_existing_alias $word && word="\\$word"
         fi
         [[ -z $line ]] && line=$word || line="$line $word"
     done
