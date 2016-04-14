@@ -33,7 +33,7 @@ what () {
 }
 
 what_file () {
-    what -f -v $1 | head -n ${2:-$(( $LINES / 2 ))}
+    what -f -v $1 # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
 w () {
@@ -47,6 +47,7 @@ w () {
         return $PASS
     fi
     what -v "$@" && return $PASS
+    echo $1 not found
     w ${1:0:${#1}-1} && return $PASS
     return $FAIL
 }
