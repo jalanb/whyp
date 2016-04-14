@@ -366,8 +366,8 @@ def show_path_to_command(path_to_command):
     """Show a command which is a file at that path"""
     if get_options().file:
         print os.path.realpath(path_to_command)
-        return
-    show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
+    else:
+        show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
     if not get_options().verbose:
         return
     language = script_language(path_to_command)
