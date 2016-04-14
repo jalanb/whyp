@@ -115,7 +115,10 @@ def strip_quotes(string):
 def memoize(method):
     """Cache the return value of the method, which takes no arguments"""
     from collections import defaultdict
-    from pprintpp import pprint as pp
+    try:
+        from pprintpp import pprint as pp
+    except ImportError:
+        from pprint import pprint as pp
     def ppd(_):
         return pp(dir())
 
