@@ -68,9 +68,8 @@ If you add the verbose flag, -v, then it will look "into the alias" and run what
 Let's re-write up as a function
 
 	$ unalias up
-	$ up ()
-	> {
-	> cd ..
+	$ up () {
+	>     cd ..
 	> }
 
 Then the what command can show that up is a function.
@@ -82,8 +81,7 @@ If you add the verbose flag, -v, then the source of the function is shown
 
 	$ what up -v
 	#! /bin/bash
-	up ()
-	{
+	up () {
 		    cd ..
 	}
 
@@ -123,12 +121,12 @@ whap
 The `whap` command tries to find where python will import files from, for example
 
 	$ whap os
-	-rw-r--r-- 1 root root 24258 Sep 19  2006 /usr/lib/python2.4/os.py
+	-rw-r--r-- 1 root root 24258 Sep 19  2006 /usr/lib/python2.7/os.py
 
-Note that the whap command uses whatever the default installation of python is, hence in the example above it found the module used for the python2.4 installation. The python version can also be specified as an argument to find imports for other python installations. Such a version argument must be the first argument.
+Note that the whap command uses whatever the default installation of python is, hence in the example above it found the module used for the python2.7 installation. The python version can also be specified as an argument to find imports for other python installations. Such a version argument must be the first argument.
 
-	$ whap 2.7 os
-	-rw-r--r-- 1 root root 26300 Aug 12  2012 /usr/local/lib/python2.7/os.py
+	$ whap 2.6 os
+	-rw-r--r-- 1 root root 26300 Aug 12  2012 /usr/local/lib/python2.6/os.py
 
 whet
 ----
