@@ -6,6 +6,9 @@
 Welcome to what's documentation!
 ================================
 
+Version:
+0.1.0
+
 Contents:
 
 .. toctree::
