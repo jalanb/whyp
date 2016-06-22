@@ -148,7 +148,7 @@ source_what () {
     else
         if ! echo $SOURCED_FILES | tr ':' ' ' | grep -x -c -q $_filename; then
             SOURCED_FILES="$SOURCED_FILES:$_filename"
-        fi
+        fi 2>/dev/null
     fi
     export SOURCED_FILES
     source "$@"
