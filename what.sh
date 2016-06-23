@@ -36,7 +36,7 @@ what_file () {
     what -f -v $1 # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
-w () {
+W () {
     local __doc__='what(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
@@ -57,6 +57,8 @@ wa () {
 }
 
 we () {
+    # Posted as "The most productive function I have written"
+    # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__='Edit the first argument if it is a text file, function or alias'
     if [[ $(type -t $1) == "file" ]]; then
         _edit_file $1
@@ -78,7 +80,7 @@ wf () {
     done
 }
 
-ww () {
+WW () {
     local __doc__='Show whether the first argument is a text file, alias or function'
     if is_existing_alias $1; then
         alias $1
