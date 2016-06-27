@@ -142,7 +142,7 @@ whet () {
 }
 
 source_what () {
-    local __doc__="Source a file (which might set some aliases) and remember that file"
+    local __doc__="Source a file (that may set some aliases) and remember that file"
     local _filename="$1"
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
         if [[ -z $2 || $2 != "optional" ]]; then
