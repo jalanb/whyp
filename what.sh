@@ -1,7 +1,9 @@
 #! /usr/bin/env bash
 
+[[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$0") in $(dirname $(readlink -f "$0")) on $(hostname -f)
+
 # This script is intended to be sourced, not run
-if [[ $0 == $BASH_SOURCE ]]; then
+if [[ "$0" == $BASH_SOURCE ]]; then
     echo "This file should be run as"
     echo "  source $0"
     echo "and should not be run as"
@@ -32,8 +34,15 @@ what () {
     return $return_value
 }
 
+# xxxxx
+
+# xxxxxx
+
+
+# xxxxxxx
+
 what_file () {
-    what -f -v $1 # | head -n ${2:-$(( $LINES / 2 ))}
+    what -f -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
 W () {
@@ -41,9 +50,9 @@ W () {
     PASS=0
     FAIL=1
     [[ -z "$@" ]] && return $FAIL
-    [[ $1 == -q ]] && return what "$@"
-    if [[ $(type -t $1) == "file" ]]; then
-        what_file $1
+    [[ "$1" == -q ]] && return what "$@"
+    if [[ $(type -t "$1") == "file" ]]; then
+        what_file "$1"
         return $PASS
     fi
     what -v "$@" && return $PASS
@@ -52,10 +61,9 @@ W () {
     return $FAIL
 }
 
-wa () {
-    we "$@"
-}
+# xxxxxxxx
 
+<<<<<<< 3068cd85b9c37773920c545885bedf2b5d555074
 we () {
     # Posted as "The most productive function I have written"
     # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
@@ -77,73 +85,52 @@ we () {
     fi
 }
 
-wf () {
-    local __doc__="if w args then look in the files"
-    for arg in "$@"; do
-        if [[ $(type -t "$arg") == "file" ]]; then
-            grep --color -nH --binary-files=without-match $arg
+_is_number () {
+    local __doc__='Whether the first argument has only digits'
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+w_source () {
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f "$1" ]] && echo not_path $1 >&2 || source_what "$@"
+}
+
+what_www () {
+    . ~/hub/what/what.sh
+    (DEBUGGING=www;
+    local _command="$1"; shift
+    ww $_command;
+    w $_command;
+    if is_existing_function $_command; then
+        (set -x; $_command "$@")
+    elif is_existing_alias $_command; then
+        (set -x; $_command "$@")
+    elif file $_command  | grep -q -e script -e text; then
+        what_wwm $_command "$@"
+    else
+        echo 0
+    fi)
+}
+
+# xxxxxxxxx
+
+_edit_alias () {
+    local __doc__='Edit an alias in the file $ALIASES, if that file exists'
+    test -n "$SOURCED_FILES" || return
+    OLD_IFS=$IFS
+    IFS=:; for sourced_file in $SOURCED_FILES
+    do
+        line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
+        if [[ -n "$line_number" ]]; then
+            ${EDITOR:-vim} $sourced_file +$line_number
         fi
     done
-}
-
-WW () {
-    local __doc__='Show whether the first argument is a text file, alias or function'
-    if is_existing_alias $1; then
-        alias $1
-    elif is_existing_function $1; then
-        _de_declare_function $1
-        echo vim $path_to_file +$line_number +/$1
-    elif which $1 > /dev/null 2>&1; then
-        real_file=$(readlink -f $(which $1))
-        if [[ $real_file != $1 ]]; then
-            echo "$1 -> $real_file"
-        fi
-        ls -l $(readlink -f $(which $1))
-    else type $1
-    fi
-}
-
-whap () {
-    local __doc__='find what python will import for a string'
-    local executable=python
-    if [[ -f $1 && -x $1 ]]; then
-        executable=$1
-        shift
-    elif [[ $1 =~ [23].[0-9] ]]; then
-        executable=python$1
-        shift
-    fi
-    if [[ $* =~ -U ]]; then
-        $executable $WHAT_DIR/whap.py "$@"
-    else
-        $($executable $WHAT_DIR/whap.py "$@")
-    fi
-}
-
-whet () {
-    local __doc__='whet makes it easier to name a command, then re-edit it'
-    local unamed_function=fred
-    local function=
-    local history_index=1
-    local path_to_file=
-    local line_number=
-    _read_whet_args $* || return $?
-    if [[ -z $function ]]; then
-        unset $unamed_function
-        function=$unamed_function
-    fi
-    if is_existing_function $function; then
-        _de_declare_function $function
-        _edit_function
-    else
-        _create_function
-        _edit_function
-    fi
+    IFS=$OLD_IFS
+    type "$1"
 }
 
 source_what () {
     local __doc__="Source a file (that may set some aliases) and remember that file"
-    local _filename="$1"
+    local _filename=$(readlink -f "$1")
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
         if [[ -z $2 || $2 != "optional" ]]; then
             echo Cannot source \"$_filename\". It is not a file. >&2
@@ -277,9 +264,9 @@ is_existing_alias () {
 
 _existing_command () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
-    if is_existing_function $1; then
+    if is_existing_function "$1"; then
         return 1
-    else type $1 2>/dev/null
+    else type "$1" 2>/dev/null
     fi
 }
 
@@ -299,12 +286,7 @@ _show_history_command () {
 
 _is_script_name () {
     local __doc__='Whether the first argument ends in .sh, or is a file'
-    [[ "$1" =~ \.sh$ || -f $1 ]]
-}
-
-_is_number () {
-    local __doc__='Whether the first argument has only digits'
-    [[ "$1" =~ ^[0-9]+$ ]]
+    [[ "$1" =~ \.sh$ || -f "$1" ]]
 }
 
 _is_identifier () {
@@ -315,15 +297,15 @@ _is_identifier () {
 _debug_declare_function () {
     local __doc__='Find where the first argument was loaded from'
     shopt -s extdebug
-    declare -F $1
+    declare -F "$1"
     shopt -u extdebug
 }
 
 _parse_declaration () {
     local __doc__='extract the ordered arguments from a debug declare'
-    function=$1;
+    function="$1";
     shift;
-    line_number=$1;
+    line_number="$1";
     shift;
     path_to_file="$*";
 }
@@ -344,4 +326,4 @@ _edit_file () {
     fi
 }
 
-# echo "from what/what.sh"
+[[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$0") in $(dirname $(readlink -f "$0")) on $(hostname -f)
