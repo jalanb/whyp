@@ -112,13 +112,18 @@ def strip_quotes(string):
     return string
 
 
-def memoize(method):
-    """Cache the return value of the method, which takes no arguments"""
-    from collections import defaultdict
+def import_pp():
     try:
         from pprintpp import pprint as pp
     except ImportError:
         from pprint import pprint as pp
+    return pp
+
+
+def memoize(method):
+    """Cache the return value of the method, which takes no arguments"""
+    from collections import defaultdict
+    pp = import_pp()
     def ppd(_):
         return pp(dir())
 
@@ -423,7 +428,7 @@ def read_command_line():
     parser.add_option('-e', '--hide_errors', action='store_true',
                       help='hide error messages from successful commands')
     parser.add_option('-f', '--file', action='store_true',
-                      help='show real path to file (if it is a file)')
+                     help='show real path to file (if it is a file)')
     parser.add_option('-q', '--quiet', action='store_true',
                       help='do not show any output')
     parser.add_option('-v', '--verbose', action='store_true',
