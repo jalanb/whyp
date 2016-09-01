@@ -17,6 +17,10 @@ import fnmatch
 import importlib
 from bdb import BdbQuit
 
+try:
+    import pudb as pdb
+except ImportError:
+    import pdb
 
 __version__ = '1.1.0'
 
@@ -117,6 +121,8 @@ def parse_args(methods):
                         help='Edit the files')
     parser.add_argument('-l', '--list', action='store_true',
                         help='List the files (ls -l)')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Say nothing')
     parser.add_argument('-v', '--version', action='store_true',
                         help='Show version')
     parser.add_argument('-U', '--Use_debugger', action='store_true',
@@ -140,12 +146,13 @@ def look_here(name):
         sys.path.remove(here)
 
 
-def path_to_import(string):
+def path_to_import(string, quiet):
     with look_here(string):
         try:
             module = importlib.import_module(string)
         except ImportError as e:
-            print(e, file=sys.stderr)
+            if not quiet:
+                print(e, file=sys.stderr)
             return None
     if module:
         pyc = module.__file__
@@ -162,7 +169,7 @@ def script(args):
         if built_in(module):
             print('builtin', module)
             continue
-        path_to_imported_module = path_to_import(module)
+        path_to_imported_module = path_to_import(module, args.quiet)
         if path_to_imported_module:
             paths.add(path_to_imported_module)
     if args.edit:
@@ -172,7 +179,8 @@ def script(args):
     else:
         command = 'echo'
     paths = ' '.join(sorted([str(_) for _ in paths]))
-    print(command, paths)
+    if not args.quiet:
+        print(command, paths)
     return bool(paths)
 
 

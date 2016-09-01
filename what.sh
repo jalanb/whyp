@@ -60,14 +60,20 @@ we () {
     # Posted as "The most productive function I have written"
     # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__='Edit the first argument if it is a text file, function or alias'
-    if [[ $(type -t $1) == "file" ]]; then
-        _edit_file $1
-    elif is_existing_function $1; then
-        _de_declare_function $1
-        _edit_function
-    elif is_existing_alias $1; then
-        _edit_alias $1
-    else type $1
+    if whap -q $1; then
+        _sought=$1; shift
+        _edit_file $(whap $_sought) "$@"
+    else:
+        if [[ $(type -t $1) == "file" ]]; then
+            _edit_file $1
+        elif is_existing_function $1; then
+            _de_declare_function $1
+            _edit_function
+        elif is_existing_alias $1; then
+            _edit_alias $1
+        else type $1
+            vf +/^$1
+        fi
     fi
 }
 
