@@ -176,7 +176,7 @@ source_path () {
 
 _read_whet_args () {
     local __doc__='evalute the args to the whet function by type, not position'
-    for arg in $*
+    for arg in "$@"
     do
         if _is_script_name $arg; then
             path_to_file=$arg
@@ -218,17 +218,32 @@ _make_path_to_file_exist () {
     fi
 }
 
+_vim_tabs () {
+    echo ${EDITOR:-vim -p}
+}
+
+_vim_file () {
+    local _file="$1";shift
+    $(_vim_tabs) "$_file" "$@"
+}
+
+_vim_line () {
+    local _file="$1";shift
+    local _line="$1";shift
+    _vim_file  "$_file" +$line
+}
+
 _edit_function () {
     local __doc__='Edit a function in a file'
     _make_path_to_file_exist
     if [[ -n "$line_number" ]]; then
-        ${EDITOR:-vim} $path_to_file +$line_number
+        _vim_line $path_to_file $line_number
     else
         local regexp="^$function[[:space:]]*()[[:space:]]*$"
         if ! grep -q $regexp $path_to_file; then
             declare -f $function >> $path_to_file
         fi
-        ${EDITOR:-vim} $path_to_file +/$regexp
+        _vim_file  $path_to_file +/$regexp
     fi
     ls -l $path_to_file
     w_source $path_to_file
@@ -248,7 +263,7 @@ _edit_alias () {
     do
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
-            ${EDITOR:-vim} $sourced_file +$line_number
+            _vim_file  $sourced_file +$line_number
         fi
     done
     IFS=$OLD_IFS
@@ -322,7 +337,7 @@ _edit_file () {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
     local file=$(python $WHAT_DIR/what.py -f $1)
     if file $file | grep -q text; then
-        ${EDITOR:-vim} $file
+        _vim_file  $file
     else
         echo $file is not text >&2
         file $file >&2
