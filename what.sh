@@ -16,10 +16,43 @@ _heading_lines=13 # Text before here is copied to new files
 
 WHAT_SOURCED=1
 export WHAT_SOURCED
-[[ -n $SOURCED_FILES ]] || SOURCED_FILES=$(readlink -f $BASH_SOURCE)
+[[ $SOURCED_FILES =~ $BASH_SOURCE ]] || SOURCED_FILES="${SOURCED_FILES}$BASH_SOURCE"
 
-WHAT=$BASH_SOURCE
-export WHAT_DIR=$(dirname $(readlink -f $WHAT))
+WHAT_SOURCE=$BASH_SOURCE
+export WHAT_DIR=$(dirname $(readlink -f $WHAT_SOURCE))
+
+# x
+
+alias w=what_w
+
+# xx
+
+alias we=what_edit
+alias wp=whap
+alias ww=what_ww
+
+# xxx
+
+alias www=what_www
+
+# xxxx
+
+whap () {
+    local __doc__='find what python will import for a string'
+    local executable=python
+    if [[ -f "$1" && -x "$1" ]]; then
+        executable="$1"
+        shift
+    elif [[ "$1" =~ [23].[0-9] ]]; then
+        executable=python$1
+        shift
+    fi
+    if [[ $* =~ -U ]]; then
+        $executable $WHAT_DIR/whap.py "$@"
+    else
+        $($executable $WHAT_DIR/whap.py "$@")
+    fi
+}
 
 what () {
     local __doc__='find what will be executed for a command string'
@@ -38,6 +71,31 @@ what () {
 
 # xxxxxx
 
+_parse_function () {
+    __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
+}
+
+what_w () {
+    local __doc__='Show whether the first argument is a text file, alias or function'
+    if is_existing_alias "$1"; then
+        alias "$1"
+    elif is_existing_function "$1"; then
+        _parse_function "$1"
+        local _above=$(( $line_number - 1 ))
+        echo
+        grep "^$function.* " $path_to_file -A4 -n --color
+        echo
+        echo "vim $(relpath $path_to_file) +$_above +/'\\<$function\\zs.*'"
+    elif which "$1" > /dev/null 2>&1; then
+        real_file=$(readlink -f $(which "$1"))
+        if [[ $real_file != "$1" ]]; then
+            echo "$1 -> $real_file"
+        fi
+        ls -l $(readlink -f $(which "$1"))
+    else type "$1"
+    fi
+}
+
 
 # xxxxxxx
 
@@ -45,7 +103,7 @@ what_file () {
     what -f -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
-W () {
+what_ww () {
     local __doc__='what(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
@@ -63,7 +121,6 @@ W () {
 
 # xxxxxxxx
 
-<<<<<<< 3068cd85b9c37773920c545885bedf2b5d555074
 we () {
     # Posted as "The most productive function I have written"
     # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
@@ -137,33 +194,50 @@ source_what () {
         fi
         return
     fi
-    # echo SOURCED_FILES= $SOURCED_FILES
     if [ -z "$SOURCED_FILES" ]; then
         export SOURCED_FILES=$_filename
     else
-        if ! echo $SOURCED_FILES | tr ':' ' ' | grep -x -c -q $_filename; then
+        if [[ $SOURCED_FILES =~ $_filename ]]; then
+            : # return 0
+        else
             SOURCED_FILES="$SOURCED_FILES:$_filename"
-        fi 2>/dev/null
+            export SOURCED_FILES
+        fi
     fi
-    export SOURCED_FILES
-    source "$@"
+    # echo "${INDENT}source $_filename"
+    # local OLDINDENT="$INDENT"
+    # local INDENT="$INDENT  "
+    source "$_filename"
+    # INDENT="$OLDINDENT"
+    # echo "${INDENT}have $_filename"
 }
 alias .=source_what
 
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from Python)
 
-w_source () {
-    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f $1 ]] && echo not_path $1 >&2 || source_what "$@"
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
+what_edit () {
+    local __doc__='Edit the first argument if it is a text file, function or alias'
+    if [[ $(type -t "$1") == "file" ]]; then
+        _edit_file "$1"
+    elif is_existing_function "$1"; then
+        _parse_function "$1"
+        _edit_function
+    elif is_existing_alias "$1"; then
+        _edit_alias "$1"
+    else type "$1"
+    fi
 }
 
-source_path () {
-    test -f $1 && w_source "$@" || return 1
-}
+# XXXXXXXXX.
 
-_read_whet_args () {
-    local __doc__='evalute the args to the whet function by type, not position'
-    for arg in "$@"
+_what_tabify () {
+    grep -q "^+"
+}
+_read_wee_args () {
+    local __doc__='evalute the args to the wee function by type, not position'
+    for arg in $*
     do
         if _is_script_name $arg; then
             path_to_file=$arg
@@ -237,31 +311,6 @@ _edit_function () {
     [[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
 }
 
-is_existing_function () {
-    local __doc__='Whether the first argument is in use as a function'
-    [[ "$(type -t $1)" == "function" ]]
-}
-
-_edit_alias () {
-    local __doc__='Edit an alias in the file $ALIASES, if that file exists'
-    test -n "$SOURCED_FILES" || return
-    OLD_IFS=$IFS
-    IFS=:; for sourced_file in $SOURCED_FILES
-    do
-        line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
-        if [[ -n "$line_number" ]]; then
-            _vim_file  $sourced_file +$line_number
-        fi
-    done
-    IFS=$OLD_IFS
-    type $1
-}
-
-is_existing_alias () {
-    local __doc__='Whether the first argument is in use as a alias'
-    [[ "$(type -t $1)" == "alias" ]]
-}
-
 _existing_command () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
     if is_existing_function "$1"; then
@@ -301,7 +350,7 @@ _debug_declare_function () {
     shopt -u extdebug
 }
 
-_parse_declaration () {
+__parse_function_line_number_and_path_to_file () {
     local __doc__='extract the ordered arguments from a debug declare'
     function="$1";
     shift;
@@ -310,9 +359,8 @@ _parse_declaration () {
     path_to_file="$*";
 }
 
-_de_declare_function () {
-    local __doc__='Set symbols for the file and line of a function'
-    _parse_declaration $(_debug_declare_function $1)
+source_path () {
+    test -f "$1" && w_source "$@" || return 1
 }
 
 _edit_file () {
@@ -324,6 +372,16 @@ _edit_file () {
         echo $file is not text >&2
         file $file >&2
     fi
+}
+
+is_existing_function () {
+    local __doc__='Whether the first argument is in use as a function'
+    [[ "$(type -t $1)" == "function" ]]
+}
+
+is_existing_alias () {
+    local __doc__='Whether the first argument is in use as a alias'
+    [[ "$(type -t $1)" == "alias" ]]
 }
 
 [[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
