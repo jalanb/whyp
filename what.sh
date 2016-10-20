@@ -176,16 +176,16 @@ _read_whet_args () {
     done
 }
 
+_write_new_file () {
+    local __doc__='Copy the head of this script to file'
+    head -n $_heading_lines $BASH_SOURCE > $path_to_file
+}
+
 _create_function () {
     local __doc__='Make a new function with a command in shell history'
     local doc="copied from $(basename $SHELL) history on $(date)"
     local history_command=$(_show_history_command)
     eval "$function() { local __doc__='$doc'; $history_command; }" 2>/dev/null
-}
-
-_write_new_file () {
-    local __doc__='Copy the head of this script to file'
-    head -n $_heading_lines $BASH_SOURCE > $path_to_file
 }
 
 _make_path_to_file_exist () {
