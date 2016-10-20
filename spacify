@@ -1,0 +1,14 @@
+#! /usr/bin/env python2
+
+import sys
+
+for line in sys.stdin.readlines():
+    if not line:
+        print ''
+        continue
+    first, rest = line[0], line[1:]
+    prefix = ''
+    while first == '+':
+        prefix += '    '
+        first, rest = rest[0], rest[1:]
+    print prefix, rest.rstrip()

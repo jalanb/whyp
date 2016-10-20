@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-[[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$0") in $(dirname $(readlink -f "$0")) on $(hostname -f)
+[[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
 
 # This script is intended to be sourced, not run
 if [[ "$0" == $BASH_SOURCE ]]; then
@@ -101,9 +101,9 @@ what_www () {
     ww $_command;
     w $_command;
     if is_existing_function $_command; then
-        (set -x; $_command "$@")
+        (set -x; $_command "$@" 2>&1 | ~/hub/what/spacify)
     elif is_existing_alias $_command; then
-        (set -x; $_command "$@")
+        (set -x; $_command "$@" 2>&1 | ~/hub/what/spacify)
     elif file $_command  | grep -q -e script -e text; then
         what_wwm $_command "$@"
     else
@@ -326,4 +326,4 @@ _edit_file () {
     fi
 }
 
-[[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$0") in $(dirname $(readlink -f "$0")) on $(hostname -f)
+[[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
