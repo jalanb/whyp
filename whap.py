@@ -11,11 +11,14 @@ If a name is found more than once each is listed
 
 from __future__ import print_function
 import os
+from cStringIO import StringIO
 import sys
 import argparse
 import fnmatch
 import importlib
 from bdb import BdbQuit
+from contextlib import contextmanager
+
 
 try:
     import pudb as pdb
@@ -79,11 +82,26 @@ def path_to_python(path, name):
     return path_to_module(path, name)
 
 
+@contextmanager
+def swallow_stdout_stderr():
+    """Divert stdout into the given stream """
+    saved_out = sys.stdout
+    saved_err = sys.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    try:
+        yield
+    finally:
+        sys.stdout = saved_out
+        sys.stderr = saved_err
+
+
 def built_in(name):
     """Whether the name is that of one of python's builtin modules"""
     try:
         #  Not all builtin modules are initially imported, so bring it in first
-        __import__(name)
+        with swallow_stdout_stderr():
+            __import__(name)
     except ImportError:
         return False
     return '(built-in)' in str(sys.modules[name])
@@ -132,8 +150,6 @@ def parse_args(methods):
     return args
 
 
-from contextlib import contextmanager
-
 @contextmanager
 def look_here(name):
     here = os.getcwd()
@@ -149,7 +165,8 @@ def look_here(name):
 def path_to_import(string, quiet):
     with look_here(string):
         try:
-            module = importlib.import_module(string)
+            with swallow_stdout_stderr():
+                module = importlib.import_module(string)
         except ImportError as e:
             if not quiet:
                 print(e, file=sys.stderr)
