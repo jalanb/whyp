@@ -170,35 +170,42 @@ def path_to_import(string, quiet):
         except ImportError as e:
             if not quiet:
                 print(e, file=sys.stderr)
-            return None
+            return None, None
     if module:
         pyc = module.__file__
         if '.egg/' in pyc:
             return pyc.split('.egg/')[0] + '.egg'
         py = os.path.realpath(os.path.splitext(pyc)[0] + '.py')
-        return py if os.path.isfile(py) else pyc
-    return None
+        filename = py if os.path.isfile(py) else pyc
+        try:
+            return filename, module.__version__
+        except AttributeError:
+            return filename, None
+    return None, None
 
 
 def script(args):
-    paths = set()
+    modules = set()
     for module in args.modules:
         if built_in(module):
             print('builtin', module)
             continue
-        path_to_imported_module = path_to_import(module, args.quiet)
-        if path_to_imported_module:
-            paths.add(path_to_imported_module)
+        path, version = path_to_import(module, args.quiet)
+        if path:
+            modules.add((path, version))
     if args.edit:
         command = 'vim -p'
+        paths = [str(p) for p, _ in modules]
     elif args.list:
         command = 'ls -l'
+        paths = [str(p) for p, v in modules]
     else:
         command = 'echo'
-    paths = ' '.join(sorted([str(_) for _ in paths]))
+        paths = [str('%s, %s' % (p, v)) if v else str(p) for p, v in modules]
+    string = ' '.join(sorted([str(p) for p in paths]))
     if not args.quiet:
-        print(command, paths)
-    return bool(paths)
+        print(command, string)
+    return bool(string)
 
 
 def main():
