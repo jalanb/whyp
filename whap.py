@@ -154,7 +154,7 @@ def parse_args(methods):
 def look_here(name):
     here = os.getcwd()
     remove_here = False
-    if not here in sys.path:
+    if here not in sys.path:
         sys.path.insert(0, here)
         remove_here = True
     yield
