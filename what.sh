@@ -82,9 +82,9 @@ what_w () {
         _parse_function "$1"
         local _above=$(( $line_number - 1 ))
         echo
-        grep "^$function.* " $path_to_file -A4 -n --color
+        grep "^$function.* " "$path_to_file" -A4 -n --color
         echo
-        echo "vim $(relpath $path_to_file) +$_above +/'\\<$function\\zs.*'"
+        echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
     elif which "$1" > /dev/null 2>&1; then
         real_file=$(readlink -f $(which "$1"))
         if [[ $real_file != "$1" ]]; then
@@ -232,7 +232,7 @@ _read_wee_args () {
     for arg in $*
     do
         if _is_script_name $arg; then
-            path_to_file=$arg
+            path_to_file="$arg"
         elif _is_number $arg; then
             history_index=$arg
         elif _is_identifier $arg; then
@@ -244,7 +244,7 @@ _read_wee_args () {
 
 _write_new_file () {
     local __doc__='Copy the head of this script to file'
-    head -n $_heading_lines $BASH_SOURCE > $path_to_file
+    head -n $_heading_lines $BASH_SOURCE > "$path_to_file"
 }
 
 _create_function () {
@@ -256,18 +256,17 @@ _create_function () {
 
 _make_path_to_file_exist () {
     local __doc__='make sure the required file exists, either an existing file, a new file, or a temp file'
-    if [[ -z "$path_to_file" ]]; then
-        path_to_file=$(mktemp /tmp/function.XXXXXX)
-        return 1
-    fi
-    if [[ -f $path_to_file ]]; then
-        cp $path_to_file $path_to_file~
+    if [[ -f "$path_to_file" ]]; then
+        cp "$path_to_file" "$path_to_file~"
         return 0
     fi
-    _write_new_file $path_to_file
+    if [[ -z "$path_to_file" ]]; then
+        path_to_file=$(mktemp /tmp/function.XXXXXX)
+    fi
+    _write_new_file "$path_to_file"
     [[ $function == $unamed_function ]] || return 1
-    line_number=$(wc -l $path_to_file)
-    declare -f $unamed_function >> $path_to_file
+    line_number=$(wc -l "$path_to_file")
+    declare -f $unamed_function >> "$path_to_file"
 }
 
 _vim_tabs () {
@@ -296,7 +295,7 @@ _edit_function () {
     fi
     local regexp_="+/$regexp"
     _vim_file "$path_to_file" $line_ "$regexp_"
-    ls -l $path_to_file
+    ls -l "$path_to_file"
     w_source "$path_to_file"
     [[ $(dirname "$path_to_file") == /tmp ]] && rm -f "$path_to_file"
 }
