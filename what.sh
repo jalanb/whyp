@@ -164,9 +164,9 @@ what_www () {
     ww $_command;
     w $_command;
     if is_existing_function $_command; then
-        (set -x; $_command "$@" 2>&1 | ~/hub/what/spacify)
+        (set -x; $_command "$@" 2>&1 ) # | ~/hub/what/spacify)
     elif is_existing_alias $_command; then
-        (set -x; $_command "$@" 2>&1 | ~/hub/what/spacify)
+        (set -x; $_command "$@" 2>&1 ) # | ~/hub/what/spacify)
     elif file $_command  | grep -q -e script -e text; then
         what_wwm $_command "$@"
     else
