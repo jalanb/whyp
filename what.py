@@ -6,13 +6,6 @@ It assumes aliases and functions have been written to files before starting
     (because we cannot reliably get them from sub-shells called hence)
 """
 
-_copyright = """
-(c) J Alan Brogan 2013
-    The source is released under the MIT license
-    See http://jalanb.mit-license.org/ for more information
-"""
-
-
 import os
 import re
 import sys
@@ -21,6 +14,13 @@ import doctest
 import optparse
 import subprocess
 from bdb import BdbQuit
+
+
+_copyright = """
+(c) J Alan Brogan 2013
+    The source is released under the MIT license
+    See http://jalanb.mit-license.org/ for more information
+"""
 
 
 def get_options():
