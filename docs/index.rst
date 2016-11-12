@@ -7,7 +7,7 @@ Welcome to what's documentation!
 ================================
 
 Version:
-0.3.2
+0.3.3
 
 Contents:
 
