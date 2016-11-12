@@ -121,24 +121,31 @@ what_ww () {
 # xxxxxxxx
 
 we () {
+    # echo "Welcome to we"
     # Posted as "The most productive function I have written"
     # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__='Edit the first argument if it is a text file, function or alias'
     if whap -q $1; then
         _sought=$1; shift
+        # echo "Found a python module $(whap $_sought)"
         _edit_file $(whap $_sought) "$@"
-    else:
-        if [[ $(type -t $1) == "file" ]]; then
-            _edit_file $1
-        elif is_existing_function $1; then
-            _de_declare_function $1
-            _edit_function
-        elif is_existing_alias $1; then
-            _edit_alias $1
-        else type $1
-            vf +/^$1
-        fi
+        return 1
     fi
+    # echo "Not a python module"
+    if [[ $(type -t $1) == "file" ]]; then
+        # echo "is a file"
+        _edit_file $1
+    elif is_existing_function $1; then
+        # echo "is a function"
+        _parse_function $1
+        _edit_function
+    elif is_existing_alias $1; then
+        # echo "is alias"
+        _edit_alias $1
+    else type $1
+        vf +/^$1
+    fi
+    # echo "Bye from we"
 }
 
 _is_number () {
@@ -249,19 +256,18 @@ _create_function () {
 
 _make_path_to_file_exist () {
     local __doc__='make sure the required file exists, either an existing file, a new file, or a temp file'
-    if [[ -n $path_to_file ]]; then
-        if [[ -f $path_to_file ]]; then
-            cp $path_to_file $path_to_file~
-        else
-            _write_new_file $path_to_file
-            if [[ $function == $unamed_function ]]; then
-                line_number=$(wc -l $path_to_file)
-                declare -f $unamed_function >> $path_to_file
-            fi
-        fi
-    else
+    if [[ -z "$path_to_file" ]]; then
         path_to_file=$(mktemp /tmp/function.XXXXXX)
+        return 1
     fi
+    if [[ -f $path_to_file ]]; then
+        cp $path_to_file $path_to_file~
+        return 0
+    fi
+    _write_new_file $path_to_file
+    [[ $function == $unamed_function ]] || return 1
+    line_number=$(wc -l $path_to_file)
+    declare -f $unamed_function >> $path_to_file
 }
 
 _vim_tabs () {
@@ -282,18 +288,17 @@ _vim_line () {
 _edit_function () {
     local __doc__='Edit a function in a file'
     _make_path_to_file_exist
-    if [[ -n "$line_number" ]]; then
-        _vim_line $path_to_file $line_number
-    else
-        local regexp="^$function[[:space:]]*()[[:space:]]*$"
-        if ! grep -q $regexp $path_to_file; then
-            declare -f $function >> $path_to_file
-        fi
-        _vim_file  $path_to_file +/$regexp
+    local line_=
+    [[ -n "$line_number" ]] && line_="+$line_number"
+    local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    if ! grep -q $regexp "$path_to_file"; then
+        declare -f $function >> "$path_to_file"
     fi
+    local regexp_="+/$regexp"
+    _vim_file "$path_to_file" $line_ "$regexp_"
     ls -l $path_to_file
-    w_source $path_to_file
-    [[ $(dirname $path_to_file) == /tmp ]] && rm -f $path_to_file
+    w_source "$path_to_file"
+    [[ $(dirname "$path_to_file") == /tmp ]] && rm -f "$path_to_file"
 }
 
 _existing_command () {
