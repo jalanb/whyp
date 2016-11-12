@@ -13,7 +13,13 @@ import stat
 import doctest
 import optparse
 import subprocess
+from collections import defaultdict
 from bdb import BdbQuit
+
+try:
+    from pprintpp import pprint as pp
+except ImportError:
+    from pprint import pprint as pp
 
 
 _copyright = """
@@ -113,20 +119,15 @@ def strip_quotes(string):
 
 
 def import_pp():
-    try:
-        from pprintpp import pprint as pp
-    except ImportError:
-        from pprint import pprint as pp
     return pp
 
 
 def memoize(method):
     """Cache the return value of the method, which takes no arguments"""
-    from collections import defaultdict
     pp = import_pp()
+
     def ppd(_):
         return pp(dir())
-
 
     cache = defaultdict(list)
 
