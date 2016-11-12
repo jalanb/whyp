@@ -1,0 +1,14 @@
+language: python
+python:
+- '2.7'
+install: pip install -r requirements.txt
+script: nosetests
+notifications:
+  email: false
+deploy:
+  provider: pypi
+  user: jalanb
+  on:
+    tags: true
+  password:
+    secure: htrmSc8NXrv480DBwcuJ/lXxZRaDkyoezqP9CCuCb2o6F19LfOJGPinak98vW/F3P5+HbxACpH23l1eT3ueXLvytJJrolS8v7VrELeEqkeHLbMAf1gwLoDfa3sTAezr3R2vA3sET95eGKTRLi51J+bLr7G2JLp5A5p5Ku5BJcCc=
