@@ -21,6 +21,10 @@ try:
 except ImportError:
     from pprint import pprint as pp
 
+try:
+    import pudb as pdb
+except ImportError:
+    import pdb
 
 _copyright = """
 (c) J Alan Brogan 2013
@@ -442,10 +446,6 @@ def read_command_line():
                       help='debug with pudb (or pdb if pudb is not available)')
     options, arguments = parser.parse_args()
     if options.debugging:
-        try:
-            import pudb as pdb
-        except ImportError:
-            import pdb
         pdb.set_trace()
     # plint does not seem to notice that methods are globals
     # pylint: disable=global-variable-undefined
