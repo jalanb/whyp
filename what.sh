@@ -27,7 +27,6 @@ alias w=what_w
 
 # xx
 
-alias we=what_edit
 alias wp=whap
 alias ww=what_ww
 
@@ -215,20 +214,6 @@ alias .=source_what
 
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from Python)
-
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
-what_edit () {
-    local __doc__='Edit the first argument if it is a text file, function or alias'
-    if [[ $(type -t "$1") == "file" ]]; then
-        _edit_file "$1"
-    elif is_existing_function "$1"; then
-        _parse_function "$1"
-        _edit_function
-    elif is_existing_alias "$1"; then
-        _edit_alias "$1"
-    else type "$1"
-    fi
-}
 
 # XXXXXXXXX.
 
