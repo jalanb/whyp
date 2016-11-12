@@ -290,14 +290,16 @@ _edit_function () {
     local line_=
     [[ -n "$line_number" ]] && line_="+$line_number"
     local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    local regexp_=+/$regexp
     if ! grep -q $regexp "$path_to_file"; then
         declare -f $function >> "$path_to_file"
     fi
-    local regexp_="+/$regexp"
-    _vim_file "$path_to_file" $line_ "$regexp_"
+    local _line=; [[ -n "$line_number" ]] && _line=+$line_number
+    _vim_file "$path_to_file" $line_ $regexp_
+    test -f "$path_to_file" ]] || return 0
     ls -l "$path_to_file"
     w_source "$path_to_file"
-    [[ $(dirname "$path_to_file") == /tmp ]] && rm -f "$path_to_file"
+    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
 }
 
 is_executable () {
