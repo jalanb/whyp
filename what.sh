@@ -236,7 +236,7 @@ _read_wee_args () {
         elif _is_number $arg; then
             history_index=$arg
         elif _is_identifier $arg; then
-            _existing_command $arg && return 1
+            is_executable $arg && return 1
             function=$arg
         fi
     done
@@ -300,7 +300,7 @@ _edit_function () {
     [[ $(dirname "$path_to_file") == /tmp ]] && rm -f "$path_to_file"
 }
 
-_existing_command () {
+is_executable () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
     if is_existing_function "$1"; then
         return 1
