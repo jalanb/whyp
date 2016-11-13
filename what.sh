@@ -120,10 +120,10 @@ what_ww () {
 
 # xxxxxxxx
 
+# echo "Welcome to we"
+# Posted as "The most productive function I have written"
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 we () {
-    # echo "Welcome to we"
-    # Posted as "The most productive function I have written"
-    # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__='Edit the first argument if it is a text file, function or alias'
     if whap -q $1; then
         _sought=$1; shift
