@@ -296,7 +296,7 @@ _edit_function () {
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
     _vim_file "$path_to_file" $line_ $regexp_
-    test -f "$path_to_file" ]] || return 0
+    test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     w_source "$path_to_file"
     [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
