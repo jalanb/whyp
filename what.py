@@ -17,11 +17,6 @@ from collections import defaultdict
 from bdb import BdbQuit
 
 try:
-    from pprintpp import pprint as pp
-except ImportError:
-    from pprint import pprint as pp
-
-try:
     import pudb as pdb
 except ImportError:
     import pdb
@@ -123,6 +118,10 @@ def strip_quotes(string):
 
 
 def import_pp():
+    try:
+        from pprintpp import pprint as pp
+    except ImportError:
+        from pprint import pprint as pp
     return pp
 
 

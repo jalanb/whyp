@@ -123,10 +123,6 @@ def version(args):
 
 
 def Use_debugger(_args):
-    try:
-        import pudb as pdb
-    except ImportError:
-        import pdb
     pdb.set_trace()
 
 
@@ -148,6 +144,7 @@ def parse_args(methods):
     args = parser.parse_args()
     run_args(args, methods)
     return args
+
 
 
 @contextmanager
