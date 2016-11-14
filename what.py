@@ -27,7 +27,6 @@ _copyright = """
     See http://jalanb.mit-license.org/ for more information
 """
 
-
 def get_options():
     """The values of options set by user on command line"""
     return None
@@ -117,22 +116,8 @@ def strip_quotes(string):
     return string
 
 
-def import_pp():
-    try:
-        from pprintpp import pprint as pp
-    except ImportError:
-        from pprint import pprint as pp
-    return pp
-
-
 def memoize(method):
     """Cache the return value of the method, which takes no arguments"""
-    pp = import_pp()
-
-    def ppd(_):
-        return pp(dir())
-
-    cache = defaultdict(list)
 
     def call_method(*args, **kwargs):
         result=method(*args, **kwargs)
@@ -140,6 +125,8 @@ def memoize(method):
         item = method, result
         cache[name].append(item)
         return result
+
+    cache = defaultdict(list)
     call_method.__doc__ = method.__doc__
     call_method.__name__ = 'memoized_%s' % method.__name__
     return call_method
