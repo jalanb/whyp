@@ -146,9 +146,8 @@ def parse_args(methods):
     return args
 
 
-
 @contextmanager
-def look_here(name):
+def look_here(_name):
     here = os.getcwd()
     remove_here = False
     if here not in sys.path:
@@ -171,7 +170,10 @@ def path_to_import(string, quiet):
     if module:
         pyc = module.__file__
         if '.egg/' in pyc:
-            return pyc.split('.egg/')[0] + '.egg'
+            dirname = pyc.split('.egg/')[0] + '.egg'
+            name = os.path.basename(dirname)
+            version_ = name.split('-')[1]
+            return dirname, version_
         py = os.path.realpath(os.path.splitext(pyc)[0] + '.py')
         filename = py if os.path.isfile(py) else pyc
         try:
@@ -187,9 +189,9 @@ def script(args):
         if built_in(module):
             print('builtin', module)
             continue
-        path, version = path_to_import(module, args.quiet)
+        path, version_ = path_to_import(module, args.quiet)
         if path:
-            modules.add((path, version))
+            modules.add((path, version_))
     if args.edit:
         command = 'vim -p'
         paths = [str(p) for p, _ in modules]
