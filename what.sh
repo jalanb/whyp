@@ -53,6 +53,34 @@ whap () {
     fi
 }
 
+# Posted as "The most productive function I have written"
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
+
+we () {
+    local __doc__='Edit the first argument if it is a text file, function or alias'
+    if whap -q $1; then
+        _sought=$1; shift
+        # echo "Found a python module $(whap $_sought)"
+        _edit_file $(whap $_sought) "$@"
+        return 1
+    fi
+    # echo "Not a python module"
+    if [[ $(type -t $1) == "file" ]]; then
+        # echo "is a file"
+        _edit_file $1
+    elif is_existing_function $1; then
+        # echo "is a function"
+        _parse_function $1
+        _edit_function
+    elif is_existing_alias $1; then
+        # echo "is alias"
+        _edit_alias $1
+    else type $1
+        vf +/^$1
+    fi
+    # echo "Bye from we"
+}
+
 what () {
     local __doc__='find what will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
@@ -119,34 +147,6 @@ what_ww () {
 }
 
 # xxxxxxxx
-
-# echo "Welcome to we"
-# Posted as "The most productive function I have written"
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
-we () {
-    local __doc__='Edit the first argument if it is a text file, function or alias'
-    if whap -q $1; then
-        _sought=$1; shift
-        # echo "Found a python module $(whap $_sought)"
-        _edit_file $(whap $_sought) "$@"
-        return 1
-    fi
-    # echo "Not a python module"
-    if [[ $(type -t $1) == "file" ]]; then
-        # echo "is a file"
-        _edit_file $1
-    elif is_existing_function $1; then
-        # echo "is a function"
-        _parse_function $1
-        _edit_function
-    elif is_existing_alias $1; then
-        # echo "is alias"
-        _edit_alias $1
-    else type $1
-        vf +/^$1
-    fi
-    # echo "Bye from we"
-}
 
 _is_number () {
     local __doc__='Whether the first argument has only digits'
