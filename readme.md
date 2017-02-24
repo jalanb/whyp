@@ -194,10 +194,14 @@ Running commands without any arguments will test them
 	$ what
 	$ whap
 
-The author has used the scripts daily on
+The author has used the scripts on
 * OSX 10.7 and 10.11 using python 2.5, 2.6 and 2.7 with bash 3.2.48 and 4.3.42
 * CentOS 5.0, 6.5 and 7.0 using python 2.4 and 2.7 with bash 3.2.25, 4.1.2 and 4.2.46
 * Ubuntu 10.04 and 12.04 using python 2.6 and 2.7 with bash 4
 * babun 1.2.0 (on cygwin on Windows 7) using python 2.7.8 with bash 4.3.33 
 
-Although I never found a use case for whet
+and continues to use them many times per day. (Although I never found a use case for whet)
+
+Witty
+-----
+One of the best compliments of my coding life was when [/u/andru183 called this code "witty"](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
