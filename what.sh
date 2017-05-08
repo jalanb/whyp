@@ -81,6 +81,10 @@ we () {
     # echo "Bye from we"
 }
 
+wf () {
+    readlink -f "$@"
+}
+
 what () {
     local __doc__='find what will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
