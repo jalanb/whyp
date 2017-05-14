@@ -200,7 +200,7 @@ source_what () {
     local _filename=$(readlink -f "$1")
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
         if [[ -z $2 || $2 != "optional" ]]; then
-            echo Cannot source \"$_filename\". It is not a file. >&2
+            echo Cannot source \"$1\". It is not a file. >&2
         fi
         return
     fi
