@@ -6,6 +6,7 @@ It assumes aliases and functions have been written to files before starting
     (because we cannot reliably get them from sub-shells called hence)
 """
 
+from __future__ import print_function
 import os
 import re
 import sys
@@ -26,6 +27,7 @@ _copyright = """
     The source is released under the MIT license
     See http://jalanb.mit-license.org/ for more information
 """
+
 
 def get_options():
     """The values of options set by user on command line"""
@@ -89,7 +91,7 @@ def show_output_of_shell_command(command):
         bash_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if not process.returncode:
-        print stdout
+        print(stdout)
         if get_options().hide_errors:
             return
         if not stderr:
@@ -120,8 +122,8 @@ def memoize(method):
     """Cache the return value of the method, which takes no arguments"""
 
     def call_method(*args, **kwargs):
-        result=method(*args, **kwargs)
-        name = method.func_name
+        result = method(*args, **kwargs)
+        name = method.__name__
         item = method, result
         cache[name].append(item)
         return result
@@ -136,7 +138,7 @@ def memoize(method):
 def get_aliases():
     """Read a dictionary of aliases from a file"""
     try:
-        lines = [l.rstrip() for l in file(get_options().aliases)]
+        lines = [l.rstrip() for l in open(get_options().aliases)]
     except IOError:
         return {}
     alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
@@ -154,7 +156,7 @@ def get_alias(string):
 def get_functions():
     """Read a dictionary of functions from a known file"""
     try:
-        lines = [l.rstrip() for l in file(get_options().functions)]
+        lines = [l.rstrip() for l in open(get_options().functions)]
     except IOError:
         return {}
     name = function_lines = None
@@ -175,7 +177,7 @@ def get_functions():
                 continue
             function_lines.append(line)
     result = {}
-    for name, lines in functions.iteritems():
+    for name, lines in functions.items():
         result[name] = '%s ()\n{\n%s\n}\n' % (name, '\n'.join(lines))
     return result
 
@@ -275,6 +277,7 @@ def file_in_environment_path(string):
             return ''
         return file_in_environment_path('%s.exe' % string)
 
+
 class Bash(object):
     """This class is a namespace to hold bash commands to be used later"""
     # pylint wants an __init__(), but I don't
@@ -292,7 +295,7 @@ def showable(language):
 def show_function(command):
     """Show a function to the user"""
     if not get_options().verbose:
-        print command, 'is a function'
+        print('%s is a function' % command)
     else:
         commands = ' | '.join([
             "shopt -s extglob; . %s; %s %s" % (
@@ -361,7 +364,7 @@ def show_command_in_path(command):
 def show_path_to_command(path_to_command):
     """Show a command which is a file at that path"""
     if get_options().file:
-        print os.path.realpath(path_to_command)
+        print(os.path.realpath(path_to_command))
     else:
         show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
     if not get_options().verbose:
@@ -375,7 +378,7 @@ def show_path_to_command(path_to_command):
 def show_alias(command):
     """Show a command defined by alias"""
     aliases = get_aliases()
-    print 'alias %s=%r' % (command, aliases[command])
+    print('alias %s=%r' % (command, aliases[command]))
     if not get_options().verbose:
         return
     sub_command = aliases[command].split()[0].strip()
@@ -419,7 +422,7 @@ def read_command_line():
     parser.add_option('-e', '--hide_errors', action='store_true',
                       help='hide error messages from successful commands')
     parser.add_option('-f', '--file', action='store_true',
-                     help='show real path to file (if it is a file)')
+                      help='show real path to file (if it is a file)')
     parser.add_option('-q', '--quiet', action='store_true',
                       help='do not show any output')
     parser.add_option('-v', '--verbose', action='store_true',
@@ -462,7 +465,7 @@ def test():
         )
         all_failures += failures
         all_tests += tests
-    print 'Ran', all_tests, 'tests,', all_failures, 'failures'
+    print('Ran %s tests, %s failures' % (all_tests, all_failures))
     return 0
 
 
