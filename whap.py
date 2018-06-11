@@ -11,7 +11,6 @@ If a name is found more than once each is listed
 
 from __future__ import print_function
 import os
-from cStringIO import StringIO
 import sys
 import argparse
 import fnmatch
@@ -19,6 +18,7 @@ import importlib
 from bdb import BdbQuit
 from contextlib import contextmanager
 
+from six import StringIO
 
 try:
     import pudb as pdb

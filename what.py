@@ -91,7 +91,13 @@ def show_output_of_shell_command(command):
         bash_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if not process.returncode:
-        print(stdout)
+        # Use sys.stdout.buffer because the output probably includes
+        # ANSI colour sequences (making it bytes, not string)
+        # https://stackoverflow.com/a/4374457/500942
+        try:
+            sys.stdout.buffer.write(stdout)
+        except AttributeError:
+            print(stdout)
         if get_options().hide_errors:
             return
         if not stderr:
@@ -312,7 +318,7 @@ def shebang_command(path_to_file):
     Which is the first line, if that line starts with #!
     """
     try:
-        first_line = file(path_to_file).readlines()[0]
+        first_line = open(path_to_file).readlines()[0]
         if first_line.startswith('#!'):
             return first_line[2:].strip()
     except (IndexError, IOError):
@@ -436,7 +442,7 @@ def read_command_line():
     options, arguments = parser.parse_args()
     if options.debugging:
         pdb.set_trace()
-    # plint does not seem to notice that methods are globals
+    # pylint does not seem to notice that methods are globals
     # pylint: disable=global-variable-undefined
     global get_options
     get_options = lambda: options

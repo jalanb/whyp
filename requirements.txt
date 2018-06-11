@@ -6,3 +6,4 @@ nose-pudb
 ipython
 pudb
 dotsite>=0.2.4
+six
