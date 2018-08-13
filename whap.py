@@ -11,6 +11,10 @@ If a name is found more than once each is listed
 
 from __future__ import print_function
 import os
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from six.moves import StringIO
 import sys
 import argparse
 import fnmatch
