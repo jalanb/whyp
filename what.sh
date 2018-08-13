@@ -114,7 +114,7 @@ what_w () {
         _parse_function "$1"
         local _above=$(( $line_number - 1 ))
         echo
-        grep "^$function.* " "$path_to_file" -A4 -n --color
+        grep "^$function " "$path_to_file" -A4 -n --color
         echo
         echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
     elif which "$1" > /dev/null 2>&1; then
