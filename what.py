@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """Show the text behind commands
 
 This script is intended to replace the standard which command
@@ -489,10 +490,4 @@ def main(commands):
 
 if __name__ == '__main__':
     args = read_command_line()
-    if not args:
-        sys.exit(test())
-    else:
-        try:
-            sys.exit(main(args))
-        except BdbQuit:
-            sys.exit(os.EX_OK)
+    sys.exit(main(args) if args else test())
