@@ -85,6 +85,10 @@ def bash_executable():
 
 def show_output_of_shell_command(command):
     """Run the given command using bash"""
+
+    def as_str(bytes_):
+        return bytes_.decode(sys.stdin.encoding)
+
     command = replace_alias(command)
     bash_command = [bash_executable(), '-c', command]
     process = subprocess.Popen(
@@ -106,7 +110,8 @@ def show_output_of_shell_command(command):
         command: %r
         status: %s
         stderr: %s
-        stdout: %s''' % (command, process.returncode, stderr, stdout))
+        stdout: %s''' % (
+            command, process.returncode, as_str(stderr), as_str(stdout)))
 
 
 def strip_quotes(string):
@@ -321,9 +326,8 @@ def shebang_command(path_to_file):
         first_line = open(path_to_file).readlines()[0]
         if first_line.startswith('#!'):
             return first_line[2:].strip()
-    except (IndexError, IOError):
-        pass
-    return ''
+    except (IndexError, IOError, UnicodeDecodeError):
+        return ''
 
 
 def extension_language(path_to_file):
