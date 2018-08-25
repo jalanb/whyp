@@ -374,10 +374,12 @@ def show_command_in_path(command):
 
 def show_path_to_command(path_to_command):
     """Show a command which is a file at that path"""
-    if get_options().file:
-        print(os.path.realpath(path_to_command))
-    else:
+    if get_options().ls:
         show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
+    else:
+        p = os.path.realpath(path_to_command)
+        if os.path.exists(p):
+            print(p)
     if not get_options().verbose:
         return
     language = script_language(path_to_command)
@@ -432,8 +434,8 @@ def read_command_line():
         'Usage: what [options] command\n\n%s' % __doc__)
     parser.add_option('-e', '--hide_errors', action='store_true',
                       help='hide error messages from successful commands')
-    parser.add_option('-f', '--file', action='store_true',
-                      help='show real path to file (if it is a file)')
+    parser.add_option('-l', '--ls', action='store_true',
+                      help='show output of "ls path" if it is a path')
     parser.add_option('-q', '--quiet', action='store_true',
                       help='do not show any output')
     parser.add_option('-v', '--verbose', action='store_true',
