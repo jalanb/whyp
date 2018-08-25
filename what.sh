@@ -23,6 +23,7 @@ export WHAT_DIR=$(dirname $(readlink -f $WHAT_SOURCE))
 
 # x
 
+alias e=we
 alias w=what_w
 
 # xx
@@ -38,18 +39,19 @@ alias www=what_www
 
 whap () {
     local __doc__='find what python will import for a string'
-    local executable=python
+    local _python=$(what python)
     if [[ -f "$1" && -x "$1" ]]; then
-        executable="$1"
+        _python="$1"
         shift
     elif [[ "$1" =~ [23].[0-9] ]]; then
-        executable=python$1
+        _python=python$1
         shift
     fi
+    _python=$(rlf $_python)
     if [[ $* =~ -U ]]; then
-        $executable $WHAT_DIR/whap.py "$@"
+        $_python $WHAT_DIR/whap.py "$@"
     else
-        $($executable $WHAT_DIR/whap.py "$@")
+        $($_python $WHAT_DIR/whap.py "$@")
     fi
 }
 
@@ -82,7 +84,7 @@ we () {
 }
 
 wf () {
-    readlink -f "$@"
+    what -f "$@"
 }
 
 what () {
@@ -93,8 +95,8 @@ what () {
     declare -f > $PATH_TO_FUNCTIONS
     python $WHAT_DIR/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     local return_value=$?
-    rm -f $PATH_TO_ALIASES
-    rm -f $PATH_TO_FUNCTIONS
+    # rm -f $PATH_TO_ALIASES
+    # rm -f $PATH_TO_FUNCTIONS
     return $return_value
 }
 
@@ -119,10 +121,8 @@ what_w () {
         echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
     elif which "$1" > /dev/null 2>&1; then
         real_file=$(readlink -f $(which "$1"))
-        if [[ $real_file != "$1" ]]; then
-            echo "$1 -> $real_file"
-        fi
-        ls -l $(readlink -f $(which "$1"))
+        [[ $real_file != "$1" ]] && echo -n "$1 -> "
+        echo "$real_file"
     else type "$1"
     fi
 }
