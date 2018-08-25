@@ -7,7 +7,7 @@ It assumes aliases and functions have been written to files before starting
     (because we cannot reliably get them from sub-shells called hence)
 """
 
-from __future__ import print_function
+
 import os
 import re
 import sys
@@ -480,10 +480,10 @@ def test():
     return 0
 
 
-def main(commands):
+def main(args):
     """Run the program"""
     result = 0
-    for arg in commands:
+    for arg in args:
         result |= show_command(arg)
     return result
 
