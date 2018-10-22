@@ -2,9 +2,6 @@ The what module
 ===============
 
     >>> import what
-    >>> print what.__doc__
-    Show the text behind commands
-    ...
 
 Sripping quotes
 ---------------

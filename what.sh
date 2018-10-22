@@ -23,12 +23,12 @@ export WHAT_DIR=$(dirname $(readlink -f $WHAT_SOURCE))
 
 # x
 
-alias e=we
-alias w=what_w
+alias e=edit_type
+alias w=what_type
 
 # xx
 
-alias wp=whap
+alias wp=what_python
 alias ww=what_ww
 
 # xxx
@@ -37,9 +37,9 @@ alias www=what_www
 
 # xxxx
 
-whap () {
+what_python () {
     local __doc__='find what python will import for a string'
-    local _python=$(what python)
+    local _python=$(PATH=/usr/local/bin:/usr/bin/:bin what python)
     if [[ -f "$1" && -x "$1" ]]; then
         _python="$1"
         shift
@@ -49,21 +49,21 @@ whap () {
     fi
     _python=$(rlf $_python)
     if [[ $* =~ -U ]]; then
-        $_python $WHAT_DIR/whap.py "$@"
+        $_python $WHAT_DIR/what_python.py "$@"
     else
-        $($_python $WHAT_DIR/whap.py "$@")
+        $($_python $WHAT_DIR/what_python.py "$@")
     fi
 }
 
 # Posted as "The most productive function I have written"
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 
-we () {
-    local __doc__='Edit the first argument if it is a text file, function or alias'
-    if whap -q $1; then
+edit_type () {
+    local __doc__="Edit the first argument as if it's a type"
+    if what_python -q $1; then
         _sought=$1; shift
-        # echo "Found a python module $(whap $_sought)"
-        _edit_file $(whap $_sought) "$@"
+        # echo "Found a python module $(what_python $_sought)"
+        _edit_file $(what_python $_sought) "$@"
         return 1
     fi
     # echo "Not a python module"
@@ -80,11 +80,7 @@ we () {
     else type $1
         vf +/^$1
     fi
-    # echo "Bye from we"
-}
-
-wf () {
-    what -f "$@"
+    # echo "Bye from edit_type"
 }
 
 what () {
@@ -108,16 +104,17 @@ _parse_function () {
     __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
 }
 
-what_w () {
+what_type () {
     local __doc__='Show whether the first argument is a text file, alias or function'
     if is_existing_alias "$1"; then
-        alias "$1"
+        type "$1"
     elif is_existing_function "$1"; then
-        _parse_function "$1"
+        # _parse_function "$1"
+        # echo
+        # grep "^$function " "$path_to_file" -A4 -n --color
+        type "$1"
+        echo
         local _above=$(( $line_number - 1 ))
-        echo
-        grep "^$function " "$path_to_file" -A4 -n --color
-        echo
         echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
     elif which "$1" > /dev/null 2>&1; then
         real_file=$(readlink -f $(which "$1"))
@@ -131,7 +128,7 @@ what_w () {
 # xxxxxxx
 
 what_file () {
-    what -f -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
+    what -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
 what_ww () {

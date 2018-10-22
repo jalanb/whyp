@@ -2,9 +2,8 @@ The what module
 ===============
 
     >>> import what
-    >>> print what.__doc__
-    Show the text behind commands
-    ...
+    >>> "Show the text behind commands" in what.__doc__
+    True
 
 The tests in this file depend on known aliases and functions
     You may need to change them to get them working on your machine
@@ -52,5 +51,5 @@ And we can get files from the bash $PATH
 Such files will vary across machines,
     but it is safe to assume that python is one of them
     and that it is in a "bin" directory
-    >>> print what.files_in_environment_path()['python']
-    /.../bin/python
+    >>> what.files_in_environment_path()['python'].endswith('bin/python')
+    True
