@@ -106,6 +106,10 @@ _parse_function () {
 
 what_type () {
     local __doc__='Show whether the first argument is a text file, alias or function'
+    type "$@"
+}
+
+old_what_type () {
     if is_existing_alias "$1"; then
         type "$1"
     elif is_existing_function "$1"; then
