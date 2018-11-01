@@ -42,6 +42,15 @@ alias what=what_type
 
 # xxxxxxxxxxx
 
+what-py () {
+    python $WHAT_DIR/what/what.py "$@"
+}
+
+what-py-file () {
+    python $WHAT_DIR/what/what.py -f "$@"
+}
+
+
 what_python () {
     local __doc__='find what python will import for a string'
     local _python=$(PATH=/usr/local/bin:/usr/bin/:bin which python)
@@ -99,7 +108,7 @@ what_shell () {
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
-    python $WHAT_DIR/what.py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
+    what-py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     local return_value=$?
     # rm -f $PATH_TO_ALIASES
     # rm -f $PATH_TO_FUNCTIONS
@@ -185,7 +194,7 @@ _edit_function () {
 
 _edit_file () {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
-    local file=$(python $WHAT_DIR/what.py -f $1)
+    local file=$(what-py -f $1)
     if file $file | grep -q text; then
         _vim_file  $file
     else

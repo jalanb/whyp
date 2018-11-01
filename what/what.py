@@ -413,7 +413,13 @@ def show_command(command):
     ]
     for found, show in methods:
         if found(command):
-            if not get_options().quiet:
+            if get_options().file:
+                if os.path.isfile:
+                    show_path_to_command(command)
+                else:
+                    # show(command) :thinking_face:
+                    pass
+            elif not get_options().quiet:
                 show(command)
             return 0
     return 1
@@ -436,6 +442,8 @@ def read_command_line():
                       help='hide error messages from successful commands')
     parser.add_option('-l', '--ls', action='store_true',
                       help='show output of "ls path" if it is a path')
+    parser.add_option('-f', '--file', action='store_true',
+                      help='do not show any output')
     parser.add_option('-q', '--quiet', action='store_true',
                       help='do not show any output')
     parser.add_option('-v', '--verbose', action='store_true',

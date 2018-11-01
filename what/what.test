@@ -2,7 +2,7 @@ The what module
 ===============
 
     >>> import what
-    >>> "Show the text behind commands" in what.__doc__
+    >>> 'Show the text' in what.__doc__
     True
 
 The tests in this file depend on known aliases and functions
