@@ -1,11 +1,12 @@
 what
 ====
 
-what is intended as a replacement for which, to show the source of aliases, functions and executable available in bash
+what extends type, wittily
 
-whap is intended as an equivalent command for python, to show whence modules and packages are imported
+what shows the source of aliases, functions and executables available in the shell
 
-we (what's edit) makes it easier to edit a command whether alias, function or file
+whedit edits commands whether aliases, functions or scripts
+
 
 Installation
 ------------
@@ -15,11 +16,22 @@ Clone the repo
     $ git clone https://github.com/jalanb/what.git
     $ cd what
 
-For convenience bash functions are provided, which can be set up like
+For convenience bash functions are provided, which can be set up like this
 
     $ source what.sh
 
-Then one can use `what` as a replacement for which, or `whap` to find whence python imports modules
+Then one can use `what` as a replacement for type, in bash or python
+
+    $ what ls
+    ls is /usr/local/gnu/ls
+
+    $ pip install -r requirements.txt
+    $ python setup.py develop
+    >>> from what import ls
+    >>> ls
+    /usr/local/gnu/ls
+    >>> from what import os
+    >>> os
 
 Daily use
 ---------
