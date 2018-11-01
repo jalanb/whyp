@@ -28,18 +28,23 @@ alias w=what_type
 
 # xx
 
-alias wp=what_python
-alias ww=what_ww
+alias ww=what_what_type
 
 # xxx
 
-alias www=what_www
+alias www=what_what_what_type
 
-# xxxx
+# xxxx+
+
+alias whap=what_python
+alias whas=what_shell
+alias what=what_type
+
+# xxxxxxxxxxx
 
 what_python () {
     local __doc__='find what python will import for a string'
-    local _python=$(PATH=/usr/local/bin:/usr/bin/:bin what python)
+    local _python=$(PATH=/usr/local/bin:/usr/bin/:bin which python)
     if [[ -f "$1" && -x "$1" ]]; then
         _python="$1"
         shift
@@ -83,7 +88,12 @@ edit_type () {
     # echo "Bye from edit_type"
 }
 
-what () {
+what_type () {
+    local __doc__='Show whether the first argument is a text file, alias or function'
+    type "$@"
+}
+
+what_shell () {
     local __doc__='find what will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
@@ -96,73 +106,34 @@ what () {
     return $return_value
 }
 
-# xxxxx
-
-# xxxxxx
-
-_parse_function () {
-    __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
-}
-
-what_type () {
-    local __doc__='Show whether the first argument is a text file, alias or function'
-    type "$@"
-}
-
-old_what_type () {
-    if is_existing_alias "$1"; then
-        type "$1"
-    elif is_existing_function "$1"; then
-        # _parse_function "$1"
-        # echo
-        # grep "^$function " "$path_to_file" -A4 -n --color
-        type "$1"
-        echo
-        local _above=$(( $line_number - 1 ))
-        echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
-    elif which "$1" > /dev/null 2>&1; then
-        real_file=$(readlink -f $(which "$1"))
-        [[ $real_file != "$1" ]] && echo -n "$1 -> "
-        echo "$real_file"
-    else type "$1"
-    fi
-}
-
-
-# xxxxxxx
-
 what_file () {
-    what -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
+    local __doc__="""verbose what"""
+    what_shell -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
-what_ww () {
+what_what_type () {
     local __doc__='what(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
     [[ -z "$@" ]] && return $FAIL
-    [[ "$1" == -q ]] && return what "$@"
+    local _options=-v
+    [[ "$1" == -q ]] && _options=
     if [[ $(type -t "$1") == "file" ]]; then
         what_file "$1"
         return $PASS
     fi
-    what -v "$@" && return $PASS
-    echo $1 not found
+    what_shell $_options "$@" && return $PASS
+    [[ $_options == "-v" ]] && echo $1 not found
     w ${1:0:${#1}-1} && return $PASS
     return $FAIL
 }
 
-# xxxxxxxx
-
-_is_number () {
-    local __doc__='Whether the first argument has only digits'
-    [[ "$1" =~ ^[0-9]+$ ]]
+what_source () {
+    local __doc__="""Try very hard to source the thing quietly"""
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f "$1" ]] && echo not_path $1 >&2 || source_what "$@" optional
 }
 
-w_source () {
-    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f "$1" ]] && echo not_path $1 >&2 || source_what "$@"
-}
-
-what_www () {
+what_what_what_type () {
     . ~/hub/what/what.sh
     (DEBUGGING=www;
     local _command="$1"; shift
@@ -179,8 +150,6 @@ what_www () {
     fi)
 }
 
-# xxxxxxxxx
-
 _edit_alias () {
     local __doc__='Edit an alias in the file $ALIASES, if that file exists'
     test -n "$SOURCED_FILES" || return
@@ -195,6 +164,36 @@ _edit_alias () {
     IFS=$OLD_IFS
     type "$1"
 }
+
+_edit_function () {
+    local __doc__='Edit a function in a file'
+    _make_path_to_file_exist
+    local line_=
+    [[ -n "$line_number" ]] && line_="+$line_number"
+    local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    local regexp_=+/$regexp
+    if ! grep -q $regexp "$path_to_file"; then
+        declare -f $function >> "$path_to_file"
+    fi
+    local _line=; [[ -n "$line_number" ]] && _line=+$line_number
+    _vim_file "$path_to_file" $line_ $regexp_
+    test -f "$path_to_file" || return 0
+    ls -l "$path_to_file"
+    what_source "$path_to_file"
+    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
+}
+
+_edit_file () {
+    local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
+    local file=$(python $WHAT_DIR/what.py -f $1)
+    if file $file | grep -q text; then
+        _vim_file  $file
+    else
+        echo $file is not text >&2
+        file $file >&2
+    fi
+}
+
 
 source_what () {
     local __doc__="Source a file (that may set some aliases) and remember that file"
@@ -224,14 +223,42 @@ source_what () {
 }
 alias .=source_what
 
+
+# _xxxxx+
+
+_parse_function () {
+    __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
+}
+
+old_what_type () {
+    if is_existing_alias "$1"; then
+        type "$1"
+    elif is_existing_function "$1"; then
+        # _parse_function "$1"
+        # echo
+        # grep "^$function " "$path_to_file" -A4 -n --color
+        type "$1"
+        echo
+        local _above=$(( $line_number - 1 ))
+        echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
+    elif which "$1" > /dev/null 2>&1; then
+        real_file=$(readlink -f $(which "$1"))
+        [[ $real_file != "$1" ]] && echo -n "$1 -> "
+        echo "$real_file"
+    else type "$1"
+    fi
+}
+
+
+_is_number () {
+    local __doc__='Whether the first argument has only digits'
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
 # Methods starting with underscores are intended for use in this file only
 #   (a convention borrowed from Python)
 
-# XXXXXXXXX.
 
-_what_tabify () {
-    grep -q "^+"
-}
 _read_wee_args () {
     local __doc__='evalute the args to the wee function by type, not position'
     for arg in $*
@@ -289,24 +316,6 @@ _vim_line () {
     _vim_file  "$_file" +$line
 }
 
-_edit_function () {
-    local __doc__='Edit a function in a file'
-    _make_path_to_file_exist
-    local line_=
-    [[ -n "$line_number" ]] && line_="+$line_number"
-    local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    local regexp_=+/$regexp
-    if ! grep -q $regexp "$path_to_file"; then
-        declare -f $function >> "$path_to_file"
-    fi
-    local _line=; [[ -n "$line_number" ]] && _line=+$line_number
-    _vim_file "$path_to_file" $line_ $regexp_
-    test -f "$path_to_file" || return 0
-    ls -l "$path_to_file"
-    w_source "$path_to_file"
-    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
-}
-
 is_executable () {
     local __doc__='Whether the name is in use as an alias, executable, ...'
     if is_existing_function "$1"; then
@@ -356,18 +365,7 @@ __parse_function_line_number_and_path_to_file () {
 }
 
 source_path () {
-    test -f "$1" && w_source "$@" || return 1
-}
-
-_edit_file () {
-    local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
-    local file=$(python $WHAT_DIR/what.py -f $1)
-    if file $file | grep -q text; then
-        _vim_file  $file
-    else
-        echo $file is not text >&2
-        file $file >&2
-    fi
+    test -f "$1" && what_source "$@" || return 1
 }
 
 is_existing_function () {

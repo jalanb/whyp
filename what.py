@@ -1,10 +1,9 @@
-#! /usr/bin/env python
-"""Show the text behind commands
+"""Show the text behind the type
 
-This script is intended to replace the standard which command
+This script is intended to replace the standard type command
 It should look for commands in aliases, bash functions, and the bash $PATH
 It assumes aliases and functions have been written to files before starting
-    (because we cannot reliably get them from sub-shells called hence)
+    (because this script cannot reliably get them from sub-shells)
 """
 
 
@@ -29,6 +28,7 @@ _copyright = """
     See http://jalanb.mit-license.org/ for more information
 """
 
+version = '0.3.5'
 
 def get_options():
     """The values of options set by user on command line"""
