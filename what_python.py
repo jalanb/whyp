@@ -9,7 +9,6 @@ If a name is found more than once each is listed
 """
 
 
-
 import os
 try:
     from io import StringIO
@@ -169,7 +168,7 @@ def path_to_import(string, quiet):
                 module = importlib.import_module(string)
         except ImportError as e:
             if not quiet:
-                print(e, file=sys.stderr)
+                sys.stderr.write('%s\n')
             return None, None
     if module:
         pyc = module.__file__
