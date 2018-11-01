@@ -38,21 +38,21 @@ alias www=what_what_what_type
 
 alias whap=what_python
 alias whas=what_shell
-alias what=what_type
+alias whyp=what_type
 
 # xxxxxxxxxxx
 
-what-py () {
-    python $WHAT_DIR/what/what.py "$@"
+whyp-py () {
+    python $WHAT_DIR/whyp/whyp.py "$@"
 }
 
-what-py-file () {
-    python $WHAT_DIR/what/what.py -f "$@"
+whyp-py-file () {
+    python $WHAT_DIR/whyp/whyp.py -f "$@"
 }
 
 
 what_python () {
-    local __doc__='find what python will import for a string'
+    local __doc__='find whyp python will import for a string'
     local _python=$(PATH=/usr/local/bin:/usr/bin/:bin which python)
     if [[ -f "$1" && -x "$1" ]]; then
         _python="$1"
@@ -103,12 +103,12 @@ what_type () {
 }
 
 what_shell () {
-    local __doc__='find what will be executed for a command string'
+    local __doc__='find whyp will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
-    what-py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
+    whyp-py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     local return_value=$?
     # rm -f $PATH_TO_ALIASES
     # rm -f $PATH_TO_FUNCTIONS
@@ -116,12 +116,12 @@ what_shell () {
 }
 
 what_file () {
-    local __doc__="""verbose what"""
+    local __doc__="""verbose whyp"""
     what_shell -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
 }
 
 what_what_type () {
-    local __doc__='what(all arguments (whether they like it or not))'
+    local __doc__='whyp(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
     [[ -z "$@" ]] && return $FAIL
@@ -143,15 +143,15 @@ what_source () {
 }
 
 what_what_what_type () {
-    . ~/hub/what/what.sh
+    . ~/hub/whyp/whyp.sh
     (DEBUGGING=www;
     local _command="$1"; shift
     ww $_command;
     w $_command;
     if is_existing_function $_command; then
-        (set -x; $_command "$@" 2>&1 ) # | ~/hub/what/spacify)
+        (set -x; $_command "$@" 2>&1 ) # | ~/hub/whyp/spacify)
     elif is_existing_alias $_command; then
-        (set -x; $_command "$@" 2>&1 ) # | ~/hub/what/spacify)
+        (set -x; $_command "$@" 2>&1 ) # | ~/hub/whyp/spacify)
     elif file $_command  | grep -q -e script -e text; then
         what_wwm $_command "$@"
     else
@@ -194,7 +194,7 @@ _edit_function () {
 
 _edit_file () {
     local __doc__='Edit a file, it is seems to be text, otherwise tell user why not'
-    local file=$(what-py -f $1)
+    local file=$(whyp-py -f $1)
     if file $file | grep -q text; then
         _vim_file  $file
     else
