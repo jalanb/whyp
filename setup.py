@@ -2,16 +2,16 @@
 
 from distutils.core import  setup
 
-import what
+import whyp
 
 setup(
-    name="what",
-    version=what.version,
-    description=what.__doc__.splitlines()[0],
-    url="https://github.com/jalanb/what",
+    name="whyp",
+    version=whyp.version,
+    description=whyp.__doc__.splitlines()[0],
+    url="https://github.com/jalanb/whyp",
     requires=["argparse"],
-    packages=["what"],
-    scripts=["bin/what"],
+    packages=["whyp"],
+    scripts=["bin/whyp"],
     platforms='any',
     classifiers=[
         'Development Status :: 2 - Beta',

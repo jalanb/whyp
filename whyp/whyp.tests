@@ -1,0 +1,12 @@
+The whyp module
+===============
+
+    >>> import whyp
+
+Sripping quotes
+---------------
+
+    >>> whyp.strip_quotes('"x"') == whyp.strip_quotes("'x'") == whyp.strip_quotes('x')
+    True
+    >>> not whyp.strip_quotes('') and not whyp.strip_quotes(None)
+    True

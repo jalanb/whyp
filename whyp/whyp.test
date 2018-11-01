@@ -1,20 +1,20 @@
-The what module
+The whyp module
 ===============
 
-    >>> import what
-    >>> 'Show the text' in what.__doc__
+    >>> import whyp
+    >>> 'Show the text' in whyp.__doc__
     True
 
 The tests in this file depend on known aliases and functions
     You may need to change them to get them working on your machine
 
-    >>> _ = what.read_command_line()
+    >>> _ = whyp.read_command_line()
 
 Read aliases
 ------------
 
 Read in a dictionary of all known aliases
-    >>> aliases = what.get_aliases()
+    >>> aliases = whyp.get_aliases()
 
 And check some known values
     These 2 aliases seem rather basic, but may not work on someone else's machine
@@ -32,16 +32,16 @@ Read functions
 --------------
 
 Similarly we can read in known functions
-    >>> functions = what.get_functions()
+    >>> functions = whyp.get_functions()
 
 Which gives a dictionary
     >>> True # 'kd' in functions.keys()
     True
 
 Which contains some (longer) commands
-    Seems safe to assume that the what function is defined
+    Seems safe to assume that the whyp function is defined
     As that is the recommended way to run this script
-    >>> #print functions['what']
+    >>> #print functions['whyp']
 
 Read commands
 -------------
@@ -51,5 +51,5 @@ And we can get files from the bash $PATH
 Such files will vary across machines,
     but it is safe to assume that python is one of them
     and that it is in a "bin" directory
-    >>> what.files_in_environment_path()['python'].endswith('bin/python')
+    >>> whyp.files_in_environment_path()['python'].endswith('bin/python')
     True

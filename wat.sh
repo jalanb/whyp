@@ -1,10 +1,10 @@
-#! ~/hub/what/wat.sh
+#! ~/hub/whyp/wyp.sh
 
 # x
 # xx
 # xxx
 
-wat () {
+wyp () {
     local __doc__="A wittier cat"
     "$@"
 }

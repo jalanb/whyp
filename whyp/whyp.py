@@ -355,7 +355,7 @@ def script_language(path_to_file):
     The language should be the last word on the shebang line (if present)
     If no shebang line is found, try an extension
 
-    >>> script_language('what.py') == 'python'
+    >>> script_language('whyp.py') == 'python'
     True
     >>> script_language('script.sh') == 'bash'
     True
@@ -428,7 +428,7 @@ def show_command(command):
 def nearby_file(named_file, extension):
     """Return the name of that file, changed to use that extension
 
-    >>> os.path.basename(nearby_file('what.pyc', '.txt')) == 'what.txt'
+    >>> os.path.basename(nearby_file('whyp.pyc', '.txt')) == 'whyp.txt'
     True
     """
     return os.path.splitext(named_file)[0] + extension
@@ -437,7 +437,7 @@ def nearby_file(named_file, extension):
 def read_command_line():
     """Look for options from user on the command line for this script"""
     parser = optparse.OptionParser(
-        'Usage: what [options] command\n\n%s' % __doc__)
+        'Usage: whyp [options] command\n\n%s' % __doc__)
     parser.add_option('-e', '--hide_errors', action='store_true',
                       help='hide error messages from successful commands')
     parser.add_option('-l', '--ls', action='store_true',
