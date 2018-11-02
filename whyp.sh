@@ -14,70 +14,55 @@ _license="This script is released under the MIT license, see accompanying LICENS
 #
 _heading_lines=13 # Text before here is copied to new files
 
-WHAT_SOURCED=1
-export WHAT_SOURCED
+WHYP_SOURCED=1
+export WHYP_SOURCED
 [[ $SOURCED_FILES =~ $BASH_SOURCE ]] || SOURCED_FILES="${SOURCED_FILES}$BASH_SOURCE"
 
-WHAT_SOURCE=$BASH_SOURCE
-export WHAT_DIR=$(dirname $(readlink -f $WHAT_SOURCE))
+WHYP_SOURCE=$BASH_SOURCE
+export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 
 # x
 
 alias e=edit_type
-alias w=what_type
+alias w=whyp-type
 
 # xx
 
-alias ww=what_what_type
+alias ww=whyp-whyp-type
 
 # xxx
 
-alias www=what_what_what_type
+alias www=whyp-whyp-whyp-type
 
-# xxxx+
+# xxxx
 
-alias whap=what_python
-alias whas=what_shell
-alias whyp=what_type
+alias whaa=whyp-type
+alias whac=whyp-command
+alias whaf=whyp-type
+alias whap=whyp-python
 
-# xxxxxxxxxxx
+alias whyp=whyp-type
+
+# xxxxx*
 
 whyp-py () {
-    python $WHAT_DIR/whyp/whyp.py "$@"
+    python $WHYP_DIR/whyp/whyp.py "$@"
 }
 
 whyp-py-file () {
-    python $WHAT_DIR/whyp/whyp.py -f "$@"
+    python $WHYP_DIR/whyp/whyp.py -f "$@"
 }
 
-
-what_python () {
-    local __doc__='find whyp python will import for a string'
-    local _python=$(PATH=/usr/local/bin:/usr/bin/:bin which python)
-    if [[ -f "$1" && -x "$1" ]]; then
-        _python="$1"
-        shift
-    elif [[ "$1" =~ [23].[0-9] ]]; then
-        _python=python$1
-        shift
-    fi
-    _python=$(rlf $_python)
-    if [[ $* =~ -U ]]; then
-        $_python $WHAT_DIR/what_python.py "$@"
-    else
-        $($_python $WHAT_DIR/what_python.py "$@")
-    fi
-}
 
 # Posted as "The most productive function I have written"
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 
 edit_type () {
     local __doc__="Edit the first argument as if it's a type"
-    if what_python -q $1; then
+    if whyp-python -q $1; then
         _sought=$1; shift
-        # echo "Found a python module $(what_python $_sought)"
-        _edit_file $(what_python $_sought) "$@"
+        # echo "Found a python module $(whyp-python $_sought)"
+        _edit_file $(whyp-python $_sought) "$@"
         return 1
     fi
     # echo "Not a python module"
@@ -97,12 +82,7 @@ edit_type () {
     # echo "Bye from edit_type"
 }
 
-what_type () {
-    local __doc__='Show whether the first argument is a text file, alias or function'
-    type "$@"
-}
-
-what_shell () {
+whyp-command () {
     local __doc__='find whyp will be executed for a command string'
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
@@ -115,12 +95,35 @@ what_shell () {
     return $return_value
 }
 
-what_file () {
-    local __doc__="""verbose whyp"""
-    what_shell -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
+whyp-python () {
+    local __doc__='find whyp python will import for a string'
+    local _python=$(PATH=/usr/local/bin:/usr/bin/:bin which python)
+    if [[ -f "$1" && -x "$1" ]]; then
+        _python="$1"
+        shift
+    elif [[ "$1" =~ [23].[0-9] ]]; then
+        _python=python$1
+        shift
+    fi
+    _python=$(rlf $_python)
+    if [[ $* =~ -U ]]; then
+        $_python $WHYP_DIR/whyp-python.py "$@"
+    else
+        $($_python $WHYP_DIR/whyp-python.py "$@")
+    fi
 }
 
-what_what_type () {
+whyp-type () {
+    local __doc__='Show whether the first argument is a text file, alias or function'
+    type "$@"
+}
+
+whyp-file () {
+    local __doc__="""verbose whyp"""
+    whyp-command -v "$1" # | head -n ${2:-$(( $LINES / 2 ))}
+}
+
+whyp-whyp-type () {
     local __doc__='whyp(all arguments (whether they like it or not))'
     PASS=0
     FAIL=1
@@ -128,21 +131,21 @@ what_what_type () {
     local _options=-v
     [[ "$1" == -q ]] && _options=
     if [[ $(type -t "$1") == "file" ]]; then
-        what_file "$1"
+        whyp-file "$1"
         return $PASS
     fi
-    what_shell $_options "$@" && return $PASS
+    whyp-command $_options "$@" && return $PASS
     [[ $_options == "-v" ]] && echo $1 not found
     w ${1:0:${#1}-1} && return $PASS
     return $FAIL
 }
 
-what_source () {
+whyp-source () {
     local __doc__="""Try very hard to source the thing quietly"""
-    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f "$1" ]] && echo not_path $1 >&2 || source_what "$@" optional
+    [[ -z $1 ]] && echo no_path >&2 || [[ ! -f "$1" ]] && echo not_path $1 >&2 || source_whyp "$@" optional
 }
 
-what_what_what_type () {
+whyp-whyp-whyp-type () {
     . ~/hub/whyp/whyp.sh
     (DEBUGGING=www;
     local _command="$1"; shift
@@ -153,7 +156,7 @@ what_what_what_type () {
     elif is_existing_alias $_command; then
         (set -x; $_command "$@" 2>&1 ) # | ~/hub/whyp/spacify)
     elif file $_command  | grep -q -e script -e text; then
-        what_wwm $_command "$@"
+        whyp-wwm $_command "$@"
     else
         echo 0
     fi)
@@ -188,7 +191,7 @@ _edit_function () {
     _vim_file "$path_to_file" $line_ $regexp_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
-    what_source "$path_to_file"
+    whyp-source "$path_to_file"
     [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
 }
 
@@ -204,7 +207,7 @@ _edit_file () {
 }
 
 
-source_what () {
+source_whyp () {
     local __doc__="Source a file (that may set some aliases) and remember that file"
     local _filename=$(readlink -f "$1")
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
@@ -230,7 +233,7 @@ source_what () {
     # INDENT="$OLDINDENT"
     # echo "${INDENT}have $_filename"
 }
-alias .=source_what
+alias .=source_whyp
 
 
 # _xxxxx+
@@ -239,7 +242,7 @@ _parse_function () {
     __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
 }
 
-old_what_type () {
+old_whyp-type () {
     if is_existing_alias "$1"; then
         type "$1"
     elif is_existing_function "$1"; then
@@ -374,7 +377,7 @@ __parse_function_line_number_and_path_to_file () {
 }
 
 source_path () {
-    test -f "$1" && what_source "$@" || return 1
+    test -f "$1" && whyp-source "$@" || return 1
 }
 
 is_existing_function () {
