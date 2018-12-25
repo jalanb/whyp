@@ -22,27 +22,21 @@ WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 
 # x
+
+alias e=eype
+alias w=whyp
+
 # xx
+
+alias wp=whyp-python
+alias ww=whyp-whyp
+
 # xxx
+
 # xxxx
-alias whap=whyp-python
-
-
-# xxxxx*
-
-whyp-py () {
-    python $WHYP_DIR/whyp/whyp.py "$@"
-}
-
-whyp-py-file () {
-    python $WHYP_DIR/whyp/whyp.py -f "$@"
-}
-
-
-# Posted as "The most productive function I have written"
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 
 eype () {
+    # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__="""Edit the first argument as if it's a type"""
     if whyp-python -q $1; then
         _sought=$1; shift
@@ -64,6 +58,23 @@ eype () {
     else type $1
         vf +/^$1
     fi
+}
+
+whyp () {
+    local __doc__="""whyp will extend type, later"""
+    type "$@"
+}
+
+alias whap=whyp-python
+
+# xxxxx*
+
+whyp-py () {
+    python $WHYP_DIR/whyp/whyp.py "$@"
+}
+
+whyp-py-file () {
+    python $WHYP_DIR/whyp/whyp.py -f "$@"
 }
 
 whyp-command () {
@@ -99,11 +110,6 @@ whyp-python () {
             $($_python $WHYP_DIR/whyp-python.py "$@")
         fi
     )
-}
-
-whyp () {
-    local __doc__="""whyp will extend type, later"""
-    type "$@"
 }
 
 show-command () {
