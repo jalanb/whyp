@@ -188,3 +188,8 @@ and continues to use them many times per day.
 Witty
 -----
 One of the best compliments of my coding life was when [/u/andru183 called this code "witty"](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
+
+
+Version
+-------
+0.7.0

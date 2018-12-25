@@ -28,7 +28,7 @@ _copyright = """
     See http://jalanb.mit-license.org/ for more information
 """
 
-version = '0.3.5'
+version = '0.7.0'
 
 def get_options():
     """The values of options set by user on command line"""

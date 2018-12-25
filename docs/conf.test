@@ -1,0 +1,5 @@
+The docs/conf module
+====================
+
+    >>> import docs/conf
+    >>> print docs/conf.__doc__
