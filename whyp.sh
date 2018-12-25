@@ -178,7 +178,7 @@ _edit_function () {
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     whyp-source "$path_to_file"
-    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
+    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file" || true
 }
 
 _edit_file () {
