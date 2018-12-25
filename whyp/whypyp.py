@@ -87,13 +87,13 @@ def path_to_python(path, name):
 
 @contextmanager
 def swallow_stdout_stderr():
-    """Divert stdout into the given stream """
+    """Divert stdout, stderr to strings"""
     saved_out = sys.stdout
     saved_err = sys.stderr
     sys.stdout = StringIO()
     sys.stderr = StringIO()
     try:
-        yield
+        yield sys.stdout.getvalue(), sys.stderr.getvalue()
     finally:
         sys.stdout = saved_out
         sys.stderr = saved_err
@@ -103,7 +103,8 @@ def built_in(name):
     """Whether the name is that of one of python's builtin modules"""
     try:
         #  Not all builtin modules are initially imported, so bring it in first
-        with swallow_stdout_stderr():
+        with swallow_stdout_stderr() as _strings:
+            _out, _err = _strings
             __import__(name)
     except ImportError:
         return False

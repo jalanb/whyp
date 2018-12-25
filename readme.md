@@ -1,12 +1,23 @@
 whyp
 ====
 
-whyp extends type, wittily
+`whyp` extends `type`, [wittily](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
 
-whyp shows the source of aliases, functions and executables available in the shell
+`whyp` shows the source of aliases, functions and executables available in the shell
 
-whedit edits commands whether aliases, functions or scripts
+`eype` edits commands whether aliases, functions or scripts
 
+Names
+-----
+
+`whyp` devolved from a repo called `what`, which extended `which`
+
+`what` got too big for it's boots, and `we` rediscovered the minimalistic tendencies of `type`
+
+`eype` is a reminder that silly names are one honking great idea -- let's do more of those!
+
+Official [prounciation guide](https://www.youtube.com/watch?v=tXo0o3dg4vQ)
+Official [video](https://www.youtube.com/watch?v=RidtrSCogg0)
 
 Installation
 ------------
@@ -14,45 +25,70 @@ Installation
 Clone the repo
 
     $ git clone https://github.com/jalanb/whyp.git
+
+Go there
+
     $ cd whyp
 
-For convenience bash functions are provided, which can be set up like this
+Make sure your Python is "the Python when you log in"
 
-    $ source whyp.sh
+    $ deactivate 
 
-Then one can use `whyp` as a replacement for type, in bash or python
-
-    $ whyp ls
-    ls is /usr/local/gnu/ls
+Install `whyp` to Python
 
     $ pip install -r requirements.txt
     $ python setup.py develop
+    $ python
     >>> from whyp import ls
-    >>> ls
-    /usr/local/gnu/ls
-    >>> from whyp import os
-    >>> os
+    >>> assert ls == '/bin/ls'
+    # YMMV
+
+commands are provided for `bash`
+    which can be added to your current shell like this
+
+    $ source __init__.sh
+
+Now you can use `whyp` as a replacement for `type` in current shell
+
+    $ type ls
+    ls is /bin/ls
+    $ whyp ls
+    ls is /bin/ls
+
+
+If you want to keep `whyp` for bash, then
+    Stay in the `whyp/` directory and
+
+    $ echo ""  >> ~/.bashrc
+    $ echo "source $(readlink -f __init__.sh)" >> ~/.bashrc
 
 Daily use
 ---------
 
 Simplified versions of the commands outlined below are provided for quick use
- These versions are designed to be simple to use, so are short and clustered near the w key.
+ These versions are designed to be simple to use, so are short and clustered near the `w` key.
 
+`w` will call `whyp`
 ```shell
-    $ w cd
+    $ w python
+    python is /usr/local/bin/python
 ```
-  will show what the cd command is (alias, function or file?)
 
+`ww` will show more about the command (definition of the alias or conents of the function/file)
 ```shell
     $ ww cd
-```
-  will show more about the command (definition of the alias or conents of the function/file)
+    /usr/bin/cd
+    #!/bin/sh
+    # $FreeBSD: src/usr.bin/alias/generic.sh,v 1.2 2005/10/24 22:32:19 cperciva Exp $
+    # This file is in the public domain.
+    builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
 
-```shell
-    $ we cd
 ```
-  will edit the command
+
+`e` will edit the command
+```shell
+    $ e cd
+```
 
 whyp
 ----
@@ -140,71 +176,6 @@ Note that the whypyp command uses whatever the default installation of python is
     $ whypyp 2.6 os
     -rw-r--r-- 1 root root 26300 Aug 12  2012 /usr/local/lib/python2.6/os.py
 
-whet
-----
-
-The English meaning of "whet" is "to sharpen, as by grinding or friction, to hone", and the `whet` command assists this for bash commands by making it easier to copy commands from your history into a function, then re-edit it until you are happy with it, then save it to a file.
-
-What it does in particular depends on the number of arguments, which would usually increase on each call.
-
-The command on its own puts the last line from bash history into a function called fred (It was from [Dr Mike Scott](http://www.computing.dcu.ie/~mike/mike.html) that I first heard "If in doubt, call it Fred".)
-
-    $ ls not.a.real.file
-    ls: not.a.real.file: No such file or directory
-    $ whet
-    $ type fred
-    fred is a function
-    fred ()
-    {
-        ls not.a.real.file
-    }
-
-And that function replays the last command (the `ls` in the example)
-
-    $ fred
-    ls: not.a.real.file: No such file or directory
-
-You can pass a number of parameters, which `whet` will interpret sensibly. A number can be used to take a different command from the history, so this example will take the 7th last command
-
-    $ whet 7
-
-A name can be used for the function replace the default "fred". For example we could create a function called stuff from the last command
-
-    $ whet stuff
-    $ type stuff
-    stuff is a function
-    stuff ()
-    {
-        whet 7
-    }
-
-If you use a name of an existing function then that function will be editted (using the editor specified by $EDITOR). When the editor exits that script is re-sourced, so any changes are loaded back into bash.
-
-And you can also supply a filename, so that any edits happen in that file, e.g.
-
-    $ whet stuff script.sh
-
-Again - if that script already exists it will be re-used.
-
-So the normal usage of whet is to run a command at the bash prompt until it is getting too big to edit easily using just "<up><left><left><left>...", then run the function, edit it with whet, re-run the function, re-edit, until it is good enough, and save it to a file, for example
-
-    $ ls
-    $ ls ../../../
-    $ whet
-    $ fred
-    $ whet fred
-    $ fred
-    $ whet fred
-    $ fred
-    $ whet fred my_ls.sh
-
-Testing
--------
-
-Running commands without any arguments will test them
-
-    $ whyp
-    $ whypyp
 
 The author has used the scripts on
 * OSX 10.7 and 10.11 using python 2.5, 2.6 and 2.7 with bash 3.2.48 and 4.3.42
@@ -212,7 +183,7 @@ The author has used the scripts on
 * Ubuntu 10.04 and 12.04 using python 2.6 and 2.7 with bash 4
 * babun 1.2.0 (on cygwin on Windows 7) using python 2.7.8 with bash 4.3.33
 
-and continues to use them many times per day. (Although I never found a use case for whet)
+and continues to use them many times per day. 
 
 Witty
 -----
