@@ -105,9 +105,9 @@ whyp-python () {
         fi
         _python=$(rlf $_exec_py)
         if [[ $* =~ -U ]]; then
-            $_python $WHYP_DIR/whyp-python.py "$@"
+            $_python $WHYP_DIR/whyp/whyp_python.py "$@"
         else
-            $($_python $WHYP_DIR/whyp-python.py "$@")
+            $($_python $WHYP_DIR/whyp/whyp_python.py "$@")
         fi
     )
 }
