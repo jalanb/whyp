@@ -20,6 +20,7 @@ export WHYP_SOURCED
 
 WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
+export WHYP_PY=WHYP_DIR/whyp
 
 # x
 
@@ -38,25 +39,22 @@ alias ww=whyp-whyp
 eype () {
     # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__="""Edit the first argument as if it's a type"""
+    local _sought=
     if whyp-python -q $1; then
         _sought=$1; shift
-        # echo "Found a python module $(whyp-python $_sought)"
         _edit_file $(whyp-python $_sought) "$@"
         return 1
-    fi
-    # echo "Not a python module"
-    if [[ $(type -t $1) == "file" ]]; then
-        # echo "is a file"
+    elif [[ $(type -t $1) == "file" ]]; then
         _edit_file $1
     elif is-existing-function $1; then
-        # echo "is a function"
         _parse_function $1
         _edit_function
     elif is-existing-alias $1; then
-        # echo "is alias"
         _edit_alias $1
-    else type $1
-        vf +/^$1
+    else
+        _file=$1; shift
+        _sought=$1; shift
+        vim $_file +/$_sought_
     fi
 }
 
@@ -70,11 +68,11 @@ alias whap=whyp-python
 # xxxxx*
 
 whyp-py () {
-    python $WHYP_DIR/whyp/whyp.py "$@"
+    python $WHYP_PY/whyp.py "$@"
 }
 
 whyp-py-file () {
-    python $WHYP_DIR/whyp/whyp.py -f "$@"
+    python $WHYP_PY/whyp.py -f "$@"
 }
 
 whyp-command () {
@@ -104,10 +102,11 @@ whyp-python () {
             shift
         fi
         _python=$(rlf $_exec_py)
+        local _whyp_python $WHYP_PY/whyp_python.py "$@"
         if [[ $* =~ -U ]]; then
-            $_python $WHYP_DIR/whyp/whyp_python.py "$@"
+            $_python $_whyp_python "$@"
         else
-            $($_python $WHYP_DIR/whyp/whyp_python.py "$@")
+            $($_python $_whyp_python "$@")
         fi
     )
 }
