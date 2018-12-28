@@ -139,6 +139,7 @@ whyp-whyp () {
     fi
 
     show-command $_options "$@" && return $_pass
+    [[ $_options == "-q" ]] && return $_fail
     [[ $_options == "-v" ]] && echo "$@ not whypped" >&2
     w ${1:0:${#1}-1} && return $_pass
     return $_fail
