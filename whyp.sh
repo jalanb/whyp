@@ -20,7 +20,7 @@ export WHYP_SOURCED
 
 WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
-export WHYP_PY=WHYP_DIR/whyp
+export WHYP_PY=$WHYP_DIR/whyp
 
 # x
 
@@ -58,12 +58,13 @@ eype () {
     fi
 }
 
+# "whap" is for backward compatibility only, remove before v1.0.0
+alias whap=whyp-python
+
 whyp () {
     local __doc__="""whyp will extend type, later"""
     type "$@"
 }
-
-alias whap=whyp-python
 
 # xxxxx*
 
@@ -76,7 +77,7 @@ whyp-py-file () {
 }
 
 whyp-command () {
-    local __doc__="""find whyp will be executed for a command string"""
+    local __doc__="""find what will be executed for a command string"""
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
@@ -88,31 +89,33 @@ whyp-command () {
     return $return_value
 }
 
+debugger_python () {
+    [[ $1 =~ ^((3(.[7-9])?)|([4-9](.[0-9])?))$ ]]
+}
+
 whyp-python () {
     local __doc__="""find what python will import for a string, outside virtualenvs"""
     (deactivate 2>/dev/null
         local _which_py=python
-        if [[ "$1" =~ ^[1-9]$ || $1 =~ ^[1-9].[0-9.]+$ ]]; then
+        if debugger_python $1; then
             _which_py=python$1
             shift
         fi
         local _exec_py=$(PATH=/usr/local/bin:/usr/bin/:/bin which $_which_py)
-        if [[ $1 =~ python && -f "$1" && -x "$1" ]]; then
-            _exec_py="$1"
-            shift
-        fi
         _python=$(rlf $_exec_py)
-        local _whyp_python $WHYP_PY/whyp_python.py "$@"
-        if [[ $* =~ -U ]]; then
+        if [[ -e $_python ]]; then
+            local _whyp_python=$WHYP_PY/whyp_python.py "$@"
             $_python $_whyp_python "$@"
         else
-            $($_python $_whyp_python "$@")
+            echo "$_exec_py is not executable" >&2
+            [[ -n $_python ]] && echo "$_python is not executable" >&2
+            return 1
         fi
     )
 }
 
 show-command () {
-    local _arg=$1; shift
+    local _arg=$1;
     if [[ $_arg =~ -[vq] ]]; then
         shift
         if [[ $_arg =~ -[q] ]]; then
@@ -369,7 +372,7 @@ __parse_function_line_number_and_path_to_file () {
 
 source-path () {
     test -f "$1" || return 1
-    whyp-source "$@" 
+    whyp-source "$@"
 }
 
 is-existing-function () {
