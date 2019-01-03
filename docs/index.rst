@@ -9,21 +9,21 @@ Welcome to whyp's documentation!
 What is whyp?
 -------------
 
-`whyp` extends `type`, [wittily](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
+``whyp`` extends ``type``, `wittily<https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/>_`.
 
-`whyp` shows the source of aliases, functions and executables available in the shell
+``whyp`` shows the source of aliases, functions and executables available in the shell
 
 What is eype?
 -------------
 
-`eype` edits commands whether aliases, functions or scripts
+``eype`` edits commands whether aliases, functions or scripts
 
 Names
 -----
 
-`whyp` devolved from a repo called `what`, which extended `which`. `what` got a bit too big for it's boots, so I yearned for the minimalistic tendencies of `type`. So `whyp` was born as a smashing of "what" and "type"
+``whyp`` devolved from a repo called ``what``, which extended ``which``. ``what`` got a bit too big for it's boots, so I yearned for the minimalistic tendencies of ``type``. So ``whyp`` was born as a smashing of "what" and "type"
 
-`eype` is a reminder that silly names are one honking great idea -- let's do more of those!
+``eype`` is a reminder that silly names are one honking great idea -- let's do more of those!
 
 Official prounciation guide `here <https://www.youtube.com/watch?v=tXo0o3dg4vQ>_`.
 Official video `here <https://www.youtube.com/watch?v=RidtrSCogg0>_`.
@@ -39,16 +39,16 @@ Go there
 
     $ cd whyp
 
-Install to your current `bash` shell
+Install to your current ``bash`` shell
 
     $ source __init__.sh
 
-If you want to keep `whyp` for bash, then
+If you want to keep ``whyp`` for bash, then
 
     $ echo ""  >> ~/.bashrc
     $ echo "source $(readlink -f __init__.sh)" >> ~/.bashrc
 
-Install to `python`
+Install to ``python``
 
     $ deactivate  # (if required)
 
@@ -58,7 +58,7 @@ Install to `python`
 whyp in bash
 ^^^^^^^^^^^^
 
-Now you can use `whyp` as a replacement for `type` in current shell
+Now you can use ``whyp`` as a replacement for ``type`` in current shell
 
     $ type ls
     ls is /bin/ls
@@ -77,15 +77,15 @@ Daily use
 ---------
 
 Simplified versions of the commands outlined below are provided for quick use
- These versions are designed to be simple to use, so are short and clustered near the `w` key.
+ These versions are designed to be simple to use, so are short and clustered near the ``w`` key.
 
-`w` will call `whyp` to show the type of something
+``w`` will call ``whyp`` to show the type of something
 
     $ w python
     python is /usr/local/bin/python
 
 
-`ww` will show more about the command (definition of the alias or conents of the function/file)
+``ww`` will show more about the command (definition of the alias or conents of the function/file)
 
     $ ww cd
     /usr/bin/cd
@@ -94,7 +94,7 @@ Simplified versions of the commands outlined below are provided for quick use
     # This file is in the public domain.
     builtin `echo ${0##*/} | tr \[:upper:] \[:lower:]` ${1+"$@"}
 
-`e` will call `eype` to edit something
+``e`` will call ``eype`` to edit something
 
     $ e whyp
 
@@ -137,6 +137,7 @@ Then the whyp command can show that up is a function.
 If you add the verbose flag, -v, then the source of the function is shown
 
     $ whyp up -v
+
     #! /bin/bash
     up () {
             cd ..
@@ -149,7 +150,7 @@ The up command could also be written as a file
     $ echo "cd .." >> ~/bin/up
     $ chmod +x ~/bin/up
 
-And the whyp command would then find the file, and show a long `ls` for it
+And the whyp command would then find the file, and show a long ``ls`` for it
 
     $ whyp up
     -rwxr-xr-x 1 jalanb staff 19 Apr 24 22:56 /home/jalanb/bin/up
@@ -161,7 +162,7 @@ If you add the verbose flag, -v, then the source of that file is shown too
     #! /bin/bash
     cd ..
 
-If you add the quiet flag, -q, then no output is shown, which can be useful when using `whyp` in scripts
+If you add the quiet flag, -q, then no output is shown, which can be useful when using ``whyp`` in scripts
 
     $ if whyp -q ls; then echo yes; else echo no; fi
     yes
@@ -175,7 +176,7 @@ If you add the errors flag ('-e') then the script will hide some errors shown in
 whypyp
 ----
 
-The `whypyp` command tries to find where python will import files from, for example
+The ``whypyp`` command tries to find where python will import files from, for example
 
     $ whypyp os
     -rw-r--r-- 1 root root 24258 Sep 19  2006 /usr/lib/python2.7/os.py
@@ -192,7 +193,7 @@ The author has used the scripts on
 * Ubuntu 10.04 and 12.04 using python 2.6 and 2.7 with bash 4
 * babun 1.2.0 (on cygwin on Windows 7) using python 2.7.8 with bash 4.3.33
 
-and continues to use them many times per day. 
+and continues to use them daily (macOS,Cent OS)
 
 Witty
 -----
