@@ -30,6 +30,41 @@ _copyright = """
 
 version = '0.7.0'
 
+
+def parse_args():
+    """Look for options from user on the command line for this script"""
+    parser = optparse.OptionParser(
+        'Usage: whyp [options] command\n\n%s' % __doc__)
+    parser.add_option('-e', '--hide_errors', action='store_true',
+                      help='hide error messages from successful commands')
+    parser.add_option('-l', '--ls', action='store_true',
+                      help='show output of "ls path" if it is a path')
+    parser.add_option('-f', '--file', action='store_true',
+                      help='do not show any output')
+    parser.add_option('-q', '--quiet', action='store_true',
+                      help='do not show any output')
+    parser.add_option('-v', '--verbose', action='store_true',
+                      help='whether to show more info, such as file contents')
+    parser.add_option('-A', '--aliases', default='/tmp/aliases',
+                      help='path to file which holds aliases')
+    parser.add_option('-F', '--functions', default='/tmp/functions',
+                      help='path to file which holds functions')
+    parser.add_option('-U', '--debugging', action='store_true',
+                      help='debug with pudb (or pdb if pudb is not available)')
+    options, arguments = parser.parse_args()
+    return options, arguments
+
+
+def read_command_line():
+    options, arguments = parse_args()
+    if options.debugging:
+        pdb.set_trace()
+    # pylint does not seem to notice that methods are globals
+    # pylint: disable=global-variable-undefined
+    global get_options
+    get_options = lambda: options
+    return arguments
+
 def get_options():
     """The values of options set by user on command line"""
     return None
@@ -432,36 +467,6 @@ def nearby_file(named_file, extension):
     True
     """
     return os.path.splitext(named_file)[0] + extension
-
-
-def read_command_line():
-    """Look for options from user on the command line for this script"""
-    parser = optparse.OptionParser(
-        'Usage: whyp [options] command\n\n%s' % __doc__)
-    parser.add_option('-e', '--hide_errors', action='store_true',
-                      help='hide error messages from successful commands')
-    parser.add_option('-l', '--ls', action='store_true',
-                      help='show output of "ls path" if it is a path')
-    parser.add_option('-f', '--file', action='store_true',
-                      help='do not show any output')
-    parser.add_option('-q', '--quiet', action='store_true',
-                      help='do not show any output')
-    parser.add_option('-v', '--verbose', action='store_true',
-                      help='whether to show more info, such as file contents')
-    parser.add_option('-A', '--aliases', default='/tmp/aliases',
-                      help='path to file which holds aliases')
-    parser.add_option('-F', '--functions', default='/tmp/functions',
-                      help='path to file which holds functions')
-    parser.add_option('-U', '--debugging', action='store_true',
-                      help='debug with pudb (or pdb if pudb is not available)')
-    options, arguments = parser.parse_args()
-    if options.debugging:
-        pdb.set_trace()
-    # pylint does not seem to notice that methods are globals
-    # pylint: disable=global-variable-undefined
-    global get_options
-    get_options = lambda: options
-    return arguments
 
 
 def test():
