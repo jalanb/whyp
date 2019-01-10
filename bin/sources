@@ -1,0 +1,62 @@
+#! /usr/bin/env python
+"""Show the text behind the type
+
+This script is intended to replace the standard type command
+It should look for commands in aliases, bash functions, and the bash $PATH
+It assumes aliases and functions have been written to files before starting
+    (because this script cannot reliably get them from sub-shells)
+"""
+
+
+
+import sys
+import argparse
+
+from whyp import sources
+
+def parse_args():
+    """Look for options from user on the command line for this script"""
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    pa = parser.add_argument
+    pa('--sources', help='Try to source these')
+    pa('--files', help='Show files in these')
+    pa('--any', action='store_true', help='Any files sourced')
+    pa('--all', action='store_true', help='All files sourced')
+    pa('--clear', action='store_true', help='Forget all sources')
+    pa('--found', action='store', help='Whether that was sourced')
+    pa('-o', '--optional', action='store_true', help='sources may be empty')
+    arguments = parser.parse_args()
+    sources.optional = arguments.optional
+    return arguments
+
+
+def main():
+    """Run the program"""
+    arguments = parse_args()
+    if arguments.clear:
+        return sources.clear()
+    if arguments.any:
+        return sources.any()
+    files = []
+    errors = []
+    ss, so = sources.source, arguments.sources
+    [(files if ss(_) else errors).append(_) for _ in so]
+    if arguments.found:
+        return arguments.found in sources.all()
+    stream = sys.stdout
+    words = []
+    if arguments.files:
+        words = files
+    elif arguments.all:
+        words = sources.all()
+    if not arguments.optional:
+        if errors:
+            words, stream = errors, sys.stderr
+        if not files and arguments.files:
+            words, stream = ('No', 'files', 'sourced'), sys.stderr
+    stream.write(' '.join(words))
+    return stream != sys.stderr
+
+
+if __name__ == '__main__':
+    sys.exit(0 if main() else 1)
