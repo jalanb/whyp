@@ -2,7 +2,7 @@
 
 from distutils.core import  setup
 
-import whyp
+from whyp import whyp
 
 setup(
     name="whyp",

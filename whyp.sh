@@ -14,13 +14,14 @@ _heading_lines=13 # Text before here is copied to new files
 
 [[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
 
-WHYP_SOURCED=1
-export WHYP_SOURCED
-[[ $SOURCES =~ $BASH_SOURCE ]] || SOURCES="${SOURCES}:$BASH_SOURCE"
-
 WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
+export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_PY=$WHYP_DIR/whyp
+export WHYP_OUT=$WHYP_DIR/whyp.out
+export WHYP_ERR=$WHYP_DIR/whyp.err
+
+$WHYP_BIN/sources --clear
 
 # x
 
@@ -33,6 +34,7 @@ alias wp=whyp-python
 alias ww=whyp-whyp
 
 # xxx
+alias www="whyp-whyp -v"
 
 # xxxx
 
@@ -63,17 +65,108 @@ alias whap=whyp-python
 
 whyp () {
     local __doc__="""whyp will extend type, later"""
-    type "$@"
+    type "$@" >$WHYP_OUT 2>$WHYP_ERR
+    cat $WHYP_OUT
 }
 
 # xxxxx*
 
 whyp-py () {
-    python $WHYP_PY/whyp.py "$@"
+    $WHYP_BIN/whyp "$@"
 }
 
 whyp-py-file () {
-    python $WHYP_PY/whyp.py -f "$@"
+    $WHYP_BIN/whyp -f "$@"
+}
+
+python-has-debugger () {
+    [[ $1 =~ ^((3(.[7-9])?)|([4-9](.[0-9])?))$ ]]
+}
+
+looks-versiony () {
+    [[ ! $1 ]] && return 1
+    [[ $1 =~ [0-9](.[0-9])* ]]
+}
+
+local-python () {
+    if whyp-executable pyth; then
+        echo pyth
+        return 0
+    fi
+    local _which_py=python
+    if looks-versiony $1; then
+        if python-has-debugger $1; then
+            _which_py=python$1
+        else
+            _which_py=python
+            echo "Requested python version too old" >&2
+        fi
+        shift
+    fi
+    local _exec_py=$(PATH=/usr/local/bin:/usr/bin/:/bin which $_which_py)
+    local _interpreter=$(readlink -f "$_exec_py")
+    [[ -e $_interpreter ]] && $_interpreter -c "import sys; sys.stdout.write(sys.executable)"
+}
+
+whyp-python () {
+    local __doc__="""find what python will import for a string, outside virtualenvs"""
+    local _python=$(local-python $1)
+    local _whyp_python=$WHYP_BIN/python
+    if [[ -e $_python && -f $_whyp_python ]]; then
+        $_python $_whyp_python "$@"
+    else
+        echo "$_exec_py is not executable" >&2
+        [[ -n $_python ]] && echo "$_python is not executable" >&2
+        [[ -f $_whyp_python ]] && echo "$_whyp_python is not a file" >&2
+        return 1
+    fi
+}
+
+quietly () {
+    "$@" 2>/dev/null
+}
+
+Quietly () {
+    "$@" >/dev/null 2>&1
+}
+
+whyp-whyp () {
+    local __doc__="""whyp-whyp expands whyp, now"""
+    local _pass=0
+    local _fail=1
+    [[ "$@" ]] || return $_fail
+    local _options=-v
+    if [[ $1 =~ -[qv] ]]; then
+        _options=$1
+        shift
+    fi
+    local _whyp=$(quietly whyp "$@")
+    if [[ $? != $_pass ]]; then
+        # whyp "$@"
+        cat $WHYP_ERR
+        return $_fail
+    fi
+    if [[ $(type -t "$1") == "file" ]]; then
+        w "$@"
+        ls -l "$1"
+        return $_pass
+    fi
+    # show-command $_options "$@" && return $_pass
+    # [[ $_options == -q ]] && return $_fail
+    # [[ $_options == -v ]] && echo "$@ not whypped" >&2
+    return $_fail
+}
+
+show-command () {
+    local _arg=$1;
+    if [[ $_arg =~ -[vq] ]]; then
+        shift
+        if [[ $_arg =~ -[q] ]]; then
+            Quietly whyp-command "$@" 
+            return $?
+        fi
+    fi
+    whyp-command "$@"
 }
 
 whyp-command () {
@@ -83,85 +176,26 @@ whyp-command () {
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
     whyp-py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
-    local return_value=$?
+    # local return_value=$?
     # rm -f $PATH_TO_ALIASES
     # rm -f $PATH_TO_FUNCTIONS
-    return $return_value
-}
-
-debugger_python () {
-    [[ $1 =~ ^((3(.[7-9])?)|([4-9](.[0-9])?))$ ]]
-}
-
-whyp-python () {
-    local __doc__="""find what python will import for a string, outside virtualenvs"""
-    (deactivate 2>/dev/null
-        local _which_py=python
-        if debugger_python $1; then
-            _which_py=python$1
-            shift
-        fi
-        local _exec_py=$(PATH=/usr/local/bin:/usr/bin/:/bin which $_which_py)
-        _python=$(rlf $_exec_py)
-        if [[ -e $_python ]]; then
-            local _whyp_python=$WHYP_PY/whyp_python.py "$@"
-            $_python $_whyp_python "$@"
-        else
-            echo "$_exec_py is not executable" >&2
-            [[ -n $_python ]] && echo "$_python is not executable" >&2
-            return 1
-        fi
-    )
-}
-
-show-command () {
-    local _arg=$1;
-    if [[ $_arg =~ -[vq] ]]; then
-        shift
-        if [[ $_arg =~ -[q] ]]; then
-            whyp-command "$@" >/dev/null 2>&1
-            return $?
-        fi
-    fi
-    whyp-command "$@"
-}
-
-whyp-whyp () {
-    local __doc__="""whyp(all arguments (whether they like it or not))"""
-    local _pass=0
-    local _fail=1
-    [[ -z "$@" ]] && return $_fail
-    local _options=-v
-    if [[ "$1" == -q ]]; then
-        _options=-q
-        shift
-    fi
-    if [[ $(type -t "$1") == "file" ]]; then
-        show-command $_options "$1"
-        return $?
-    fi
-
-    show-command $_options "$@" && return $_pass
-    [[ $_options == "-q" ]] && return $_fail
-    [[ $_options == "-v" ]] && echo "$@ not whypped" >&2
-    w ${1:0:${#1}-1} && return $_pass
-    return $_fail
+    # return $return_value
 }
 
 whyp-debug () {
     (DEBUGGING=www;
         local _command="$1"; shift
         ww $_command;
-        w $_command;
+        whyp $_command;
         (set -x; $_command "$@" 2>&1 )
     )
 }
 
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    test -n "$SOURCES" || return
+    $WHYP_BIN/sources --any || return
     OLD_IFS=$IFS
-    IFS=:; for sourced_file in $SOURCES
+    IFS=:; for sourced_file in $($WHYP_BIN/sources --files)
     do
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
@@ -206,7 +240,6 @@ whyp-source () {
     source-whyp "$@" optional
 }
 
-unalias . 2>/dev/null
 
 source-whyp () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
@@ -217,23 +250,27 @@ source-whyp () {
         fi
         return
     fi
-    if [ -z "$SOURCES" ]; then
-        export SOURCES=$_filename
-    else
-        if [[ $SOURCES =~ $_filename ]]; then
-            : # return 0
-        else
-            SOURCES="$SOURCES:$_filename"
-            export SOURCES
-        fi
+    $WHYP_BIN/sources --optional --sources "$_filename"
+    if ! $WHYP_BIN/sources --found "$_filename"; then
+        source "$_filename"
     fi
-    source "$_filename"
 }
 
+quietly unalias . 
 alias .=source-whyp
 
 
 # _xxxxx+
+
+whyp-executable () {
+    Quietly type "$@" 
+}
+
+whyp-function () {
+    _parse_function "$@"
+    echo "$function is at '$path_to_file:$line_number'"
+    echo "$EDITOR $path_to_file +$line_number"
+}
 
 _parse_function () {
     __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
@@ -247,7 +284,7 @@ old_whyp-type () {
         echo
         local _above=$(( $line_number - 1 ))
         echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
-    elif which "$1" > /dev/null 2>&1; then
+    elif whyp-executable "$1"; then
         real_file=$(readlink -f $(which "$1"))
         [[ $real_file != "$1" ]] && echo -n "$1 -> "
         echo "$real_file"
@@ -256,29 +293,9 @@ old_whyp-type () {
 }
 
 
-_is_number () {
-    local __doc__="""Whether the first argument has only digits"""
-    [[ "$1" =~ ^[0-9]+$ ]]
-}
-
 # Methods starting with underscores are intended for use in this file only
 #   (another convention borrowed from Python)
 
-
-_read_wee_args () {
-    local __doc__="""evalute the args to the wee function by type, not position"""
-    local _arg=
-    for _arg in "$@"; do
-        if _is_script_name $_arg; then
-            path_to_file="$_arg"
-        elif _is_number $_arg; then
-            history_index=$_arg
-        elif _is_identifier $_arg; then
-            is_executable $_arg && return 1
-            function=$_arg
-        fi
-    done
-}
 
 _write_new_file () {
     local __doc__="""Copy the head of this script to file"""
@@ -289,7 +306,7 @@ _create_function () {
     local __doc__="""Make a new function with a command in shell history"""
     local doc="copied from $(basename $SHELL) history on $(date)"
     local history_command=$(_show_history_command)
-    eval "$function() { local __doc__="""$doc"""; $history_command; }" 2>/dev/null
+    quietly eval "$function() { local __doc__="""$doc"""; $history_command; }" 
 }
 
 _make_path_to_file_exist () {
@@ -322,14 +339,6 @@ _vim_line () {
     _vim_file  "$_file" +$line
 }
 
-is_executable () {
-    local __doc__="""Whether the name is in use as an alias, executable, ..."""
-    if is-existing-function "$1"; then
-        return 1
-    else type "$1" 2>/dev/null
-    fi
-}
-
 _show_history_command () {
     local __doc__="""Get a command from the end of current bash history"""
     local line=
@@ -344,19 +353,9 @@ _show_history_command () {
     echo $line
 }
 
-_is_script_name () {
-    local __doc__="""Whether the first argument ends in .sh, or is a file"""
-    [[ "$1" =~ \.sh$ || -f "$1" ]]
-}
-
-_is_identifier () {
-    local __doc__="""Whether the first argument is alphanumeric and underscores"""
-    [[ "$1" =~ ^[[:alnum:]_]+$ ]]
-}
-
 _debug_declare_function () {
     local __doc__="""Find where the first argument was loaded from"""
-    shopt -s extdebug
+    shopt -s extdebug;
     declare -F "$1"
     shopt -u extdebug
 }

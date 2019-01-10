@@ -17,10 +17,6 @@ import subprocess
 from collections import defaultdict
 from bdb import BdbQuit
 
-try:
-    import pudb as pdb
-except ImportError:
-    import pdb
 
 _copyright = """
 (c) J Alan Brogan 2013
@@ -28,46 +24,9 @@ _copyright = """
     See http://jalanb.mit-license.org/ for more information
 """
 
+from whyp import arguments
+
 version = '0.7.0'
-
-
-def parse_args():
-    """Look for options from user on the command line for this script"""
-    parser = optparse.OptionParser(
-        'Usage: whyp [options] command\n\n%s' % __doc__)
-    parser.add_option('-e', '--hide_errors', action='store_true',
-                      help='hide error messages from successful commands')
-    parser.add_option('-l', '--ls', action='store_true',
-                      help='show output of "ls path" if it is a path')
-    parser.add_option('-f', '--file', action='store_true',
-                      help='do not show any output')
-    parser.add_option('-q', '--quiet', action='store_true',
-                      help='do not show any output')
-    parser.add_option('-v', '--verbose', action='store_true',
-                      help='whether to show more info, such as file contents')
-    parser.add_option('-A', '--aliases', default='/tmp/aliases',
-                      help='path to file which holds aliases')
-    parser.add_option('-F', '--functions', default='/tmp/functions',
-                      help='path to file which holds functions')
-    parser.add_option('-U', '--debugging', action='store_true',
-                      help='debug with pudb (or pdb if pudb is not available)')
-    options, arguments = parser.parse_args()
-    return options, arguments
-
-
-def read_command_line():
-    options, arguments = parse_args()
-    if options.debugging:
-        pdb.set_trace()
-    # pylint does not seem to notice that methods are globals
-    # pylint: disable=global-variable-undefined
-    global get_options
-    get_options = lambda: options
-    return arguments
-
-def get_options():
-    """The values of options set by user on command line"""
-    return None
 
 
 def environment_value(key):
@@ -138,7 +97,7 @@ def show_output_of_shell_command(command):
             sys.stdout.buffer.write(stdout)
         except AttributeError:
             print(stdout)
-        if get_options().hide_errors:
+        if get_argument('hide_errors'):
             return
         if not stderr:
             return
@@ -184,8 +143,11 @@ def memoize(method):
 @memoize
 def get_aliases():
     """Read a dictionary of aliases from a file"""
+    path = getattr(get_argument(''), 'aliases', None)
+    if not path:
+        return {}
     try:
-        lines = [l.rstrip() for l in open(get_options().aliases)]
+        lines = [l.rstrip() for l in open(path)]
     except IOError:
         return {}
     alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
@@ -203,7 +165,7 @@ def get_alias(string):
 def get_functions():
     """Read a dictionary of functions from a known file"""
     try:
-        lines = [l.rstrip() for l in open(get_options().functions)]
+        lines = [l.rstrip() for l in open(get_argument('functions'))]
     except IOError:
         return {}
     name = function_lines = None
@@ -341,12 +303,12 @@ def showable(language):
 
 def show_function(command):
     """Show a function to the user"""
-    if not get_options().verbose:
+    if not get_argument('verbose'):
         print('%s is a function' % command)
     else:
         commands = ' | '.join([
             "shopt -s extglob; . %s; %s %s" % (
-                get_options().functions, Bash.declare_f, command),
+                get_argument('functions'), Bash.declare_f, command),
             "sed '1 i\\\n#! /usr/bin/env bash\n'",
             Bash.view_file
         ])
@@ -409,13 +371,13 @@ def show_command_in_path(command):
 
 def show_path_to_command(path_to_command):
     """Show a command which is a file at that path"""
-    if get_options().ls:
+    if get_argument('ls'):
         show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
     else:
         p = os.path.realpath(path_to_command)
         if os.path.exists(p):
             print(p)
-    if not get_options().verbose:
+    if not get_argument('verbose'):
         return
     language = script_language(path_to_command)
     if showable(language):
@@ -427,7 +389,7 @@ def show_alias(command):
     """Show a command defined by alias"""
     aliases = get_aliases()
     print('alias %s=%r' % (command, aliases[command]))
-    if not get_options().verbose:
+    if not get_argument('verbose'):
         return
     sub_command = aliases[command].split()[0].strip()
     if sub_command == command:
@@ -440,21 +402,23 @@ def show_alias(command):
 
 def show_command(command):
     """Show whatever is behind a command"""
+    i = 0
     methods = [
         (lambda x: x in get_aliases(), show_alias),
         (lambda x: x in get_functions(), show_function),
         (lambda x: x in files_in_environment_path(), show_command_in_path),
         (os.path.isfile, show_path_to_command),
     ]
+    function = get_functions().get(command, None)
     for found, show in methods:
         if found(command):
-            if get_options().file:
+            if get_argument('file'):
                 if os.path.isfile:
                     show_path_to_command(command)
                 else:
                     # show(command) :thinking_face:
                     pass
-            elif not get_options().quiet:
+            elif not get_argument('quiet'):
                 show(command)
             return 0
     return 1
@@ -493,16 +457,3 @@ def test():
         all_tests += tests
     print('Ran %s tests, %s failures' % (all_tests, all_failures))
     return 0
-
-
-def main(args):
-    """Run the program"""
-    result = 0
-    for arg in args:
-        result |= show_command(arg)
-    return result
-
-
-if __name__ == '__main__':
-    args = read_command_line()
-    sys.exit(main(args) if args else test())

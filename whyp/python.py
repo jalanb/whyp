@@ -122,26 +122,21 @@ def run_args(args, methods):
 
 
 def version(args):
-    print('%s %s' % (args, __version__))
+    print(__version__)
     raise SystemExit
 
 
 def parse_args(methods):
     """Parse out command line arguments"""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('modules', metavar='modules', type=str, nargs='+',
-                        help='Python modules to be used')
-    parser.add_argument('-e', '--edit', action='store_true',
-                        help='Edit the files')
-    parser.add_argument('-l', '--list', action='store_true',
-                        help='List the files (ls -l)')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Say nothing')
-    parser.add_argument('-v', '--version', action='store_true',
-                        help='Show version')
-    args = parser.parse_args()
-    run_args(args, methods)
-    return args
+    pa = parser.add_argument
+    pa('modules', type=str, nargs='+', help='Python modules to be used')
+    pa('-e', '--edit', action='store_true', help='Edit the files')
+    pa('-l', '--list', action='store_true', help='List the files (ls -l)')
+    pa('-q', '--quiet', action='store_true', help='Say nothing')
+    pa('-v', '--version', action='store_true', help='Show version')
+    arguments = parser.parse_args()
+    return arguments.version and version() or arguments
 
 
 @contextmanager
