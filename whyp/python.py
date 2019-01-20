@@ -1,4 +1,3 @@
-#! /usr/bin/env python3.7
 """This small script offers a python equivalent to "which"
 
 For every argument on the command line it lists
@@ -23,10 +22,7 @@ from bdb import BdbQuit
 from contextlib import contextmanager
 
 from six import StringIO
-try:
-    import pudb as pdb
-except ImportError:
-    import pdb
+from pysyte import paths
 
 from whyp import __version__
 from whyp import arguments
@@ -145,7 +141,7 @@ def path_to_import(string, quiet):
                 module = importlib.import_module(string)
         except ImportError as e:
             if not quiet:
-                sys.stderr.write('%s\n')
+                sys.stderr.write('%s\n' % string)
             return None, None
     if module:
         pyc = module.__file__
@@ -163,25 +159,57 @@ def path_to_import(string, quiet):
     return None, None
 
 
+def show(*args):
+    string = ' '.join(args)
+    if arguments.get('quiet'):
+        return False
+    print(string)
+    return True
+
+
+def module_paths(modules):
+    strings = []
+    for name, path, version in modules:
+        item = None
+        path_ = paths.makepath(path)
+        if path_.ext != '.egg':
+            item = path_
+        else:
+            dir_ = path_ / name
+            if not dir_.isdir():
+                item = dir_
+            else:
+                init = dir_ / '__init__.py'
+                if init.isfile():
+                    item = init
+                else:
+                    named = dir_ / str('%s.py' % name)
+                    if named.isfile():
+                        item = named
+        if version and arguments.get('version'):
+            item = '%s, %s' % (path, version)
+        if item:
+            strings.append(str(item))
+    return strings;
+
+
 def script():
+    found = False
     modules = set()
     for module in arguments.get('modules'):
         if built_in(module):
-            print('builtin', module)
+            show('builtin', module)
+            found = True
             continue
         path, version_ = path_to_import(module, arguments.get('quiet'))
         if path:
-            modules.add((path, version_))
-    if arguments.get('edit'):
-        command = 'vim -p'
-        paths = [str(p) for p, _ in modules]
-    elif arguments.get('list'):
-        command = 'ls -l'
-        paths = [str(p) for p, v in modules]
-    else:
-        command = 'echo'
-        paths = [str('%s, %s' % (p, v)) if v else str(p) for p, v in modules]
-    string = ' '.join(sorted([str(p) for p in paths]))
-    if not arguments.get('quiet'):
-        print(command, string)
+            modules.add((module, path, version_))
+            found = True
+    if not modules:
+        return found
+    paths_ = module_paths(modules)
+    if not paths_:
+        return False
+    string = ' '.join(sorted([str(p) for p in paths_]))
+    show(string)
     return bool(string)
