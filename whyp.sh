@@ -21,7 +21,15 @@ export WHYP_PY=$WHYP_DIR/whyp
 export WHYP_OUT=$WHYP_DIR/whyp.out
 export WHYP_ERR=$WHYP_DIR/whyp.err
 
-$WHYP_BIN/sources --clear
+whyp-bin () {
+    #local _script=$WHYP_BIN/$1; shift
+    # (
+    # set -x
+    PYTHONPATH=$WHYP_DIR $WHYP_BIN/"$@"
+    # )
+}
+
+whyp-bin sources --clear
 
 # x
 
@@ -38,8 +46,8 @@ alias www="whyp-whyp -v"
 
 # xxxx
 
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 eype () {
-    # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
     local __doc__="""Edit the first argument as if it's a type"""
     local _sought=
     if whyp-python -q $1; then
@@ -72,11 +80,11 @@ whyp () {
 # xxxxx*
 
 whyp-py () {
-    $WHYP_BIN/whyp "$@"
+    whyp-bin whyp "$@"
 }
 
 whyp-py-file () {
-    $WHYP_BIN/whyp -f "$@"
+    whyp-bin whyp -f "$@"
 }
 
 python-has-debugger () {
@@ -89,10 +97,10 @@ looks-versiony () {
 }
 
 local-python () {
-    if whyp-executable pyth; then
-        echo pyth
-        return 0
-    fi
+    # if whyp-executable pyth; then
+    #     echo pyth
+    #     return 0
+    # fi
     local _which_py=python
     if looks-versiony $1; then
         if python-has-debugger $1; then
@@ -110,14 +118,15 @@ local-python () {
 
 whyp-python () {
     local __doc__="""find what python will import for a string, outside virtualenvs"""
+    local _quietly=
+    [[ $1 == -q ]] && _quietly=1 && shift
     local _python=$(local-python $1)
-    local _whyp_python=$WHYP_BIN/python
+    local _whyp_python=whyp-bin python
     if [[ -e $_python && -f $_whyp_python ]]; then
         $_python $_whyp_python "$@"
     else
-        echo "$_exec_py is not executable" >&2
-        [[ -n $_python ]] && echo "$_python is not executable" >&2
-        [[ -f $_whyp_python ]] && echo "$_whyp_python is not a file" >&2
+        [[ -e $_python ]] || echo "$_python is not executable" >&2
+        [[ -f $_whyp_python ]] || echo "$_whyp_python is not a file" >&2
         return 1
     fi
 }
@@ -162,7 +171,7 @@ show-command () {
     if [[ $_arg =~ -[vq] ]]; then
         shift
         if [[ $_arg =~ -[q] ]]; then
-            Quietly whyp-command "$@" 
+            Quietly whyp-command "$@"
             return $?
         fi
     fi
@@ -193,10 +202,10 @@ whyp-debug () {
 
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    $WHYP_BIN/sources --any || return
+    whyp-bin sources --any || return
     OLD_IFS=$IFS
-    IFS=:; for sourced_file in $($WHYP_BIN/sources --files)
-    do
+    local _whyp_sources=$(whyp-bin sources --files)
+    IFS=:; for sourced_file in $_whyp_sources; do
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
             ${EDITOR:-vim} $sourced_file +$line_number
@@ -250,20 +259,20 @@ source-whyp () {
         fi
         return
     fi
-    $WHYP_BIN/sources --optional --sources "$_filename"
-    if ! $WHYP_BIN/sources --found "$_filename"; then
+    whyp-bin sources --optional --sources "$_filename"
+    if whyp-bin sources --found "$_filename"; then
         source "$_filename"
     fi
 }
 
-quietly unalias . 
+quietly unalias .
 alias .=source-whyp
 
 
 # _xxxxx+
 
 whyp-executable () {
-    Quietly type "$@" 
+    Quietly type "$@"
 }
 
 whyp-function () {
@@ -306,7 +315,7 @@ _create_function () {
     local __doc__="""Make a new function with a command in shell history"""
     local doc="copied from $(basename $SHELL) history on $(date)"
     local history_command=$(_show_history_command)
-    quietly eval "$function() { local __doc__="""$doc"""; $history_command; }" 
+    quietly eval "$function() { local __doc__="""$doc"""; $history_command; }"
 }
 
 _make_path_to_file_exist () {
