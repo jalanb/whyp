@@ -23,11 +23,12 @@ from bdb import BdbQuit
 from contextlib import contextmanager
 
 from six import StringIO
-
 try:
     import pudb as pdb
 except ImportError:
     import pdb
+
+from whyp import arguments
 
 __version__ = '1.1.0'
 
@@ -75,7 +76,7 @@ def path_to_sub_directory(path, name):
     """If name is a real sub-directory of path, return that"""
     result = os.path.join(path, name)
     if os.path.isdir(result):
-        return result
+        return os.path.normpath(result)
 
 
 def path_to_python(path, name):
@@ -126,19 +127,6 @@ def version(args):
     raise SystemExit
 
 
-def parse_args(methods):
-    """Parse out command line arguments"""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    pa = parser.add_argument
-    pa('modules', type=str, nargs='+', help='Python modules to be used')
-    pa('-e', '--edit', action='store_true', help='Edit the files')
-    pa('-l', '--list', action='store_true', help='List the files (ls -l)')
-    pa('-q', '--quiet', action='store_true', help='Say nothing')
-    pa('-v', '--version', action='store_true', help='Show version')
-    arguments = parser.parse_args()
-    return arguments.version and version() or arguments
-
-
 @contextmanager
 def look_here(_name):
     here = os.getcwd()
@@ -176,46 +164,25 @@ def path_to_import(string, quiet):
     return None, None
 
 
-def script(args):
+def script():
     modules = set()
-    for module in args.modules:
+    for module in arguments.get('modules'):
         if built_in(module):
             print('builtin', module)
             continue
-        path, version_ = path_to_import(module, args.quiet)
+        path, version_ = path_to_import(module, arguments.get('quiet'))
         if path:
             modules.add((path, version_))
-    if args.edit:
+    if arguments.get('edit'):
         command = 'vim -p'
         paths = [str(p) for p, _ in modules]
-    elif args.list:
+    elif arguments.get('list'):
         command = 'ls -l'
         paths = [str(p) for p, v in modules]
     else:
         command = 'echo'
         paths = [str('%s, %s' % (p, v)) if v else str(p) for p, v in modules]
     string = ' '.join(sorted([str(p) for p in paths]))
-    if not args.quiet:
+    if not arguments.get('quiet'):
         print(command, string)
     return bool(string)
-
-
-def main():
-    """Run the script"""
-    try:
-        args = parse_args(globals())
-        return os.EX_OK if script(args) else not os.EX_OK
-    except BdbQuit:
-        pass
-    except SystemExit as e:
-        return e.code
-    except Exception as e:  # pylint: disable=broad-except
-        if __version__[0] < '1':
-            raise
-        print(e, sys.stderr)
-        return not os.EX_OK
-    return os.EX_OK
-
-
-if __name__ == '__main__':
-    sys.exit(main())

@@ -1,32 +1,17 @@
-"""Show the text behind the type
-
-This script is intended to replace the standard type command
-It should look for commands in aliases, bash functions, and the bash $PATH
-It assumes aliases and functions have been written to files before starting
-    (because this script cannot reliably get them from sub-shells)
-"""
-
+"""Show the text behind the type"""
 
 import os
 import re
 import sys
 import stat
 import doctest
-import optparse
 import subprocess
 from collections import defaultdict
 from bdb import BdbQuit
 
+from pysyte.iteration import first
 
-_copyright = """
-(c) J Alan Brogan 2013
-    The source is released under the MIT license
-    See http://jalanb.mit-license.org/ for more information
-"""
-
-from . import arguments
-
-version = '0.7.0'
+from whyp import arguments
 
 
 def environment_value(key):
@@ -52,7 +37,7 @@ def pager():
     vimcat originated at https://github.com/rkitover/vimpager
         So try ../../vimpager/vimcat too
     """
-    path_to_vimcat = file_in_environment_path('vimcat')
+    path_to_vimcat = find_in_environment_path('vimcat')
     if os.path.isfile(path_to_vimcat):
         return path_to_vimcat
     parent = os.path.dirname
@@ -62,20 +47,20 @@ def pager():
         path_to_vimcat = os.path.join(path_to_hub, vimcat_dir, 'vimcat')
         if os.path.isfile(path_to_vimcat):
             return path_to_vimcat
-    return file_in_environment_path('less')
+    return find_in_environment_path('less')
 
 
 def replace_alias(command):
     """Replace any alias with its value at start of the command"""
     if ' ' not in command:
         return command
-    command, arguments = command.split(' ', 1)
-    return '%s %s' % (get_alias(command), arguments)
+    command, args = command.split(' ', 1)
+    return '%s %s' % (find_alias(command), args)
 
 
 def bash_executable():
     """The first executable called 'bash' in the $PATH"""
-    return file_in_environment_path('bash')
+    return find_in_environment_path('bash')
 
 
 def show_output_of_shell_command(command):
@@ -97,7 +82,7 @@ def show_output_of_shell_command(command):
             sys.stdout.buffer.write(stdout)
         except AttributeError:
             print(stdout)
-        if get_argument('hide_errors'):
+        if arguments.get('hide_errors'):
             return
         if not stderr:
             return
@@ -117,9 +102,9 @@ def strip_quotes(string):
     """
     if not string:
         return string
-    first = string[0]
+    first_ = string[0]
     last = string[-1]
-    if first == last and first in '"\'':
+    if first_ == last and first_ in '"\'':
         return string[1:-1]
     return string
 
@@ -140,14 +125,18 @@ def memoize(method):
     return call_method
 
 
+def read_command_line():
+    arguments.put('aliases', '/tmp/aliases')
+    arguments.put('functions', '/tmp/functions')
+
+
 @memoize
 def get_aliases():
     """Read a dictionary of aliases from a file"""
-    path = getattr(get_argument(''), 'aliases', None)
-    if not path:
-        return {}
+    aliases = arguments.get('aliases')
     try:
-        lines = [l.rstrip() for l in open(path)]
+        stream = open(aliases) if aliases else []
+        lines = [l.rstrip() for l in stream]
     except IOError:
         return {}
     alias_lines = [l[6:] for l in lines if l.startswith('alias ')]
@@ -156,16 +145,22 @@ def get_aliases():
     return dict(alias_commands)
 
 
-def get_alias(string):
+def find_alias(string):
     """Give the alias for that string, or the string itself"""
     return get_aliases().get(string, string)
+
+
+def get_alias(string):
+    return get_aliases().get(string, None)
 
 
 @memoize
 def get_functions():
     """Read a dictionary of functions from a known file"""
+    arg_funcs = arguments.get('functions')
     try:
-        lines = [l.rstrip() for l in open(get_argument('functions'))]
+        stream = open(arg_funcs) if arg_funcs else []
+        lines = [l.rstrip() for l in stream]
     except IOError:
         return {}
     name = function_lines = None
@@ -189,6 +184,10 @@ def get_functions():
     for name, lines in functions.items():
         result[name] = '%s ()\n{\n%s\n}\n' % (name, '\n'.join(lines))
     return result
+
+
+def find_function(name):
+    return get_functions().get(name, None)
 
 
 def environment_paths():
@@ -272,10 +271,10 @@ def files_in_environment_path():
     return dict(result)
 
 
-def file_in_environment_path(string):
+def find_in_environment_path(string):
     """Gives the path to string, or string.exe
 
-    >>> file_in_environment_path('python') == sys.executable or True
+    >>> find_in_environment_path('python') == sys.executable or True
     True
     """
     try:
@@ -284,7 +283,7 @@ def file_in_environment_path(string):
     except KeyError:
         if string.endswith('.exe'):
             return ''
-        return file_in_environment_path('%s.exe' % string)
+        return find_in_environment_path('%s.exe' % string)
 
 
 class Bash(object):
@@ -303,12 +302,12 @@ def showable(language):
 
 def show_function(command):
     """Show a function to the user"""
-    if not get_argument('verbose'):
+    if not arguments.get('verbose'):
         print('%s is a function' % command)
     else:
         commands = ' | '.join([
             "shopt -s extglob; . %s; %s %s" % (
-                get_argument('functions'), Bash.declare_f, command),
+                arguments.get('functions'), Bash.declare_f, command),
             "sed '1 i\\\n#! /usr/bin/env bash\n'",
             Bash.view_file
         ])
@@ -365,19 +364,19 @@ def script_language(path_to_file):
 
 def show_command_in_path(command):
     """Show a command which is a file in $PATH"""
-    path_to_command = file_in_environment_path(command)
+    path_to_command = find_in_environment_path(command)
     show_path_to_command(path_to_command)
 
 
 def show_path_to_command(path_to_command):
     """Show a command which is a file at that path"""
-    if get_argument('ls'):
+    if arguments.get('ls'):
         show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
     else:
         p = os.path.realpath(path_to_command)
         if os.path.exists(p):
             print(p)
-    if not get_argument('verbose'):
+    if not arguments.get('verbose'):
         return
     language = script_language(path_to_command)
     if showable(language):
@@ -387,11 +386,11 @@ def show_path_to_command(path_to_command):
 
 def show_alias(command):
     """Show a command defined by alias"""
-    aliases = get_aliases()
-    print('alias %s=%r' % (command, aliases[command]))
-    if not get_argument('verbose'):
+    alias = get_alias(command)
+    print('alias %s=%r' % (command, alias))
+    if not arguments.get('verbose'):
         return
-    sub_command = aliases[command].split()[0].strip()
+    sub_command = alias.split()[0].strip()
     if sub_command == command:
         return
     if os.path.dirname(sub_command) in environment_paths():
@@ -402,26 +401,26 @@ def show_alias(command):
 
 def show_command(command):
     """Show whatever is behind a command"""
-    i = 0
-    methods = [
-        (lambda x: x in get_aliases(), show_alias),
-        (lambda x: x in get_functions(), show_function),
-        (lambda x: x in files_in_environment_path(), show_command_in_path),
-        (os.path.isfile, show_path_to_command),
-    ]
-    function = get_functions().get(command, None)
-    for found, show in methods:
-        if found(command):
-            if get_argument('file'):
-                if os.path.isfile:
-                    show_path_to_command(command)
-                else:
-                    # show(command) :thinking_face:
-                    pass
-            elif not get_argument('quiet'):
-                show(command)
-            return 0
-    return 1
+    if arguments.get('file'):
+        if os.path.isfile:
+            show_path_to_command(command)
+        else:
+            # show(command) :thinking_face:
+            pass
+    elif not arguments.get('quiet'):
+        methods = [
+            (get_alias, show_alias),
+            (find_function, show_function),
+            (find_in_environment_path, show_command_in_path),
+            (os.path.isfile, show_path_to_command),
+        ]
+        try:
+            show = first((show for find, show in methods if find(command)))
+            show(command)
+            return True
+        except ValueError:
+            return False
+    return False
 
 
 def nearby_file(named_file, extension):
@@ -431,29 +430,3 @@ def nearby_file(named_file, extension):
     True
     """
     return os.path.splitext(named_file)[0] + extension
-
-
-def test():
-    """Run any doctests in this script or associated test scripts"""
-    options = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
-    all_failures, all_tests = 0, 0
-    main_module = sys.modules['__main__']
-    failures, tests = doctest.testmod(
-        main_module,
-        optionflags=options,
-    )
-    all_failures += failures
-    all_tests += tests
-    for extension in ['.test', '.tests']:
-        main_test = nearby_file(main_module.__file__, extension)
-        if not os.path.isfile(main_test):
-            continue
-        failures, tests = doctest.testfile(
-            main_test,
-            optionflags=options,
-            module_relative=False,
-        )
-        all_failures += failures
-        all_tests += tests
-    print('Ran %s tests, %s failures' % (all_tests, all_failures))
-    return 0

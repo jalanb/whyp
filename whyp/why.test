@@ -1,0 +1,26 @@
+The whyp.why module
+===================
+
+    >>> from whyp import why
+    >>> assert 'text behind the type' in why.__doc__
+
+More modules for testing
+------------------------
+
+    >>> from whyp import arguments
+    >>> from os import path
+
+Bash environment
+----------------
+
+    >>> assert path.isfile(why.bash_executable())
+    >>> assert path.basename(why.bash_executable()) == 'bash'
+
+    >>> assert why.find_alias('bash') == 'bash'
+    >>> assert why.get_alias('bash') is None
+    >>> assert why.find_function('bash') is None
+    >>> assert path.isfile(why.find_in_environment_path('bash'))
+    >>> assert why.find_in_environment_path('bash') == why.bash_executable()
+    >>> arguments.put('aliases', '/tmp/aliases')
+    >>> arguments.put('functions', '/tmp/functions')
+    >>> assert why.get_alias('w') == 'whyp'

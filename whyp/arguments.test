@@ -1,0 +1,24 @@
+The whyp.arguments module
+=========================
+
+    >>> from whyp import arguments
+    >>> assert 'command line arguments ' in arguments.__doc__
+
+More modules for testing
+------------------------
+
+    >>> import sys
+
+Set up a command line to parse
+    >>> sys.argv = ['program', '-l', 'fred']
+
+Parse sys.argv
+--------------
+
+    >>> parser = arguments.parser('doc')
+    >>> _ = parser.add_argument('-l', '--long', action='store')
+    >>> arguments.parse_args()
+
+args are now available from the module
+
+    >>> assert arguments.get('long') == 'fred'

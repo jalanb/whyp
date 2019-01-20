@@ -1,0 +1,22 @@
+The whyp.why module
+===================
+
+    >>> from whyp import why
+    >>> import os
+    >>> from pysyte.streams import swallow_stdout
+
+    >>> assert why.strip_quotes(None) is None
+    >>> assert why.strip_quotes('') is ''
+    >>> path = '/usr/local/bin'
+    >>> assert why.contractuser(path) == path
+    >>> assert not why.items_in('/no/such/path')
+    >>> assert why.showable('python')
+    >>> assert why.showable('bash')
+    >>> assert not why.showable('java')
+    >>> with swallow_stdout():
+    ...     assert why.show_command('bash')
+
+    >>> with swallow_stdout():
+    ...     why.show_alias('w')
+
+
