@@ -14,18 +14,20 @@ _file = '.'.join((path.splitext(__file__)[0], 'yaml'))  # static to importers
 
 optional = False  # volatile to importers
 
-def load():
+def load(optional):
     """Provide the data from a yaml file"""
+    if not path.isfile(_file):
+        return optional and [] or False
     try:
         with open(_file) as stream:
             return yaml.safe_load(stream)
-    except:
+    except FileNotFoundError:
         if optional:
             return []
         raise
 
 
-_sources = load()
+_sources = load(True)
 
 
 def save():
