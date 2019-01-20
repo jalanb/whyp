@@ -28,9 +28,8 @@ try:
 except ImportError:
     import pdb
 
+from whyp import __version__
 from whyp import arguments
-
-__version__ = '1.1.0'
 
 
 def directory_list(path):
