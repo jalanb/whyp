@@ -22,14 +22,17 @@ export WHYP_OUT=$WHYP_DIR/whyp.out
 export WHYP_ERR=$WHYP_DIR/whyp.err
 
 whyp-bin () {
-    #local _script=$WHYP_BIN/$1; shift
-    # (
-    # set -x
-    PYTHONPATH=$WHYP_DIR $WHYP_BIN/"$@"
-    # )
+    local __doc__="""Full path to a script in whyp/bin"""
+    echo $WHYP_BIN/"$1"
 }
 
-whyp-bin sources --clear
+whyp-bin-run () {
+    local __doc__="""Run a script in whyp/bin"""
+    local _script=$1; shift
+    PYTHONPATH=$WHYP_DIR $(whyp-bin $_script) "$@"
+}
+
+whyp-bin-run sources --clear
 
 # x
 
@@ -80,11 +83,11 @@ whyp () {
 # xxxxx*
 
 whyp-py () {
-    whyp-bin whyp "$@"
+    whyp-bin-run whyp "$@"
 }
 
 whyp-py-file () {
-    whyp-bin whyp -f "$@"
+    whyp-bin-run whyp -f "$@"
 }
 
 python-has-debugger () {
@@ -121,7 +124,7 @@ whyp-python () {
     local _quietly=
     [[ $1 == -q ]] && _quietly=1 && shift
     local _python=$(local-python $1)
-    local _whyp_python=whyp-bin python
+    local _whyp_python=$(whyp-bin python)
     if [[ -e $_python && -f $_whyp_python ]]; then
         $_python $_whyp_python "$@"
     else
@@ -202,9 +205,9 @@ whyp-debug () {
 
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    whyp-bin sources --any || return
+    whyp-bin-run sources --any || return
     OLD_IFS=$IFS
-    local _whyp_sources=$(whyp-bin sources --files)
+    local _whyp_sources=$(whyp-bin-run sources --files)
     IFS=:; for sourced_file in $_whyp_sources; do
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
@@ -259,8 +262,8 @@ source-whyp () {
         fi
         return
     fi
-    whyp-bin sources --optional --sources "$_filename"
-    if whyp-bin sources --found "$_filename"; then
+    whyp-bin-run sources --optional --sources "$_filename"
+    if whyp-bin-run sources --found "$_filename"; then
         source "$_filename"
     fi
 }

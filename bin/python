@@ -8,6 +8,7 @@ It should look for modules in standard paths
 
 
 
+import os
 import sys
 
 from whyp import python
@@ -19,23 +20,16 @@ def parse_args():
     parser = arguments.parser(__doc__)
     pa = parser.add_argument
     pa('modules', nargs='+', help='the modules python might import')
-    pa('-l', '--ls', action='store_true',
-                      help='show output of "ls path" if it is a path')
-    pa('-q', '--quiet', action='store_true',
-                      help='do not show any output')
-    pa('-v', '--verbose', action='store_true',
-                      help='whether to show more info, such as file contents')
+    pa('-q', '--quiet', action='store_true', help='do not show any output')
+    pa('-v', '--version', action='store_true', help='show module version')
     arguments.parse_args()
 
 
 def main():
     """Run the program"""
     parse_args()
-    result = 0
-    for command in arguments.get('modules'):
-        result |= whyp.show_command(command)
-    return result
+    return python.script()
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(0 if main() else 1)
