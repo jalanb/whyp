@@ -2,13 +2,41 @@ The whyp.why module
 ===================
 
     >>> from whyp import why
-    >>> import os
+
+More modules for testing
+------------------------
+
+    >>> from whyp import arguments
+    >>> from os import path
+
     >>> from pysyte.streams import swallow_stdout
+
+Bash environment
+----------------
+
+    >>> assert path.isfile(why.bash_executable())
+    >>> assert path.basename(why.bash_executable()) == 'bash'
+
+    >>> assert why.find_alias('bash') == 'bash'
+    >>> assert why.get_alias('bash') is None
+    >>> assert why.find_function('bash') is None
+    >>> assert path.isfile(why.find_in_environment_path('bash'))
+    >>> assert why.find_in_environment_path('bash') == why.bash_executable()
+    >>> arguments.put('aliases', '/tmp/aliases')
+    >>> arguments.put('functions', '/tmp/functions')
+    >>> assert why.get_alias('w') == 'whyp'
+
+quote handling
+--------------
 
     >>> assert why.strip_quotes(None) is None
     >>> assert why.strip_quotes('') is ''
-    >>> path = '/usr/local/bin'
-    >>> assert why.contractuser(path) == path
+    >>> p = '/usr/local/bin'
+    >>> assert why.contractuser(p) == p
+
+Showing paths
+-------------
+
     >>> assert not why.items_in('/no/such/path')
     >>> assert why.showable('python')
     >>> assert why.showable('bash')
@@ -19,4 +47,10 @@ The whyp.why module
     >>> with swallow_stdout():
     ...     why.show_alias('w')
 
+Sripping quotes
+---------------
 
+    >>> why.strip_quotes('"x"') == why.strip_quotes("'x'") == why.strip_quotes('x')
+    True
+    >>> not why.strip_quotes('') and not why.strip_quotes(None)
+    True
