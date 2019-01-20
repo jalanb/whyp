@@ -1,41 +1,47 @@
-The whap module
-===============
+The whyp.python module
+======================
 
-    >>> import whap
-    >>> print whap.__doc__
-    This small script offers a python equivalent to "which"
-    ...
+    >>> from whyp import python
+    >>> assert 'python equivalent to "which"' in  python.__doc__
 
 More modules for testing
 ------------------------
 
     >>> import os
+    >>> import importlib
 
 Paths to modules
 ----------------
 
 Here's one python file we know exists:
-    >>> os.path.isfile(whap.__file__)
+    >>> os.path.isfile(python.__file__)
     True
 
-    >>> directory = os.path.dirname(whap.__file__)
-    >>> filename = os.path.basename(whap.__file__)
+    >>> directory = os.path.dirname(python.__file__)
+    >>> filename = os.path.basename(python.__file__)
 
-Depending on current status, that might be whap.py or whap.pyc
+Depending on current status, that might be python.py or python.pyc
     >>> name, ext = os.path.splitext(filename)
     >>> ext in ['.py', '.pyc']
     True
 
 This method gives the file in the directory,
     but always prefers source over compiled
-    >>> print whap.path_to_module(directory, 'whap')
-    /.../whap.py
+    >>> actual = python.path_to_module(directory, 'python')
+    >>> assert actual.endswith('/python.py')
 
 Paths to packages
 -----------------
 
 Hard to test this, as no guarantee there are any known packages around
-    best to go with one of the standard python packages
-    >>> directory = os.path.dirname(os.__file__)
-    >>> print whap.path_to_sub_directory(directory, 'compiler')
-    /.../compiler
+    best to go with standard python packages
+    Python's /lib/ contains 'os.py' and a directory `importlib`
+
+    >>> lib = os.path.dirname(os.__file__)
+
+path_to_sub_directory() should return path to a sub-dir
+    >>> actual = python.path_to_sub_directory(lib, 'importlib')
+    >>> assert actual == os.path.dirname(importlib.__file__)
+
+or nothing for a bad name
+    >>> assert python.path_to_sub_directory(lib, 'not a dir') is None

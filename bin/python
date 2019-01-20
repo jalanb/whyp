@@ -19,6 +19,7 @@ def parse_args():
     parser = arguments.parser(__doc__)
     pa = parser.add_argument
     pa('modules', nargs='+', help='the modules python might import')
+    pa('-e', '--edit', action='store_true', help='Edit the files')
     pa('-l', '--ls', action='store_true',
                       help='show output of "ls path" if it is a path')
     pa('-q', '--quiet', action='store_true',
