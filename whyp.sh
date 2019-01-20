@@ -55,8 +55,8 @@ eype () {
     local _sought=
     if whyp-python -q $1; then
         _sought=$1; shift
-        _edit_file $(whyp-python $_sought) "$@"
-        return 1
+        _vim_file $(whyp-python $_sought) "$@"
+        return 0
     elif [[ $(type -t $1) == "file" ]]; then
         _edit_file $1
     elif is-existing-function $1; then
@@ -122,11 +122,12 @@ local-python () {
 whyp-python () {
     local __doc__="""find what python will import for a string, outside virtualenvs"""
     local _quietly=
-    [[ $1 == -q ]] && _quietly=1 && shift
+    [[ $1 == -q ]] && _quietly=-q && shift
     local _python=$(local-python $1)
     local _whyp_python=$(whyp-bin python)
     if [[ -e $_python && -f $_whyp_python ]]; then
-        $_python $_whyp_python "$@"
+        $_python $_whyp_python $_quietly "$@"
+        return $?
     else
         [[ -e $_python ]] || echo "$_python is not executable" >&2
         [[ -f $_whyp_python ]] || echo "$_whyp_python is not a file" >&2
@@ -239,6 +240,7 @@ _edit_function () {
 _edit_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
     local file=$(whyp-py -f $1)
+    [[ -f $_file ]] || return 1
     if file $file | grep -q text; then
         _vim_file  $file
     else
