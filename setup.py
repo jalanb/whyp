@@ -2,11 +2,11 @@
 
 from distutils.core import  setup
 
-from whyp import whyp
+import whyp
 
 setup(
     name="whyp",
-    version=whyp.version,
+    version=whyp.__version__,
     description=whyp.__doc__.splitlines()[0],
     url="https://github.com/jalanb/whyp",
     requires=["argparse"],

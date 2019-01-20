@@ -1,20 +1,20 @@
-The whyp module
-===============
+The whyp.whyp module
+====================
 
-    >>> import whyp
-    >>> 'Show the text' in whyp.__doc__
+    >>> from whyp import why
+    >>> 'Show the text' in why.__doc__
     True
 
 The tests in this file depend on known aliases and functions
     You may need to change them to get them working on your machine
 
-    >>> _ = whyp.read_command_line()
+    >>> _ = why.read_command_line()
 
 Read aliases
 ------------
 
 Read in a dictionary of all known aliases
-    >>> aliases = whyp.get_aliases()
+    >>> aliases = why.get_aliases()
 
 And check some known values
     These 2 aliases seem rather basic, but may not work on someone else's machine
@@ -32,7 +32,7 @@ Read functions
 --------------
 
 Similarly we can read in known functions
-    >>> functions = whyp.get_functions()
+    >>> functions = why.get_functions()
 
 Which gives a dictionary
     >>> True # 'kd' in functions.keys()
@@ -51,5 +51,5 @@ And we can get files from the bash $PATH
 Such files will vary across machines,
     but it is safe to assume that python is one of them
     and that it is in a "bin" directory
-    >>> whyp.files_in_environment_path()['python'].endswith('bin/python')
+    >>> why.files_in_environment_path()['python'].endswith('bin/python')
     True

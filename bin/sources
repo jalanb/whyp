@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/local/bin/python
 """Show the text behind the type
 
 This script is intended to replace the standard type command
@@ -13,46 +13,48 @@ import sys
 import argparse
 
 from whyp import sources
+from whyp import arguments
 
 def parse_args():
     """Look for options from user on the command line for this script"""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     pa = parser.add_argument
-    pa('--sources', help='Try to source these')
-    pa('--files', help='Show files in these')
+    pa('--sources', help='Try to source these', nargs='*')
+    pa('--files', action='store_true', help='Show files in those')
     pa('--any', action='store_true', help='Any files sourced')
     pa('--all', action='store_true', help='All files sourced')
     pa('--clear', action='store_true', help='Forget all sources')
     pa('--found', action='store', help='Whether that was sourced')
     pa('-o', '--optional', action='store_true', help='sources may be empty')
     arguments = parser.parse_args()
-    sources.optional = arguments.optional
     return arguments
 
 
 def main():
     """Run the program"""
-    arguments = parse_args()
-    if arguments.clear:
+    args = parse_args()
+    if args.clear:
         return sources.clear()
-    if arguments.any:
+    if args.any:
         return sources.any()
     files = []
     errors = []
-    ss, so = sources.source, arguments.sources
-    [(files if ss(_) else errors).append(_) for _ in so]
-    if arguments.found:
-        return arguments.found in sources.all()
+    sources.load(args.optional)
+    ss, aa = sources.source, args.sources or []
+    [(files if ss(_) else errors).append(_) for _ in aa]
+    alll = sources.all() or []
+    if args.found:
+        return args.found in alll
     stream = sys.stdout
     words = []
-    if arguments.files:
+    if args.files:
         words = files
-    elif arguments.all:
+    elif args.all:
         words = sources.all()
-    if not arguments.optional:
+    if not args.optional:
         if errors:
             words, stream = errors, sys.stderr
-        if not files and arguments.files:
+        if not files and args.files:
             words, stream = ('No', 'files', 'sourced'), sys.stderr
     stream.write(' '.join(words))
     return stream != sys.stderr
