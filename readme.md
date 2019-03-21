@@ -189,6 +189,13 @@ Witty
 -----
 One of the best compliments of my coding life was when [/u/andru183 called this code "witty"](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
 
+Thanks
+------
+
+
+![JetBrains](images/jet_brains.png)
+
+This project has been supported by [JetBrains](www.jetbrains.com), who have graciously licensed me use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for development
 
 Version
 -------
