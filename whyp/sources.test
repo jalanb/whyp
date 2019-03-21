@@ -1,0 +1,19 @@
+The whyp.sources module
+=======================
+
+    >>> from whyp import sources
+    >>> assert 'aliases / functions from source files' in sources.__doc__
+
+More modules for testing
+------------------------
+
+    >>> from os.path  import basename
+
+Functions to get sourced files
+------------------------------
+
+Should be some files sourced already
+    >>> assert sources.any()
+
+And our shell script should be one of them
+    >>> assert 'whyp.sh' in [basename(s) for s in sources.all()]
