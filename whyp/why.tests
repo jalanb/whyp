@@ -22,8 +22,13 @@ Bash environment
     >>> assert why.find_function('bash') is None
     >>> assert path.isfile(why.find_in_environment_path('bash'))
     >>> assert why.find_in_environment_path('bash') == why.bash_executable()
+
+Read alias file
+--------------
+
+    >>> with open('/tmp/aliases', 'w') as stream:
+    ...     _ = stream.write('alias w=whyp\n')
     >>> arguments.put('aliases', '/tmp/aliases')
-    >>> arguments.put('functions', '/tmp/functions')
     >>> assert why.get_alias('w') == 'whyp'
 
 quote handling
