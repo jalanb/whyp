@@ -40,17 +40,18 @@ def main():
     files = []
     errors = []
     sources.load(args.optional)
-    ss, aa = sources.source, args.sources or []
-    [(files if ss(_) else errors).append(_) for _ in aa]
     alll = sources.all() or []
     if args.found:
         return args.found in alll
-    stream = sys.stdout
+    for source in args.sources or alll:
+        items = files if sources.source(source) else errors
+        items.append(source)
     words = []
     if args.files:
         words = files
     elif args.all:
         words = sources.all()
+    stream = sys.stdout
     if not args.optional:
         if errors:
             words, stream = errors, sys.stderr

@@ -32,7 +32,14 @@ whyp-bin-run () {
     PYTHONPATH=$WHYP_DIR $(whyp-bin $_script) "$@"
 }
 
-whyp-bin-run sources --clear
+whyp-pudb-run () {
+    local __doc__="""Run a script in whyp/bin"""
+    local _script=$1; shift
+    set -x
+    PYTHONPATH=$WHYP_DIR pudb $(whyp-bin $_script) "$@"
+    set +x
+}
+
 
 # x
 
@@ -53,17 +60,19 @@ alias www="whyp-whyp -v"
 eype () {
     local __doc__="""Edit the first argument as if it's a type"""
     local _sought=
-    if whyp-python -q $1; then
+    if is-bash $1; then # Cannot edit builtins
+        return 1
+    elif is-file $1; then
+        _edit_file $1
+    elif is-function $1; then
+        _parse_function $1
+        _edit_function
+    elif is-alias $1; then
+        _edit_alias $1
+    elif whyp-python -q $1; then
         _sought=$1; shift
         _vim_file $(whyp-python $_sought) "$@"
         return 0
-    elif [[ $(type -t $1) == "file" ]]; then
-        _edit_file $1
-    elif is-existing-function $1; then
-        _parse_function $1
-        _edit_function
-    elif is-existing-alias $1; then
-        _edit_alias $1
     else
         _file=$1; shift
         _sought=$1; shift
@@ -76,8 +85,9 @@ alias whap=whyp-python
 
 whyp () {
     local __doc__="""whyp will extend type, later"""
-    type "$@" >$WHYP_OUT 2>$WHYP_ERR
+    type "$@" >$WHYP_OUT 2>$WHYP_ERR || return 1
     cat $WHYP_OUT
+    return 0
 }
 
 # xxxxx*
@@ -123,16 +133,20 @@ whyp-python () {
     local __doc__="""find what python will import for a string, outside virtualenvs"""
     local _quietly=
     [[ $1 == -q ]] && _quietly=-q && shift
+    # Python symbols do not start with numbers
+    [[ $1 =~ ^[0-9] ]] && return 1
+    # Python symbols do not have hyphens
+    [[ $1 =~ - ]] && return 1
     local _python=$(local-python $1)
     local _whyp_python=$(whyp-bin python)
-    if [[ -e $_python && -f $_whyp_python ]]; then
-        $_python $_whyp_python $_quietly "$@"
-        return $?
-    else
-        [[ -e $_python ]] || echo "$_python is not executable" >&2
-        [[ -f $_whyp_python ]] || echo "$_whyp_python is not a file" >&2
+    if [[ ! -f $_whyp_python ]]; then
+        echo "$_whyp_python is not a file" >&2
         return 1
     fi
+    local _pythonpath=$PYTHONPATH
+    local _whyp_dir=$(dirname $(readlink -f $WHYP_SOURCE))
+    [[ $_pythonpath ]] && _pythonpath=$_whyp_dir:$_pythonpath || _pythonpath=$_whyp_dir
+    (PYTHONPATH=$_pythonpath python $_whyp_python $_quietly "$@")
 }
 
 quietly () {
@@ -159,10 +173,22 @@ whyp-whyp () {
         cat $WHYP_ERR
         return $_fail
     fi
-    if [[ $(type -t "$1") == "file" ]]; then
+    if is-bash $1; then # there's no more to be said
+        whyp $1
+    elif is-file "$1"; then
         w "$@"
         ls -l "$1"
         return $_pass
+    elif is-alias $1; then
+        alias $1
+        local _stdout=$(alias $1)
+        local _suffix=${_stdout//*=\'}
+        local _command=${_suffix//\'}
+        whyp $_command
+    elif is-function $1; then
+        _parse_function "$@"
+        echo "$function is from '$path_to_file:$line_number'"
+        whyp $1 | kat -f2
     fi
     # show-command $_options "$@" && return $_pass
     # [[ $_options == -q ]] && return $_fail
@@ -207,16 +233,14 @@ whyp-debug () {
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
     whyp-bin-run sources --any || return
-    OLD_IFS=$IFS
-    local _whyp_sources=$(whyp-bin-run sources --files)
-    IFS=:; for sourced_file in $_whyp_sources; do
+    local _whyp_sources=$(whyp-bin-run sources --all)
+    for sourced_file in $_whyp_sources; do
+        [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
             ${EDITOR:-vim} $sourced_file +$line_number
         fi
     done
-    IFS=$OLD_IFS
-    type "$1"
 }
 
 _edit_function () {
@@ -262,10 +286,9 @@ source-whyp () {
         if [[ -z $2 || $2 != "optional" ]]; then
             echo Cannot source \"$1\". It is not a file. >&2
         fi
-        return
+        return 1
     fi
-    whyp-bin-run sources --optional --sources "$_filename"
-    if whyp-bin-run sources --found "$_filename"; then
+    if whyp-bin-run sources --optional --sources "$_filename"; then
         source "$_filename"
     fi
 }
@@ -291,9 +314,9 @@ _parse_function () {
 }
 
 old_whyp-type () {
-    if is-existing-alias "$1"; then
+    if is-alias "$1"; then
         type "$1"
-    elif is-existing-function "$1"; then
+    elif is-function "$1"; then
         type "$1"
         echo
         local _above=$(( $line_number - 1 ))
@@ -360,7 +383,7 @@ _show_history_command () {
     for word in $words
     do
         if [[ ${word:0:1} != "-" ]]; then
-            is-existing-alias $word && word="\\$word"
+            is-alias $word && word="\\$word"
         fi
         [[ -z $line ]] && line=$word || line="$line $word"
     done
@@ -388,14 +411,39 @@ source-path () {
     whyp-source "$@"
 }
 
-is-existing-function () {
+is-function () {
     local __doc__="""Whether the first argument is in use as a function"""
     [[ "$(type -t $1)" == "function" ]]
 }
 
-is-existing-alias () {
+is-bash () {
+    local __doc__="""Whether the first argument is a keyword or builtin"""
+    is-keyword $1 || is-builtin $1
+}
+
+is-keyword () {
+    local __doc__="""Whether the first argument is in use as a keyword"""
+    [[ "$(type -t $1)" == "keyword" ]]
+}
+
+is-builtin () {
+    local __doc__="""Whether the first argument is in use as a builtin"""
+    [[ "$(type -t $1)" == "builtin" ]]
+}
+
+is-file () {
+    local __doc__="""Whether the first argument is in use as a file"""
+    [[ "$(type -t $1)" == "file" ]]
+}
+
+is-alias () {
     local __doc__="""Whether the first argument is in use as a alias"""
     [[ "$(type -t $1)" == "alias" ]]
+}
+
+is-unrecognised () {
+    local __doc__="""Whether the first argument is in use as a unrecognised"""
+    [[ "$(type -t $1)" == "" ]]
 }
 
 [[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
