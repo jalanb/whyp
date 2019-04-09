@@ -138,7 +138,7 @@ whyp-python () {
     # Python symbols do not have hyphens
     [[ $1 =~ - ]] && return 1
     local _python=$(local-python $1)
-    local _whyp_python=$(whyp-bin python)
+    local _whyp_python=$(whyp-bin whyp-python)
     if [[ ! -f $_whyp_python ]]; then
         echo "$_whyp_python is not a file" >&2
         return 1
