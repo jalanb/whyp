@@ -233,7 +233,7 @@ whyp-debug () {
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
     whyp-bin-run sources --any || return
-    local _whyp_sources=$(whyp-bin-run sources --all)
+    local _whyp_sources=$(whyp-bin-run sources --all --optional)
     for sourced_file in $_whyp_sources; do
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
