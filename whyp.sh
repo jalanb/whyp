@@ -263,13 +263,13 @@ _edit_function () {
 
 _edit_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local file=$(whyp-py -f $1)
+    local _file=$(whyp-py $1)
     [[ -f $_file ]] || return 1
-    if file $file | grep -q text; then
-        _vim_file  $file
+    if file $_file | grep -q text; then
+        _vim_file  $_file
     else
-        echo $file is not text >&2
-        file $file >&2
+        echo $_file is not text >&2
+        file $_file >&2
     fi
 }
 
