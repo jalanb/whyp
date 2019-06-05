@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#! /usr/bin/env cat
 
 # This script is intended to be sourced, not run
 if [[ "$0" == $BASH_SOURCE ]]; then
@@ -10,16 +10,37 @@ fi
 #
 _license="This script is released under the MIT license, see accompanying LICENSE file"
 #
-_heading_lines=13 # Text before here is copied to new files
+_heading_lines=13 # Text before here was copied to template scripts, YAGNI
 
-[[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
 
-WHYP_SOURCE=$BASH_SOURCE
+export WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
+export WHYP_HOST=$(hostname -f)
+_whyp_local="$WHYP_SOURCE in $WHYP_DIR on $WHYP_HOST"
+
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_PY=$WHYP_DIR/whyp
-export WHYP_OUT=$WHYP_DIR/whyp.out
 export WHYP_ERR=$WHYP_DIR/whyp.err
+
+set -e
+    source $WHYP_DIR/colours.sh
+set +e
+
+whyp_hello () {
+    [[ $WELCOME_BYE ]] && WHYP_WELCOME=1
+    [[ $WHYP_WELCOME ]] || return
+    blue Welcome to $_whyp_local
+}
+
+whyp_goodbye () {
+    [[ $WHYP_WELCOME ]] || return
+    blue Bye from $_whyp_local
+}
+
+
+# WHYP_WELCOME=1
+whyp_hello 
+
 
 whyp-bin () {
     local __doc__="""Full path to a script in whyp/bin"""
@@ -48,6 +69,7 @@ alias w=whyp
 
 # xx
 
+alias wa="whyp --all"
 alias wp=whyp-python
 alias ww=whyp-whyp
 
@@ -84,10 +106,19 @@ eype () {
 alias whap=whyp-python
 
 whyp () {
-    local __doc__="""whyp will extend type, later"""
-    type "$@" >$WHYP_OUT 2>$WHYP_ERR || return 1
-    cat $WHYP_OUT
-    return 0
+    local __doc__="""whyp extends type"""
+    [[ "$@" ]] || echo "Usage: whyp <command>"
+    local _commands=type
+    local _alls_regexp="--*[al]*\>"
+    if [[ "$@" =~ $_alls_regexp ]]; then
+        local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" );
+        (
+            coloured type $_command
+            coloured which -a "$_command"
+        ) 
+    else
+        coloured type $_command
+    fi | red 2| green
 }
 
 # xxxxx*
@@ -177,7 +208,7 @@ whyp-whyp () {
         whyp $1
     elif is-file "$1"; then
         w "$@"
-        ls -l "$1"
+        ls -l $(type "$1" | sed -e "s:.* is ::")
         return $_pass
     elif is-alias $1; then
         alias $1
@@ -446,4 +477,4 @@ is-unrecognised () {
     [[ "$(type -t $1)" == "" ]]
 }
 
-[[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
+whyp_goodbye
