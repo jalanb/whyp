@@ -8,15 +8,18 @@ This module provides a source() method to recognise aliases / functions
 """
 
 import yaml
-from os import path
+import os
+from os import path as op
 
-_file = '.'.join((path.splitext(__file__)[0], 'yaml'))  # static to importers
+from whyp import paths
+
+_file = '.'.join((op.splitext(__file__)[0], 'yaml'))  # static to importers
 
 optional = False  # volatile to importers
 
 def load(optional):
     """Provide the data from a yaml file"""
-    if not path.isfile(_file):
+    if not op.isfile(_file):
         return set() if optional else False
     try:
         with open(_file) as stream:
@@ -31,7 +34,7 @@ _sources = load(True)
 
 
 def save():
-    real_sources = sorted([s for s in _sources if path.isfile(s)])
+    real_sources = sorted([s for s in _sources if op.isfile(s)])
     try:
         with open(_file, 'w') as stream:
             yaml.safe_dump(real_sources, stream)
@@ -47,7 +50,7 @@ def clear():
 
 
 def source(path_to_file):
-    if path.isfile(path_to_file):
+    if op.isfile(path_to_file):
         if path_to_file in _sources:
             return True
         _sources.add(path_to_file)
@@ -61,4 +64,10 @@ def any():
 
 def all():
     return _sources or ([] if optional else None)
+
+
+def split_names(string):
+
+    path = paths.as_path(string)
+    return path.directory(), path.base() if path.isfile() else path.dirname()
 

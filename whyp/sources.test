@@ -17,3 +17,7 @@ Should be some files sourced already
 
 And our shell script should be one of them
     >>> assert 'whyp.sh' in [basename(s) for s in sources.all()]
+
+    >>> dir_, base = sources.split_names('/usr/local/bin/python')
+    >>> assert dir_ = '/usr/local/bin'
+    >>> assert base == 'python'
