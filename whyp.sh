@@ -29,12 +29,12 @@ set +e
 whyp_hello () {
     [[ $WELCOME_BYE ]] && WHYP_WELCOME=1
     [[ $WHYP_WELCOME ]] || return
-    blue Welcome to $_whyp_local
+    echo Welcome to $_whyp_local
 }
 
 whyp_goodbye () {
     [[ $WHYP_WELCOME ]] || return
-    blue Bye from $_whyp_local
+    echo Bye from $_whyp_local
 }
 
 
@@ -113,11 +113,11 @@ whyp () {
     if [[ "$@" =~ $_alls_regexp ]]; then
         local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" );
         (
-            coloured type $_command
-            coloured which -a "$_command"
+            colourised type $_command
+            colourised which -a "$_command" | sed -e "s:::"
         ) 
     else
-        coloured type $_command
+        colourised type $_command
     fi | red 2| green
 }
 

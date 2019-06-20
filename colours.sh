@@ -19,7 +19,7 @@ green () {
     colourise 32 "$@"
 }
 
-brown () {
+yellow () {
     colourise 33 "$@"
 }
 
@@ -45,7 +45,7 @@ grey () {
 
 colourised () {
     [[ "$@" ]] || return
-    (set -e; set -x;
+    (
         touch .colours.out .colours.err
         "$@" > .colours.out 2> .colours.err
         blue -n "$@"
@@ -61,7 +61,7 @@ colourise () {
     local _colour="\033[${_light};$1m"; shift
     local _end=
     local _text=
-    if [[ $1 == "-[fn]*" ]]
+    if [[ $1 == "-[fn]*" ]]; then
         [[ $1 =~ "-[f]*[n][f]*" ]] && _end="\n"
         [[ $1 =~ "-[n]*[f][n]*" ]] && shift
         local _path=
@@ -70,7 +70,7 @@ colourise () {
         [[ -f "$_path" ]] && _cat=cat
         [[ $_cat ]] && _text="$(${_cat} ${_path} ) ${_end}"
     else
-        [[ $1 == "-n"]] && _end="\n" && shift
+        [[ $1 == "-n" ]] && _end="\n" && shift
         _text="$@${_end}"
     fi
     local _no_colour="\033[0m"
