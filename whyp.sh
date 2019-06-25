@@ -20,37 +20,6 @@ export WHYP_PY=$WHYP_DIR/whyp
 export WHYP_OUT=$WHYP_DIR/whyp.out
 export WHYP_ERR=$WHYP_DIR/whyp.err
 
-whyp-bin () {
-    local __doc__="""Full path to a script in whyp/bin"""
-    echo $WHYP_BIN/"$1"
-}
-
-
-whyp-bin-run () {
-    local __doc__="""Run a script in whyp/bin"""
-    local _script=$1; shift
-    PYTHONPATH=$WHYP_DIR $(whyp-bin $_script) "$@"
-}
-
-whyp-pudb-run () {
-    local __doc__="""Run a script in whyp/bin"""
-    local _script=$1; shift
-    set -x
-    PYTHONPATH=$WHYP_DIR pudb $(whyp-bin $_script) "$@"
-    set +x
-}
-
-
-whyp-edit-file () {
-    local __doc__="""Edit the first argument as if it's a type"""
-    local _file=$1; shift
-    [[ -f $_file ]] || return 1
-    local _dir=$(dirname $_file)
-    [[ -d $_dir ]] || _dir=.
-    local _base=$(basename $_file)
-    (cd $_dir; $EDITOR $_base "$@")
-}
-
 # x
 
 alias e=eype
@@ -111,12 +80,41 @@ whyp () {
 
 # xxxxx*
 
+whyp-bin () {
+    local __doc__="""Full path to a script in whyp/bin"""
+    echo $WHYP_BIN/"$1"
+}
+
+whyp-bin-run () {
+    local __doc__="""Run a script in whyp/bin"""
+    local _script=$1; shift
+    PYTHONPATH=$WHYP_DIR $(whyp-bin $_script) "$@"
+}
+
+whyp-pudb-run () {
+    local __doc__="""Debug a script in whyp/bin"""
+    local _script=$1; shift
+    set -x
+    PYTHONPATH=$WHYP_DIR pudb $(whyp-bin $_script) "$@"
+    set +x
+}
+
 whyp-py () {
     whyp-bin-run whyp "$@"
 }
 
 whyp-py-file () {
     whyp-bin-run whyp -f "$@"
+}
+
+whyp-edit-file () {
+    local __doc__="""Edit the first argument if it's a file"""
+    local _file=$1; shift
+    [[ -f $_file ]] || return 1
+    local _dir=$(dirname $_file)
+    [[ -d $_dir ]] || _dir=.
+    local _base=$(basename $_file)
+    (cd $_dir; $EDITOR $_base "$@")
 }
 
 python-has-debugger () {
