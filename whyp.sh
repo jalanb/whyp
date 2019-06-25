@@ -13,7 +13,7 @@ _license="This script is released under the MIT license, see accompanying LICENS
 _heading_lines=13 # Text before here was copied to template scripts, YAGNI
 
 
-WHYP_SOURCE=$BASH_SOURCE
+export WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_PY=$WHYP_DIR/whyp
@@ -58,6 +58,7 @@ alias w=whyp
 
 # xx
 
+alias wa="whyp --all"
 alias wp=whyp-python
 alias ww=whyp-whyp
 
@@ -187,7 +188,7 @@ whyp-whyp () {
         whyp $1
     elif is-file "$1"; then
         w "$@"
-        ls -l "$1"
+        ls -l $(type "$1" | sed -e "s:.* is ::")
         return $_pass
     elif is-alias $1; then
         alias $1
