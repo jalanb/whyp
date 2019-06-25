@@ -41,6 +41,16 @@ whyp-pudb-run () {
 }
 
 
+whyp-edit-file () {
+    local __doc__="""Edit the first argument as if it's a type"""
+    local _file=$1; shift
+    [[ -f $_file ]] || return 1
+    local _dir=$(dirname $_file)
+    [[ -d $_dir ]] || _dir=.
+    local _base=$(basename $_file)
+    (cd $_dir; $EDITOR $_base "$@")
+}
+
 # x
 
 alias e=eype
@@ -71,12 +81,12 @@ eype () {
         _edit_alias $1
     elif whyp-python -q $1; then
         _sought=$1; shift
-        _vim_file $(whyp-python $_sought) "$@"
+        whyp-edit-file $(whyp-python $_sought) "$@"
         return 0
     else
         _file=$1; shift
         _sought=$1; shift
-        vim $_file +/$_sought_
+        whyp-edit-file $_file +/$_sought_
     fi
 }
 
@@ -238,7 +248,7 @@ _edit_alias () {
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
-            ${EDITOR:-vim} $sourced_file +$line_number
+            whyp-edit-file $sourced_file +$line_number
         fi
     done
 }
@@ -246,15 +256,13 @@ _edit_alias () {
 _edit_function () {
     local __doc__="""Edit a function in a file"""
     _make_path_to_file_exist
-    local line_=
-    [[ -n "$line_number" ]] && line_="+$line_number"
     local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     local regexp_=+/$regexp
     if ! grep -q $regexp "$path_to_file"; then
         declare -f $function >> "$path_to_file"
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
-    _vim_file "$path_to_file" $line_ $regexp_
+    whyp-edit-file "$path_to_file" $_line $regexp_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     whyp-source "$path_to_file"
@@ -266,7 +274,7 @@ _edit_file () {
     local _file=$(whyp-py $1)
     [[ -f $_file ]] || return 1
     if file $_file | grep -q text; then
-        _vim_file  $_file
+        whyp-edit-file  $_file
     else
         echo $_file is not text >&2
         file $_file >&2
@@ -320,7 +328,7 @@ old_whyp-type () {
         type "$1"
         echo
         local _above=$(( $line_number - 1 ))
-        echo "vim $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
+        echo "whyp-edit-file $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
     elif whyp-executable "$1"; then
         real_file=$(readlink -f $(which "$1"))
         [[ $real_file != "$1" ]] && echo -n "$1 -> "
@@ -361,19 +369,10 @@ _make_path_to_file_exist () {
     declare -f $unamed_function >> "$path_to_file"
 }
 
-_vim_tabs () {
-    echo ${EDITOR:-vim -p}
-}
-
-_vim_file () {
-    local _file="$1";shift
-    $(_vim_tabs) "$_file" "$@"
-}
-
 _vim_line () {
     local _file="$1";shift
     local _line="$1";shift
-    _vim_file  "$_file" +$line
+    whyp-edit-file  "$_file" +$line
 }
 
 _show_history_command () {
