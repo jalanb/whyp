@@ -1,10 +1,12 @@
 language: python
 python:
 - '3.6'
-install: "pip install -r requirements.txt"
+install: pip install -r requirements.txt
 script: nosetests
 notifications:
   email: false
+  slack:
+    secure: E08/tj137DR78xUMTAkI7HjnR6VrnZN+rTxOccKJGawkKkQRu6ZGi1ZxZ3ph8CDIG2Zin8vDURMiZByhOjoC3eKFyUJ/3zJGN+Ql9YD9QI3W4DCmRJZvcDGANGzZaX5lsoMsVMyxzMsSPWPKCbr0/HOWWNjqrFhgmX3bQIUn1zA=
 deploy:
   provider: pypi
   user: jalanb
