@@ -95,10 +95,18 @@ eype () {
 alias whap=whyp-python
 
 whyp () {
-    local __doc__="""whyp will extend type, later"""
-    type "$@" >$WHYP_OUT 2>$WHYP_ERR || return 1
-    cat $WHYP_OUT
-    return 0
+    local __doc__="""whyp extends type"""
+    [[ "$@" ]] || echo "Usage: whyp <command>"
+    local _alls_regexp="--*[al]*\>"
+    if [[ "$@" =~ $_alls_regexp ]]; then
+        local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" );
+        (
+            type $_command
+            which -a "$_command"
+        ) 
+    else
+        type "$@"
+    fi 
 }
 
 # xxxxx*
