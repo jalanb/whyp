@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#! /usr/bin/env cat
 
 # This script is intended to be sourced, not run
 if [[ "$0" == $BASH_SOURCE ]]; then
@@ -10,9 +10,8 @@ fi
 #
 _license="This script is released under the MIT license, see accompanying LICENSE file"
 #
-_heading_lines=13 # Text before here is copied to new files
+_heading_lines=13 # Text before here was copied to template scripts, YAGNI
 
-[[ -n $WELCOME_BYE ]] && echo Welcome to $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
 
 WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
@@ -25,6 +24,7 @@ whyp-bin () {
     local __doc__="""Full path to a script in whyp/bin"""
     echo $WHYP_BIN/"$1"
 }
+
 
 whyp-bin-run () {
     local __doc__="""Run a script in whyp/bin"""
@@ -445,5 +445,3 @@ is-unrecognised () {
     local __doc__="""Whether the first argument is in use as a unrecognised"""
     [[ "$(type -t $1)" == "" ]]
 }
-
-[[ -n $WELCOME_BYE ]] && echo Bye from $(basename "$BASH_SOURCE") in $(dirname $(readlink -f "$BASH_SOURCE")) on $(hostname -f)
