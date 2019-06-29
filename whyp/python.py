@@ -22,7 +22,7 @@ from bdb import BdbQuit
 from contextlib import contextmanager
 
 from six import StringIO
-from pysyte import paths
+from pysyte.types import paths
 
 from whyp import __version__
 from whyp import arguments
