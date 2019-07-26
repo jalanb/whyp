@@ -20,7 +20,7 @@ optional = False  # volatile to importers
 def load(optional):
     """Provide the data from a yaml file"""
     if not op.isfile(_file):
-        return set() if optional else False
+        return set()
     try:
         with open(_file) as stream:
             return set(yaml.safe_load(stream) or [])
