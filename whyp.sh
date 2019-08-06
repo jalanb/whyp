@@ -38,25 +38,25 @@ alias www="whyp-whyp -v"
 
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 eype () {
-    local __doc__="""Edit the first argument as if it's a type"""
+    local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
     local _sought=
-    if is-bash $1; then # Cannot edit builtins
+    if is-bash "$1"; then # Cannot edit builtins
         return 1
-    elif is-file $1; then
-        _edit_file $1
-    elif is-function $1; then
-        _parse_function $1
-        _edit_function
-    elif is-alias $1; then
-        _edit_alias $1
-    elif whyp-python -q $1; then
-        _sought=$1; shift
+    elif is-file "$1"; then
+        _edit_file "$@"
+    elif is-function "$1"; then
+        _parse_function "$1"
+        _edit_function "$@"
+    elif is-alias "$1"; then
+        _edit_alias "$1"
+    elif whyp-python -q "$1"; then
+        _sought="$1"; shift
         whyp-edit-file $(whyp-python $_sought) "$@"
         return 0
     else
-        _file=$1; shift
-        _sought=$1; shift
-        whyp-edit-file $_file +/$_sought_
+        local _file="$1"; shift
+        _sought="$1"; shift
+        whyp-edit-file "$_file" +/"$_sought" "$@"_
     fi
 }
 
@@ -207,9 +207,6 @@ whyp-whyp () {
         echo "$function is from '$path_to_file:$line_number'"
         whyp $1 | kat -f2
     fi
-    # show-command $_options "$@" && return $_pass
-    # [[ $_options == -q ]] && return $_fail
-    # [[ $_options == -v ]] && echo "$@ not whypped" >&2
     return $_fail
 }
 
@@ -269,6 +266,7 @@ _edit_function () {
         declare -f $function >> "$path_to_file"
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
+    [[ "$@" =~ [+][/] ]] && regexp_=$(ses ".*\([+][/][^ ]*\).*" '\1' "$@")
     whyp-edit-file "$path_to_file" $_line $regexp_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
