@@ -463,3 +463,7 @@ is-unrecognised () {
     local __doc__="""Whether the first argument is in use as a unrecognised"""
     [[ "$(type -t $1)" == "" ]]
 }
+
+runnable () {
+    Quietly type "$@"
+}
