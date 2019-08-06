@@ -34,6 +34,12 @@ alias ww=whyp-whyp
 # xxx
 alias www="whyp-whyp -v"
 
+ses () {
+    local _old="$1"; shift
+    local _new="$1"; shift
+    echo "$@" | sed -e "s:$_old:$_new:"
+}
+
 # xxxx
 
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
@@ -174,6 +180,14 @@ Quietly () {
     "$@" >/dev/null 2>&1
 }
 
+make_shebang () {
+    sed -e "1s:.*:#! /bin/bash:"
+}
+
+bat_function () {
+    $(which bat >/dev/null) && (make_shebang | bat) || cat
+}
+
 whyp-whyp () {
     local __doc__="""whyp-whyp expands whyp, now"""
     local _pass=0
@@ -205,7 +219,7 @@ whyp-whyp () {
     elif is-function $1; then
         _parse_function "$@"
         echo "$function is from '$path_to_file:$line_number'"
-        whyp $1 | kat -f2
+        whyp $1 | bat_function
     fi
     return $_fail
 }
