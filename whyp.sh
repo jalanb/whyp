@@ -184,8 +184,15 @@ make_shebang () {
     sed -e "1s:.*:#! /bin/bash:"
 }
 
-bat_function () {
-    $(which bat >/dev/null) && (make_shebang | bat) || cat
+whyp_cat () {
+    local _lines=$1
+    if runnable bat; then
+        bat --language=bash --style=changes,grid,numbers
+    elif [[ $_lines > 40 ]]; then
+        less
+    else
+        cat
+    fi
 }
 
 whyp-whyp () {
@@ -218,8 +225,9 @@ whyp-whyp () {
         whyp $_command
     elif is-function $1; then
         _parse_function "$@"
+        local _lines=$(whyp $1 | wc -l)
+        whyp $1 | sed -e "/is a function$/d" | whyp_cat $_lines
         echo "$function is from '$path_to_file:$line_number'"
-        whyp $1 | bat_function
     fi
     return $_fail
 }
