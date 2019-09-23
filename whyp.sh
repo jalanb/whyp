@@ -201,7 +201,7 @@ whyp-whyp () {
     local _fail=1
     [[ "$@" ]] || return $_fail
     local _options=-v
-    if [[ $1 =~ -[qv] ]]; then
+    if [[ $1 =~ (^| )-[qv] ]]; then
         _options=$1
         shift
     fi
@@ -214,8 +214,11 @@ whyp-whyp () {
     if is-bash $1; then # there's no more to be said
         whyp $1
     elif is-file "$1"; then
-        w "$@"
-        ls -l $(type "$1" | sed -e "s:.* is ::")
+        local _path=$(type "$1" | sed -e "s:.* is ::")
+        local _command=less
+        runnable bat && _command=bat
+        $_command $_path
+        ls -l $_path
         return $_pass
     elif is-alias $1; then
         alias $1
