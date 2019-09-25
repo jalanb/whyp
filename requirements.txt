@@ -1,11 +1,11 @@
-pprintpp
-requests
-nose==1.3.7
+coverage
+ipython
 nose-progressive
 nose-pudb
-ipython
+nose==1.3.7
+pprintpp
 pudb
-six
 pysyte
 pyyaml
-coverage
+requests
+six
