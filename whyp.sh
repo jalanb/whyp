@@ -1,6 +1,7 @@
 #! /usr/bin/env cat
 
 # This script is intended to be sourced, not run
+
 if [[ "$0" == $BASH_SOURCE ]]; then
     echo "This file should be run as"
     echo "  source $0"
@@ -27,12 +28,12 @@ alias w=whyp
 
 # xx
 
-alias wa="whyp --all"
+alias wa='whyp --all'
 alias wp=whyp-python
 alias ww=whyp-whyp
 
 # xxx
-alias www="whyp-whyp -v"
+alias www=whyp-whyp-whyp
 
 ses () {
     local _old="$1"; shift
@@ -46,11 +47,9 @@ ses () {
 eype () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
     local _sought=
-    if is-bash "$1"; then # Cannot edit builtins
-        return 1
-    elif is-file "$1"; then
-        _edit_file "$@"
-    elif is-function "$1"; then
+    is-bash "$1" && return
+    is-file "$1" && _edit_file "$@" && return $?
+    if is-function "$1"; then
         _parse_function "$1"
         _edit_function "$@"
     elif is-alias "$1"; then
@@ -69,19 +68,27 @@ eype () {
 # "whap" is for backward compatibility only, remove before v1.0.0
 alias whap=whyp-python
 
+dehash () {
+    local _command=$1; shift
+    local _type="$@"
+    if [[ $_type =~ hashed ]]; then
+        local _dehash=$(echo $_type | sed -e "s:.*hashed (\([^)]*\)):\1:")
+        _type="$_command is $_dehash"
+    fi
+    echo $_type
+}
+
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
     local _alls_regexp="--*[al]*\>"
     if [[ "$@" =~ $_alls_regexp ]]; then
-        local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" );
-        (
-            type $_command
-            which -a "$_command"
-        ) 
+        local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" )
+        ( type $_command
+        which -a "$_command" )
     else
         type "$@"
-    fi 
+    fi
 }
 
 # xxxxx*
@@ -152,10 +159,21 @@ local-python () {
     [[ -e $_interpreter ]] && $_interpreter -c "import sys; sys.stdout.write(sys.executable)"
 }
 
+whyp-option () {
+    local _options=
+    [[ $1 == -q ]] && _options=quiet
+    [[ $1 == -v ]] && _options=verbose
+    [[ $1 == verbose ]] && _options=verbose
+    [[ $1 == quiet ]] && _options=quiet
+    [[ $_options ]] || return 1
+    echo $_options
+    return 0
+}
+
 whyp-python () {
     local __doc__="""find what python will import for a string, outside virtualenvs"""
-    local _quietly=
-    [[ $1 == -q ]] && _quietly=-q && shift
+    local _whyp_options=$(whyp-option "$@")
+    [[ $_whyp_options ]] && shift
     # Python symbols do not start with numbers
     [[ $1 =~ ^[0-9] ]] && return 1
     # Python symbols do not have hyphens
@@ -169,7 +187,9 @@ whyp-python () {
     local _pythonpath=$PYTHONPATH
     local _whyp_dir=$(dirname $(readlink -f $WHYP_SOURCE))
     [[ $_pythonpath ]] && _pythonpath=$_whyp_dir:$_pythonpath || _pythonpath=$_whyp_dir
-    (PYTHONPATH=$_pythonpath python $_whyp_python $_quietly "$@")
+    local _option=
+    [[ $_whyp_options == quiet ]] && _option=-q
+    (PYTHONPATH=$_pythonpath python $_whyp_python $_option "$@")
 }
 
 quietly () {
@@ -177,6 +197,10 @@ quietly () {
 }
 
 Quietly () {
+    "$@" >/dev/null
+}
+
+QUietly () {
     "$@" >/dev/null 2>&1
 }
 
@@ -200,12 +224,9 @@ whyp-whyp () {
     local _pass=0
     local _fail=1
     [[ "$@" ]] || return $_fail
-    local _options=-v
-    if [[ $1 =~ (^| )-[qv] ]]; then
-        _options=$1
-        shift
-    fi
-    local _whyp=$(quietly whyp "$@")
+    local _whyp_options=$(whyp-option "$@")
+    [[ $_whyp_options ]] && shift
+    local _whyp=$(dehash $(quietly whyp "$@"))
     if [[ $? != $_pass ]]; then
         # whyp "$@"
         cat $WHYP_ERR
@@ -240,7 +261,7 @@ show-command () {
     if [[ $_arg =~ -[vq] ]]; then
         shift
         if [[ $_arg =~ -[q] ]]; then
-            Quietly whyp-command "$@"
+            QUietly whyp-command "$@"
             return $?
         fi
     fi
@@ -284,15 +305,19 @@ _edit_alias () {
 
 _edit_function () {
     local __doc__="""Edit a function in a file"""
-    _make_path_to_file_exist
-    local regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    local regexp_=+/$regexp
-    if ! grep -q $regexp "$path_to_file"; then
-        declare -f $function >> "$path_to_file"
+    local _made=
+    _make_path_to_file_exist && _made=1
+    local _regexp="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    local _new=
+    if ! grep -q $_regexp "$path_to_file"; then
+        line_number=$(wc -l "$path_to_file")
+        echo 'declare -f $function >> "$path_to_file"'
+        set +x; return 0
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
-    [[ "$@" =~ [+][/] ]] && regexp_=$(ses ".*\([+][/][^ ]*\).*" '\1' "$@")
-    whyp-edit-file "$path_to_file" $_line $regexp_
+    local _seek=+/$_regexp
+    [[ "$@" =~ [+][/] ]] && _seek=$(ses ".*\([+][/][^ ]*\).*" '\1' "$@")
+    whyp-edit-file "$path_to_file" $_line $_seek
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     whyp-source "$path_to_file"
@@ -337,8 +362,12 @@ alias .=source-whyp
 
 # _xxxxx+
 
+whyp-whyp-whyp () {
+    ww verbose "$@"
+}
+
 whyp-executable () {
-    Quietly type "$@"
+    QUietly type "$@"
 }
 
 whyp-function () {
@@ -390,13 +419,8 @@ _make_path_to_file_exist () {
         cp "$path_to_file" "$path_to_file~"
         return 0
     fi
-    if [[ -z "$path_to_file" ]]; then
-        path_to_file=$(mktemp /tmp/function.XXXXXX)
-    fi
+    [[ ! "$path_to_file" || $path_to_file == main ]] && path_to_file=$(mktemp /tmp/function.XXXXXX)
     _write_new_file "$path_to_file"
-    [[ $function == $unamed_function ]] || return 1
-    line_number=$(wc -l "$path_to_file")
-    declare -f $unamed_function >> "$path_to_file"
 }
 
 _vim_line () {
@@ -476,5 +500,5 @@ is-unrecognised () {
 }
 
 runnable () {
-    Quietly type "$@"
+    QUietly type "$@"
 }
