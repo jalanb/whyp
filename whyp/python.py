@@ -134,13 +134,13 @@ def look_here(_name):
         sys.path.remove(here)
 
 
-def path_to_import(string, quiet):
+def path_to_import(string):
     with look_here(string):
         try:
             with swallow_stdout_stderr():
                 module = importlib.import_module(string)
         except ImportError as e:
-            if not quiet:
+            if not arguments.get('quiet')
                 sys.stderr.write('%s\n' % string)
             return None, None
     if module:
@@ -201,7 +201,7 @@ def script():
             show('builtin', module)
             found = True
             continue
-        path, version_ = path_to_import(module, arguments.get('quiet'))
+        path, version_ = path_to_import(module)
         if path:
             modules.add((module, path, version_))
             found = True
