@@ -195,7 +195,7 @@ Thanks
 
 ![JetBrains](images/jet_brains.png)
 
-This project has been supported by [JetBrains](www.jetbrains.com), who have graciously licensed me use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for development
+This project has been supported by [JetBrains](www.jetbrains.com), who have graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for development of this project.
 
 Version
 -------
