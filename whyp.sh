@@ -68,7 +68,11 @@ eype () {
 # "whap" is for backward compatibility only, remove before v1.0.0
 alias whap=whyp-python
 
-dehash () {
+de_alias () {
+    echo "$@" | sed -e "s:.* is aliased to::"
+}
+
+de_hash () {
     local _command=$1; shift
     local _type="$@"
     if [[ $_type =~ hashed ]]; then
@@ -89,6 +93,10 @@ whyp () {
     else
         type "$@"
     fi
+}
+
+de_whyp () {
+    echo $(de_alias $(de_hash $(quietly whyp "$@")))
 }
 
 # xxxxx*
@@ -219,41 +227,52 @@ whyp_cat () {
     fi
 }
 
+
+whyp-function () {
+    _parse_function "$@"
+    local _lines=$(whyp $1 | wc -l)
+    whyp $1 | sed -e "/is a function$/d" | whyp_cat $_lines
+    echo "$function is from '$path_to_file:$line_number'"
+    return 0
+}
+
+whyp-alias () {
+    alias $1
+    local _stdout=$(alias $1)
+    local _suffix=${_stdout//*=\'}
+    local _command=${_suffix//\'}
+    whyp $_command
+}
+        
+whyp-file () {
+
+    local _path=$(type "$1" | sed -e "s:.* is ::")
+    local _command=less
+    runnable bat && _command=bat
+    $_command $_path
+    ls -l $_path
+    return $_pass
+}
+
 whyp-whyp () {
     local __doc__="""whyp-whyp expands whyp, now"""
-    local _pass=0
-    local _fail=1
-    [[ "$@" ]] || return $_fail
+    [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
-    local _whyp=$(dehash $(quietly whyp "$@"))
-    if [[ $? != $_pass ]]; then
-        # whyp "$@"
-        cat $WHYP_ERR
-        return $_fail
+    local _whyp=$(quietly whyp "$@")
+    [[ $? == 0 ]] || return 1
+    is-bash $1 && whyp $1 && return $?
+    is-function "$1" && whyp-function "$@" && return 0
+    if is-alias "$1"; then
+        local _stdout=(alias $1)
+        if [[ $_stdout  =~ is.a.function ]]; then 
+            whyp-function $(de_alias "$@") && return $?
+        else
+            whyp-alias "$@" && return $?
+        fi
     fi
-    if is-bash $1; then # there's no more to be said
-        whyp $1
-    elif is-file "$1"; then
-        local _path=$(type "$1" | sed -e "s:.* is ::")
-        local _command=less
-        runnable bat && _command=bat
-        $_command $_path
-        ls -l $_path
-        return $_pass
-    elif is-alias $1; then
-        alias $1
-        local _stdout=$(alias $1)
-        local _suffix=${_stdout//*=\'}
-        local _command=${_suffix//\'}
-        whyp $_command
-    elif is-function $1; then
-        _parse_function "$@"
-        local _lines=$(whyp $1 | wc -l)
-        whyp $1 | sed -e "/is a function$/d" | whyp_cat $_lines
-        echo "$function is from '$path_to_file:$line_number'"
-    fi
-    return $_fail
+    is-file "$1" && whyp-file "$@" && return $?
+    return 1
 }
 
 show-command () {
@@ -368,12 +387,6 @@ whyp-whyp-whyp () {
 
 whyp-executable () {
     QUietly type "$@"
-}
-
-whyp-function () {
-    _parse_function "$@"
-    echo "$function is at '$path_to_file:$line_number'"
-    echo "$EDITOR $path_to_file +$line_number"
 }
 
 _parse_function () {
