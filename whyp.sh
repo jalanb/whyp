@@ -68,6 +68,15 @@ eype () {
 # "whap" is for backward compatibility only, remove before v1.0.0
 alias whap=whyp-python
 
+ww_help () {
+    local _function=$1; shift
+    rm -f /tmp/err
+    [[ $1 =~ (-h|--help) ]] && ww $_function 2>/tmp/err
+    local _result=$?
+    [[ -f /tmp/err ]] && return 2
+    return $_result
+}
+
 de_alias () {
     echo "$@" | sed -e "s:.* is aliased to::"
 }
