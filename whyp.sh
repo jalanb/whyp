@@ -1,4 +1,4 @@
-#! /usr/bin/env cat
+#! /usr/bin/env head -n 3
 
 # This script is intended to be sourced, not run
 
@@ -104,8 +104,16 @@ whyp () {
     fi
 }
 
-de_whyp () {
-    echo $(de_alias $(de_hash $(quietly whyp "$@")))
+whysp () {
+    quietly whyp "$@"
+}
+
+whyped () {
+    echo $(de_hash $(whysp "$@"))
+}
+
+whypped () {
+    echo $(de_alias $(whyped "$@"))
 }
 
 # xxxxx*
@@ -252,7 +260,7 @@ whyp-alias () {
     local _command=${_suffix//\'}
     whyp $_command
 }
-        
+
 whyp-file () {
 
     local _path=$(type "$1" | sed -e "s:.* is ::")
@@ -263,25 +271,39 @@ whyp-file () {
     return $_pass
 }
 
+whyp-match () {
+    local _is_thing=$1
+    local _thing="$2"
+    $_is_thing "$_thing" || return 1
+}
+
+whyp-show () {
+    local _display=$1
+    whyp-match $2 "$3" || return 1
+    $_display "$3"
+}
+
 whyp-whyp () {
     local __doc__="""whyp-whyp expands whyp, now"""
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
-    local _whyp=$(quietly whyp "$@")
+    local _whyp=$(whysp "$@")
     [[ $? == 0 ]] || return 1
-    is-bash $1 && whyp $1 && return $?
-    is-function "$1" && whyp-function "$@" && return 0
-    if is-alias "$1"; then
-        local _stdout=(alias $1)
-        if [[ $_stdout  =~ is.a.function ]]; then 
-            whyp-function $(de_alias "$@") && return $?
-        else
-            whyp-alias "$@" && return $?
-        fi
+    local _one=
+    [[ $1 ]] && _one="$1"
+    [[ "$_one" ]] && _one=$(whyped "$_one")
+    whyp-show whyp is-bash "$_one" && return 0
+    whyp-show whyp-function is-function "$_one" && return 0
+    whyp-show whyp-file is-file "$_one" && return 0
+    whyp-match is-alias "$_one" || return 1
+    local _stdout=(alias "$_one")
+    if [[ $_stdout  =~ is.a.function ]]; then
+        why-show whyp-function is-function $(whypped "$_one")
+    else
+        whyp-show whyp-alias is-alias "$_one"
     fi
-    is-file "$1" && whyp-file "$@" && return $?
-    return 1
+    return $?
 }
 
 show-command () {
@@ -339,7 +361,7 @@ _edit_function () {
     local _new=
     if ! grep -q $_regexp "$path_to_file"; then
         line_number=$(wc -l "$path_to_file")
-        echo 'declare -f $function >> "$path_to_file"'
+        echo "Add $function onto $path_to_file at new line $line_number"
         set +x; return 0
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
@@ -395,7 +417,7 @@ whyp-whyp-whyp () {
 }
 
 whyp-executable () {
-    QUietly type "$@"
+    QUietly type $(whyped "$@")
 }
 
 _parse_function () {
