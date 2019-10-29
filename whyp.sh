@@ -41,6 +41,12 @@ ses () {
     echo "$@" | sed -e "s:$_old:$_new:"
 }
 
+wat () {
+    local _cmd=cat
+    is-file bat && _cmd=bat
+    is-file kat && $(kat "$@" >/dev/null 2>&1) && _cmd=kat
+    $_cmd "$@"
+}
 # xxxx
 
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
