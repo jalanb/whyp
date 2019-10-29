@@ -94,8 +94,11 @@ de_hash () {
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
-    if is-function $1 || is-alias $1; then
-        whyp-whyp "$@"
+    if is-function $1 ; then
+        whyp-whyp -f "$@"
+        return $?
+    elif is-alias $1; then
+        whyp-whyp -a "$@"
         return $?
     fi
     local _alls_regexp="--*[al]*\>"
@@ -194,6 +197,8 @@ whyp-option () {
     [[ $1 == -v ]] && _options=verbose
     [[ $1 == verbose ]] && _options=verbose
     [[ $1 == quiet ]] && _options=quiet
+    [[ $1 == -f ]] && _options="$_options --is-function"
+    [[ $1 == -a ]] && _options="$_options --is-alias"
     [[ $_options ]] || return 1
     echo $_options
     return 0
