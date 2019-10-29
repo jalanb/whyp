@@ -140,7 +140,7 @@ def path_to_import(string):
             with swallow_stdout_stderr():
                 module = importlib.import_module(string)
         except ImportError as e:
-            if not arguments.get('quiet')
+            if not arguments.get('quiet'):
                 sys.stderr.write('%s\n' % string)
             return None, None
     if module:

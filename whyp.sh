@@ -255,9 +255,10 @@ whyp_cat () {
 
 
 whyp-function () {
+    local __doc__="""whyp a function"""
     _parse_function "$@"
-    local _lines=$(whyp $1 | wc -l)
-    whyp $1 | sed -e "/is a function$/d" | whyp_cat $_lines
+    local _lines=$(type $1 | wc -l)
+    type $1 | sed -e "/is a function$/d" | whyp_cat $_lines
     echo "$function is from '$path_to_file:$line_number'"
     return 0
 }
@@ -297,8 +298,10 @@ whyp-whyp () {
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
-    local _whyp=$(whysp "$@")
-    [[ $? == 0 ]] || return 1
+    if [[ $_whyp_options =~ --is- ]]; then
+        whysp "$@"
+        return $?
+    fi
     local _one=
     [[ $1 ]] && _one="$1"
     [[ "$_one" ]] && _one=$(whyped "$_one")
