@@ -199,4 +199,4 @@ This project has been supported by [JetBrains](www.jetbrains.com), who have grac
 
 Version
 -------
-0.7.3
+0.7.8
