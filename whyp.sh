@@ -41,6 +41,12 @@ ses () {
     echo "$@" | sed -e "s:$_old:$_new:"
 }
 
+wat () {
+    local _cmd=cat
+    is-file bat && _cmd=bat
+    is-file kat && $(kat "$@" >/dev/null 2>&1) && _cmd=kat
+    $_cmd "$@"
+}
 # xxxx
 
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
@@ -94,6 +100,13 @@ de_hash () {
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
+    if is-function $1 ; then
+        whyp-whyp -f "$@"
+        return $?
+    elif is-alias $1; then
+        whyp-whyp -a "$@"
+        return $?
+    fi
     local _alls_regexp="--*[al]*\>"
     if [[ "$@" =~ $_alls_regexp ]]; then
         local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" )
@@ -190,6 +203,8 @@ whyp-option () {
     [[ $1 == -v ]] && _options=verbose
     [[ $1 == verbose ]] && _options=verbose
     [[ $1 == quiet ]] && _options=quiet
+    [[ $1 == -f ]] && _options="$_options --is-function"
+    [[ $1 == -a ]] && _options="$_options --is-alias"
     [[ $_options ]] || return 1
     echo $_options
     return 0
@@ -246,9 +261,10 @@ whyp_cat () {
 
 
 whyp-function () {
+    local __doc__="""whyp a function"""
     _parse_function "$@"
-    local _lines=$(whyp $1 | wc -l)
-    whyp $1 | sed -e "/is a function$/d" | whyp_cat $_lines
+    local _lines=$(type $1 | wc -l)
+    type $1 | sed -e "/is a function$/d" | whyp_cat $_lines
     echo "$function is from '$path_to_file:$line_number'"
     return 0
 }
@@ -288,8 +304,10 @@ whyp-whyp () {
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
-    local _whyp=$(whysp "$@")
-    [[ $? == 0 ]] || return 1
+    if [[ $_whyp_options =~ --is- ]]; then
+        whysp "$@"
+        return $?
+    fi
     local _one=
     [[ $1 ]] && _one="$1"
     [[ "$_one" ]] && _one=$(whyped "$_one")
