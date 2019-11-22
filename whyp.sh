@@ -18,8 +18,6 @@ export WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_PY=$WHYP_DIR/whyp
-export WHYP_OUT=$WHYP_DIR/whyp.out
-export WHYP_ERR=$WHYP_DIR/whyp.err
 
 # x
 
@@ -29,10 +27,11 @@ alias w=whyp
 # xx
 
 alias wa='whyp --all'
-alias wp=whyp-python
 alias ww=whyp-whyp
 
 # xxx
+
+alias wat=whyp_cat
 alias www=whyp-whyp-whyp
 
 ses () {
@@ -60,9 +59,9 @@ eype () {
         _edit_function "$@"
     elif is-alias "$1"; then
         _edit_alias "$1"
-    elif whyp-python -q "$1"; then
+    elif whypy "$1"; then
         _sought="$1"; shift
-        whyp-edit-file $(whyp-python $_sought) "$@"
+        whyp-edit-file $(whypyf $1) +/"$_sought" "$@"
         return 0
     else
         local _file="$1"; shift
@@ -70,9 +69,6 @@ eype () {
         whyp-edit-file "$_file" +/"$_sought" "$@"_
     fi
 }
-
-# "whap" is for backward compatibility only, remove before v1.0.0
-alias whap=whyp-python
 
 ww_help () {
     local _function=$1; shift
@@ -178,23 +174,20 @@ looks-versiony () {
 }
 
 local-python () {
-    # if whyp-executable pyth; then
-    #     echo pyth
-    #     return 0
-    # fi
-    local _which_py=python
+    local _local_python_name=python
     if looks-versiony $1; then
         if python-has-debugger $1; then
-            _which_py=python$1
+            _local_python_name=python$1
         else
-            _which_py=python
+            _local_python_name=python2
             echo "Requested python version too old" >&2
         fi
         shift
+    else
+        _local_python_name=python3
     fi
-    local _exec_py=$(PATH=/usr/local/bin:/usr/bin/:/bin which $_which_py)
-    local _interpreter=$(readlink -f "$_exec_py")
-    [[ -e $_interpreter ]] && $_interpreter -c "import sys; sys.stdout.write(sys.executable)"
+    local _local_python=$(PATH=/usr/local/bin:/usr/bin/:/bin which $_local_python_name 2>/dev/null)
+    [[ $_local_python ]] && $_local_python -c "import sys; sys.stdout.write(sys.executable)"
 }
 
 whyp-option () {
@@ -207,29 +200,36 @@ whyp-option () {
     [[ $1 == -a ]] && _options="$_options --is-alias"
     [[ $_options ]] || return 1
     echo $_options
-    return 0
+    true
 }
 
-whyp-python () {
-    local __doc__="""find what python will import for a string, outside virtualenvs"""
-    local _whyp_options=$(whyp-option "$@")
-    [[ $_whyp_options ]] && shift
-    # Python symbols do not start with numbers
+whypy () {
+    local __doc__="""test that python will import any args"""
+    for arg in "$@"; do
+        whypyn $arg || continue
+        python -c "import $arg" >/dev/null 2>&1 || return 1
+    done
+    true
+}
+
+whypyf () {
+    local __doc__="""the files that python imports args as"""
+    local _result=1
+    for arg in "$@"; do
+        whypyn $arg || continue
+        python -c "import $arg; print($arg).__file__" 2>/dev/null || continue
+        _result=0
+    done
+    return $_result
+}
+
+whypyn () {
+    local __doc__="""Whether arg looks like a python name"""
+    # Python names do not start with numbers
     [[ $1 =~ ^[0-9] ]] && return 1
-    # Python symbols do not have hyphens
-    [[ $1 =~ - ]] && return 1
-    local _python=$(local-python $1)
-    local _whyp_python=$(whyp-bin whyp-python)
-    if [[ ! -f $_whyp_python ]]; then
-        echo "$_whyp_python is not a file" >&2
-        return 1
-    fi
-    local _pythonpath=$PYTHONPATH
-    local _whyp_dir=$(dirname $(readlink -f $WHYP_SOURCE))
-    [[ $_pythonpath ]] && _pythonpath=$_whyp_dir:$_pythonpath || _pythonpath=$_whyp_dir
-    local _option=
-    [[ $_whyp_options == quiet ]] && _option=-q
-    (PYTHONPATH=$_pythonpath python $_whyp_python $_option "$@")
+    # Python names do not have hyphens, nor code
+    [[ $1 =~ [-/] ]] && return 1
+    true
 }
 
 quietly () {
@@ -249,13 +249,15 @@ make_shebang () {
 }
 
 whyp_cat () {
-    local _lines=$1
+    local __doc__="""Choose best avalaible cat"""
+    local __todo__="""Add vimcat, kat, pygments, ..."""
+    local _lines=$1; shift
     if runnable bat; then
-        bat --language=bash --style=changes,grid,numbers
+        bat --language=bash --style=changes,grid,numbers "$@"
     elif [[ $_lines > 40 ]]; then
-        less
+        less "$@"
     else
-        cat
+        cat "$@"
     fi
 }
 
@@ -299,18 +301,32 @@ whyp-show () {
     $_display "$3"
 }
 
+whyp-option () {
+    local _options=
+    [[ $1 == -q ]] && _options=quiet
+    [[ $1 == -v ]] && _options=verbose
+    [[ $1 == verbose ]] && _options=verbose
+    [[ $1 == quiet ]] && _options=quiet
+    [[ $_options ]] || return 1
+    echo $_options
+    return 0
+}
+
 whyp-whyp () {
     local __doc__="""whyp-whyp expands whyp, now"""
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
+<<<<<<< HEAD
     if [[ $_whyp_options =~ --is- ]]; then
         whysp "$@"
         return $?
     fi
+=======
+>>>>>>> Moving functions around
     local _one=
     [[ $1 ]] && _one="$1"
-    [[ "$_one" ]] && _one=$(whyped "$_one")
+    QUietly whyp "$_one" || return 1
     whyp-show whyp is-bash "$_one" && return 0
     whyp-show whyp-function is-function "$_one" && return 0
     whyp-show whyp-file is-file "$_one" && return 0
@@ -322,18 +338,6 @@ whyp-whyp () {
         whyp-show whyp-alias is-alias "$_one"
     fi
     return $?
-}
-
-show-command () {
-    local _arg=$1;
-    if [[ $_arg =~ -[vq] ]]; then
-        shift
-        if [[ $_arg =~ -[q] ]]; then
-            QUietly whyp-command "$@"
-            return $?
-        fi
-    fi
-    whyp-command "$@"
 }
 
 whyp-command () {
