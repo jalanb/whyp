@@ -317,16 +317,8 @@ whyp-whyp () {
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp-option "$@")
     [[ $_whyp_options ]] && shift
-<<<<<<< HEAD
-    if [[ $_whyp_options =~ --is- ]]; then
-        whysp "$@"
-        return $?
-    fi
-=======
->>>>>>> Moving functions around
     local _one=
     [[ $1 ]] && _one="$1"
-    QUietly whyp "$_one" || return 1
     whyp-show whyp is-bash "$_one" && return 0
     whyp-show whyp-function is-function "$_one" && return 0
     whyp-show whyp-file is-file "$_one" && return 0
