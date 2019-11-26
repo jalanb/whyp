@@ -97,10 +97,10 @@ whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
     if is-function $1 ; then
-        whyp-whyp -f "$@"
+        whyp-whyp "$@"
         return $?
     elif is-alias $1; then
-        whyp-whyp -a "$@"
+        whyp-whyp "$@"
         return $?
     fi
     local _alls_regexp="--*[al]*\>"
