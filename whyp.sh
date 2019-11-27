@@ -267,7 +267,8 @@ whyp-function () {
     _parse_function "$@"
     local _lines=$(type $1 | wc -l)
     type $1 | sed -e "/is a function$/d" | whyp_cat $_lines
-    echo "$function is from '$path_to_file:$line_number'"
+    echo "'$path_to_file:$line_number' $function ()"
+    echo "$EDITOR $path_to_file +$line_number"
     return 0
 }
 
@@ -295,10 +296,12 @@ whyp-match () {
     $_is_thing "$_thing" || return 1
 }
 
-whyp-show () {
-    local _display=$1
-    whyp-match $2 "$3" || return 1
-    $_display "$3"
+whyp_show () {
+    local _matcher=$1; shift
+    whyp-match $_matcher "$1" || return 1
+    local _display=$1; shift
+    local _one="$1"; shift
+    $_display "$_one"
 }
 
 whyp-option () {
@@ -319,15 +322,15 @@ whyp-whyp () {
     [[ $_whyp_options ]] && shift
     local _one=
     [[ $1 ]] && _one="$1"
-    whyp-show whyp is-bash "$_one" && return 0
-    whyp-show whyp-function is-function "$_one" && return 0
-    whyp-show whyp-file is-file "$_one" && return 0
+    whyp_show is-bash whyp "$_one" && return 0
+    whyp_show is-function whyp-function "$_one" && return 0
+    whyp_show is-file whyp-file "$_one" && return 0
     whyp-match is-alias "$_one" || return 1
     local _stdout=(alias "$_one")
     if [[ $_stdout  =~ is.a.function ]]; then
         why-show whyp-function is-function $(whypped "$_one")
     else
-        whyp-show whyp-alias is-alias "$_one"
+        whyp_show is-alias whyp-alias "$_one"
     fi
     return $?
 }
