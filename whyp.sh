@@ -27,12 +27,12 @@ alias w=whyp
 # xx
 
 alias wa='whyp --all'
-alias ww=whyp-whyp
+alias ww=whyp_whyp
 
 # xxx
 
 alias wat=whyp_cat
-alias www=whyp-whyp-whyp
+alias www=whyp_whyp_whyp
 
 ses () {
     local _old="$1"; shift
@@ -42,8 +42,8 @@ ses () {
 
 wat () {
     local _cmd=cat
-    is-file bat && _cmd=bat
-    is-file kat && $(kat "$@" >/dev/null 2>&1) && _cmd=kat
+    is_file bat && _cmd=bat
+    is_file kat && $(kat "$@" >/dev/null 2>&1) && _cmd=kat
     $_cmd "$@"
 }
 # xxxx
@@ -52,21 +52,21 @@ wat () {
 eype () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
     local _sought=
-    is-bash "$1" && return
-    is-file "$1" && _edit_file "$@" && return $?
-    if is-function "$1"; then
+    is_bash "$1" && return
+    is_file "$1" && _edit_file "$@" && return $?
+    if is_function "$1"; then
         _parse_function "$1"
         _edit_function "$@"
-    elif is-alias "$1"; then
+    elif is_alias "$1"; then
         _edit_alias "$1"
     elif whypy "$1"; then
         _sought="$1"; shift
-        whyp-edit-file $(whypyf $1) +/"$_sought" "$@"
+        whyp_edit_file $(whypyf $1) +/"$_sought" "$@"
         return 0
     else
         local _file="$1"; shift
         _sought="$1"; shift
-        whyp-edit-file "$_file" +/"$_sought" "$@"_
+        whyp_edit_file "$_file" +/"$_sought" "$@"_
     fi
 }
 
@@ -96,11 +96,11 @@ de_hash () {
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
-    if is-function $1 ; then
-        whyp-whyp "$@"
+    if is_function $1 ; then
+        whyp_whyp "$@"
         return $?
-    elif is-alias $1; then
-        whyp-whyp "$@"
+    elif is_alias $1; then
+        whyp_whyp "$@"
         return $?
     fi
     local _alls_regexp="--*[al]*\>"
@@ -127,34 +127,34 @@ whypped () {
 
 # xxxxx*
 
-whyp-bin () {
+whyp_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
     echo $WHYP_BIN/"$1"
 }
 
-whyp-bin-run () {
+whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
     local _script=$1; shift
-    PYTHONPATH=$WHYP_DIR $(whyp-bin $_script) "$@"
+    PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
 }
 
-whyp-pudb-run () {
+whyp_pudb_run () {
     local __doc__="""Debug a script in whyp/bin"""
     local _script=$1; shift
     set -x
-    PYTHONPATH=$WHYP_DIR pudb $(whyp-bin $_script) "$@"
+    PYTHONPATH=$WHYP_DIR pudb $(whyp_bin $_script) "$@"
     set +x
 }
 
-whyp-py () {
-    whyp-bin-run whyp "$@"
+whyp_py () {
+    whyp_bin_run whyp "$@"
 }
 
-whyp-py-file () {
-    whyp-bin-run whyp -f "$@"
+whyp_py_file () {
+    whyp_bin_run whyp -f "$@"
 }
 
-whyp-edit-file () {
+whyp_edit_file () {
     local __doc__="""Edit the first argument if it's a file"""
     local _file=$1; shift
     [[ -f $_file ]] || return 1
@@ -164,19 +164,19 @@ whyp-edit-file () {
     (cd $_dir; $EDITOR $_base "$@")
 }
 
-python-has-debugger () {
+python_has_debugger () {
     [[ $1 =~ ^((3(.[7-9])?)|([4-9](.[0-9])?))$ ]]
 }
 
-looks-versiony () {
+looks_versiony () {
     [[ ! $1 ]] && return 1
     [[ $1 =~ [0-9](.[0-9])* ]]
 }
 
-local-python () {
+local_python () {
     local _local_python_name=python
-    if looks-versiony $1; then
-        if python-has-debugger $1; then
+    if looks_versiony $1; then
+        if python_has_debugger $1; then
             _local_python_name=python$1
         else
             _local_python_name=python2
@@ -190,7 +190,7 @@ local-python () {
     [[ $_local_python ]] && $_local_python -c "import sys; sys.stdout.write(sys.executable)"
 }
 
-whyp-option () {
+whyp_option () {
     local _options=
     [[ $1 == -q ]] && _options=quiet
     [[ $1 == -v ]] && _options=verbose
@@ -262,7 +262,7 @@ whyp_cat () {
 }
 
 
-whyp-function () {
+whyp_function () {
     local __doc__="""whyp a function"""
     _parse_function "$@"
     local _lines=$(type $1 | wc -l)
@@ -272,7 +272,7 @@ whyp-function () {
     return 0
 }
 
-whyp-alias () {
+whyp_alias () {
     alias $1
     local _stdout=$(alias $1)
     local _suffix=${_stdout//*=\'}
@@ -280,7 +280,7 @@ whyp-alias () {
     whyp $_command
 }
 
-whyp-file () {
+whyp_file () {
 
     local _path=$(type "$1" | sed -e "s:.* is ::")
     local _command=less
@@ -290,7 +290,7 @@ whyp-file () {
     return $_pass
 }
 
-whyp-match () {
+whyp_match () {
     local _is_thing=$1
     local _thing="$2"
     $_is_thing "$_thing" || return 1
@@ -298,13 +298,13 @@ whyp-match () {
 
 whyp_show () {
     local _matcher=$1; shift
-    whyp-match $_matcher "$1" || return 1
+    whyp_match $_matcher "$1" || return 1
     local _display=$1; shift
     local _one="$1"; shift
     $_display "$_one"
 }
 
-whyp-option () {
+whyp_option () {
     local _options=
     [[ $1 == -q ]] && _options=quiet
     [[ $1 == -v ]] && _options=verbose
@@ -315,40 +315,40 @@ whyp-option () {
     return 0
 }
 
-whyp-whyp () {
-    local __doc__="""whyp-whyp expands whyp, now"""
+whyp_whyp () {
+    local __doc__="""whyp_whyp expands whyp, now"""
     [[ "$@" ]] || return 1
-    local _whyp_options=$(whyp-option "$@")
+    local _whyp_options=$(whyp_option "$@")
     [[ $_whyp_options ]] && shift
     local _one=
     [[ $1 ]] && _one="$1"
-    whyp_show is-bash whyp "$_one" && return 0
-    whyp_show is-function whyp-function "$_one" && return 0
-    whyp_show is-file whyp-file "$_one" && return 0
-    whyp-match is-alias "$_one" || return 1
+    whyp_show is_bash whyp "$_one" && return 0
+    whyp_show is_function whyp_function "$_one" && return 0
+    whyp_show is_file whyp_file "$_one" && return 0
+    whyp_match is_alias "$_one" || return 1
     local _stdout=(alias "$_one")
     if [[ $_stdout  =~ is.a.function ]]; then
-        why-show whyp-function is-function $(whypped "$_one")
+        why_show whyp_function is_function $(whypped "$_one")
     else
-        whyp_show is-alias whyp-alias "$_one"
+        whyp_show whyp_alias is_alias "$_one"
     fi
     return $?
 }
 
-whyp-command () {
+whyp_command () {
     local __doc__="""find what will be executed for a command string"""
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
-    whyp-py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
+    whyp_py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     # local return_value=$?
     # rm -f $PATH_TO_ALIASES
     # rm -f $PATH_TO_FUNCTIONS
     # return $return_value
 }
 
-whyp-debug () {
+whyp_debug () {
     (DEBUGGING=www;
         local _command="$1"; shift
         ww $_command;
@@ -359,13 +359,13 @@ whyp-debug () {
 
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    whyp-bin-run sources --any || return
-    local _whyp_sources=$(whyp-bin-run sources --all --optional)
+    whyp_bin_run sources --any || return
+    local _whyp_sources=$(whyp_bin_run sources --all --optional)
     for sourced_file in $_whyp_sources; do
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
-            whyp-edit-file $sourced_file +$line_number
+            whyp_edit_file $sourced_file +$line_number
         fi
     done
 }
@@ -384,32 +384,32 @@ _edit_function () {
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
     local _seek=+/$_regexp
     [[ "$@" =~ [+][/] ]] && _seek=$(ses ".*\([+][/][^ ]*\).*" '\1' "$@")
-    whyp-edit-file "$path_to_file" $_line $_seek
+    whyp_edit_file "$path_to_file" $_line $_seek
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
-    whyp-source "$path_to_file"
+    whyp_source "$path_to_file"
     [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file" || true
 }
 
 _edit_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local _file=$(whyp-py $1)
+    local _file=$(whyp_py $1)
     [[ -f $_file ]] || return 1
     if file $_file | grep -q text; then
-        whyp-edit-file  $_file
+        whyp_edit_file  $_file
     else
         echo $_file is not text >&2
         file $_file >&2
     fi
 }
 
-whyp-source () {
+whyp_source () {
     local __doc__="""Source optionally"""
-    source-whyp "$@" optional
+    source_whyp "$@" optional
 }
 
 
-source-whyp () {
+source_whyp () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
     local _filename=$(readlink -f "$1")
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
@@ -418,22 +418,22 @@ source-whyp () {
         fi
         return 1
     fi
-    if whyp-bin-run sources --optional --sources "$_filename"; then
+    if whyp_bin_run sources --optional --sources "$_filename"; then
         source "$_filename"
     fi
 }
 
 quietly unalias .
-alias .=source-whyp
+alias .=source_whyp
 
 
 # _xxxxx+
 
-whyp-whyp-whyp () {
+whyp_whyp_whyp () {
     ww verbose "$@"
 }
 
-whyp-executable () {
+whyp_executable () {
     QUietly type $(whyped "$@")
 }
 
@@ -441,15 +441,15 @@ _parse_function () {
     __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
 }
 
-old_whyp-type () {
-    if is-alias "$1"; then
+old_whyp_type () {
+    if is_alias "$1"; then
         type "$1"
-    elif is-function "$1"; then
+    elif is_function "$1"; then
         type "$1"
         echo
         local _above=$(( $line_number - 1 ))
-        echo "whyp-edit-file $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
-    elif whyp-executable "$1"; then
+        echo "whyp_edit_file $(relpath ""$path_to_file"") +$_above +/'\\<$function\\zs.*'"
+    elif whyp_executable "$1"; then
         real_file=$(readlink -f $(which "$1"))
         [[ $real_file != "$1" ]] && echo -n "$1 -> "
         echo "$real_file"
@@ -487,7 +487,7 @@ _make_path_to_file_exist () {
 _vim_line () {
     local _file="$1";shift
     local _line="$1";shift
-    whyp-edit-file  "$_file" +$line
+    whyp_edit_file  "$_file" +$line
 }
 
 _show_history_command () {
@@ -497,7 +497,7 @@ _show_history_command () {
     for word in $words
     do
         if [[ ${word:0:1} != "-" ]]; then
-            is-alias $word && word="\\$word"
+            is_alias $word && word="\\$word"
         fi
         [[ -z $line ]] && line=$word || line="$line $word"
     done
@@ -520,42 +520,42 @@ __parse_function_line_number_and_path_to_file () {
     path_to_file="$*";
 }
 
-source-path () {
+source_path () {
     test -f "$1" || return 1
-    whyp-source "$@"
+    whyp_source "$@"
 }
 
-is-function () {
+is_function () {
     local __doc__="""Whether the first argument is in use as a function"""
     [[ "$(type -t $1)" == "function" ]]
 }
 
-is-bash () {
+is_bash () {
     local __doc__="""Whether the first argument is a keyword or builtin"""
-    is-keyword $1 || is-builtin $1
+    is_keyword $1 || is_builtin $1
 }
 
-is-keyword () {
+is_keyword () {
     local __doc__="""Whether the first argument is in use as a keyword"""
     [[ "$(type -t $1)" == "keyword" ]]
 }
 
-is-builtin () {
+is_builtin () {
     local __doc__="""Whether the first argument is in use as a builtin"""
     [[ "$(type -t $1)" == "builtin" ]]
 }
 
-is-file () {
+is_file () {
     local __doc__="""Whether the first argument is in use as a file"""
     [[ "$(type -t $1)" == "file" ]]
 }
 
-is-alias () {
+is_alias () {
     local __doc__="""Whether the first argument is in use as a alias"""
     [[ "$(type -t $1)" == "alias" ]]
 }
 
-is-unrecognised () {
+is_unrecognised () {
     local __doc__="""Whether the first argument is in use as a unrecognised"""
     [[ "$(type -t $1)" == "" ]]
 }
