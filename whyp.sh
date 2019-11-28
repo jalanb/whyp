@@ -96,13 +96,6 @@ de_hash () {
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
-    if is_function $1 ; then
-        whyp_whyp "$@"
-        return $?
-    elif is_alias $1; then
-        whyp_whyp "$@"
-        return $?
-    fi
     local _alls_regexp="--*[al]*\>"
     if [[ "$@" =~ $_alls_regexp ]]; then
         local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" )
