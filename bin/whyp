@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python3
 """Show the text behind the type
 
 This script is intended to replace the standard type command

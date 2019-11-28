@@ -9,11 +9,6 @@ More modules for testing
 
     >>> import os
 
-We'll test with these 2 paths
-    >>> local_dir_string = '/usr/local/bin'
-    >>> local_file_string = '/usr/local/bin/python'
-
-
 Fail early
 ----------
 
@@ -24,40 +19,37 @@ When the condition fails nothing as made
     >>> nothing = paths.exists('/not/a/real/path')
     >>> assert not nothing
 
+    >>> from whyp.path import path
+
 When the check passes, they give a path
-    >>> local_path = paths.exists(local_dir_string)
-    >>> assert local_path
+    >>> usr_local_bin = path('/usr/local/bin')
+    >>> assert usr_local_bin.isdir()
 
 Check for files and dirs
-    >>> local_dir = paths.isdir(local_dir_string)
-    >>> local_file = paths.isfile(local_file_string)
+    >>> python_executable = path(
+    ...     '/usr/bin/env python -c "import sys; sys.output.write(sys.executable)"'
+    ... )
+    >>> assert python_executable.isfile()
 
-    >>> assert local_dir_string == local_path
-    >>> assert local_dir_string == local_dir
-    >>> assert local_file_string == local_file
 
 Functions that paths offer
 --------------------------
-
-Looks like a string
-    >>> # assert isinstance(local_file, str)
-
 
 Has handy methods proxied from os.path:
     basename, dirname, realpath, ...
 
     >>> assert local_file.base() == 'python'
-    >>> assert local_file.dir() == local_dir_string
+    >>> assert local_file.dir() == usr_local_bin
     >>> assert local_file.base() == 'python'
 
     >>> assert local_dir.base() == 'bin'
-    >>> assert local_dir.real() == local_dir_string == local_dir.dir()
+    >>> assert local_dir.real() == usr_local_bin == local_dir.dir()
 
 There is the tradtional operator for /
     >>> assert local_dir / 'python' == local_file
 
 Same and different paths
-    >>> assert local_dir == local_dir_string
+    >>> assert local_dir == usr_local_bin
     >>> assert local_dir != local_file
 
 In the same directory:
@@ -75,15 +67,19 @@ But that path file different from the original
     >>> assert real_python_file != local_file
 
 Bad paths have nothing of interest
-    >>> unreal_dir = '/usr/locally/bin'
-    >>> assert not paths.exists(unreal_dir)
-    >>> assert not paths.isdir(unreal_dir)
-    >>> assert not paths.isfile(unreal_dir)
+    >>> unreal_dir = path('/not/a/real/bin')
+    >>> assert not unreal_dir.exists()
+    >>> assert not unreal_dir.isdir()
+    >>> assert unreal_dir.dir()
+    >>> assert unreal_dir.name
 
-    >>> unreal_file = paths.isfile('/not/a/real/path')
+    >>> unreal_file = path('/not/a/real/path')
     >>> assert not unreal_file.exists()
-    >>> assert not unreal_file.dir()
-    >>> assert unreal_file.real() == unreal_file.dir() == unreal_file.base()
+    >>> assert not unreal_file.real()
+
+    >>> assert not unreal_file.is_file()
+    >>> assert unreal_file.file()
+    >>> assert unreal_file.base()
 
 
 The dirname either gets the name of the given directory
@@ -93,4 +89,4 @@ The dirname either gets the name of the given directory
     >>> assert dir_dirname == file_dirname
 
 
-    >>> assert local_file.dir().dir() == local_dir_string
+    >>> assert local_file.dir().dir() == usr_local_bin
