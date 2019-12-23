@@ -193,7 +193,7 @@ whyp_option () {
     [[ $1 == -a ]] && _options="$_options --is-alias"
     [[ $_options ]] || return 1
     echo $_options
-    true
+    return 0
 }
 
 whypy () {
@@ -202,7 +202,7 @@ whypy () {
         whypyn $arg || continue
         python -c "import $arg" >/dev/null 2>&1 || return 1
     done
-    true
+    return 0
 }
 
 whypyf () {
@@ -222,7 +222,7 @@ whypyn () {
     [[ $1 =~ ^[0-9] ]] && return 1
     # Python names do not have hyphens, nor code
     [[ $1 =~ [-/] ]] && return 1
-    true
+    return 0
 }
 
 quietly () {
@@ -264,7 +264,9 @@ whyp_bash () {
 
 whyp_function () {
     local __doc__="""whyp a function"""
+    is_function "$@" || return 1
     _parse_function "$@"
+    [[ -f $path_to_file ]] || return 1
     local _lines=$(type $1 | wc -l)
     type $1 | sed -e "/is a function$/d" | whyp_cat $_lines
     echo "'$path_to_file:$line_number' $function ()"
@@ -273,15 +275,21 @@ whyp_function () {
 }
 
 whyp_alias () {
+    is_alias "$@" || return 1
     alias $1
     local _stdout=$(alias $1)
-    local _suffix=${_stdout//*=\'}
-    local _command=${_suffix//\'}
-    whyp $_command
+    if [[ $_stdout  =~ is.a.function ]]; then
+        _name=$(whypped $_name)
+        whyp_function $_name
+    else
+        local _suffix=${_stdout//*=\'}
+        local _command=${_suffix//\'}
+        whyp $_command
+    fi
 }
 
 whyp_file () {
-
+    is_file "$@" || return 1
     local _path=$(type "$1" | sed -e "s:.* is ::")
     local _command=less
     runnable bat && _command=bat
@@ -308,24 +316,37 @@ whyp_option () {
     return 0
 }
 
+whyp_show_ () {
+    local _stream=quietly
+    local _options=$(whyp_option "$@")
+    [[ $_options ]] && shift
+    [[ $_options == verbose ]] && _stream=
+    local _name="$1"; shift
+    local _type="$_stream $1"; shift
+    $_type "$_name" || return 1
+    return 0
+}
+
+whyp_show () {
+    local _name=$1; shift
+    local _shown=
+    local _whyp=
+    for _whyp in whyp_bash whyp_function whyp_alias whyp_file ; do
+        whyp_show_ $_name $_whyp || continue
+        return 0
+    done
+    return 1
+}
+
 whyp_whyp () {
     local __doc__="""whyp_whyp expands whyp, now"""
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp_option "$@")
     [[ $_whyp_options ]] && shift
-    local _one=
-    [[ $1 ]] && _one="$1"
-    whyp_show is_bash whyp "$_one" && return 0
-    whyp_show is_function whyp_function "$_one" && return 0
-    whyp_show is_file whyp_file "$_one" && return 0
-    whyp_match is_alias "$_one" || return 1
-    local _stdout=(alias "$_one")
-    if [[ $_stdout  =~ is.a.function ]]; then
-        why_show whyp_function is_function $(whypped "$_one")
-    else
-        whyp_show whyp_alias is_alias "$_one"
-    fi
-    return $?
+    [[ $1 ]]
+    local _name="$1"; shift
+    whyp_show "$_name"
+    [[ $? == 0 ]] && return 0
 }
 
 whyp_command () {
@@ -381,7 +402,8 @@ _edit_function () {
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     whyp_source "$path_to_file"
-    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file" || true
+    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
+    return 0
 }
 
 _edit_file () {
