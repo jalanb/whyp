@@ -255,6 +255,13 @@ whyp_cat () {
 }
 
 
+whyp_bash () {
+    local __doc__="""help on bash builtin"""
+    is_bash "$@" || return 1
+    help "$@"
+    return 0
+}
+
 whyp_function () {
     local __doc__="""whyp a function"""
     _parse_function "$@"
@@ -283,18 +290,11 @@ whyp_file () {
     return $_pass
 }
 
-whyp_match () {
-    local _is_thing=$1
+is_type () {
+    local _is_type=$1
     local _thing="$2"
-    $_is_thing "$_thing" || return 1
-}
-
-whyp_show () {
-    local _matcher=$1; shift
-    whyp_match $_matcher "$1" || return 1
-    local _display=$1; shift
-    local _one="$1"; shift
-    $_display "$_one"
+    $_is_type "$_thing" && return 0
+    return 1
 }
 
 whyp_option () {
@@ -518,8 +518,13 @@ source_path () {
     whyp_source "$@"
 }
 
+is_alias () {
+    local __doc__="""Whether $1 is an alias"""
+    [[ "$(type -t $1)" == "alias" ]]
+}
+
 is_function () {
-    local __doc__="""Whether the first argument is in use as a function"""
+    local __doc__="""Whether $1 is a function"""
     [[ "$(type -t $1)" == "function" ]]
 }
 
@@ -529,27 +534,22 @@ is_bash () {
 }
 
 is_keyword () {
-    local __doc__="""Whether the first argument is in use as a keyword"""
+    local __doc__="""Whether $1 is a keyword"""
     [[ "$(type -t $1)" == "keyword" ]]
 }
 
 is_builtin () {
-    local __doc__="""Whether the first argument is in use as a builtin"""
+    local __doc__="""Whether $1 is a builtin"""
     [[ "$(type -t $1)" == "builtin" ]]
 }
 
 is_file () {
-    local __doc__="""Whether the first argument is in use as a file"""
+    local __doc__="""Whether $1 is an executable file"""
     [[ "$(type -t $1)" == "file" ]]
 }
 
-is_alias () {
-    local __doc__="""Whether the first argument is in use as a alias"""
-    [[ "$(type -t $1)" == "alias" ]]
-}
-
 is_unrecognised () {
-    local __doc__="""Whether the first argument is in use as a unrecognised"""
+    local __doc__="""Whether $1 is unrecognised"""
     [[ "$(type -t $1)" == "" ]]
 }
 
