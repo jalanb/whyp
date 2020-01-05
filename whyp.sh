@@ -26,6 +26,7 @@ alias w=whyp
 
 # xx
 
+[[ $ALIAS_CC ]] && alias cc=eype
 alias wa='whyp --all'
 alias ww=whyp_whyp
 
@@ -244,9 +245,10 @@ make_shebang () {
 whyp_cat () {
     local __doc__="""Choose best avalaible cat"""
     local __todo__="""Add vimcat, kat, pygments, ..."""
-    local _lines=$1; shift
     if runnable bat; then
         bat --language=bash --style=changes,grid,numbers "$@"
+    elif runnable kat; then
+        kat --numbers "$@"
     elif [[ $_lines > 40 ]]; then
         less "$@"
     else
