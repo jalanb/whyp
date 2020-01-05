@@ -26,6 +26,7 @@ alias w=whyp
 
 # xx
 
+[[ $ALIAS_CC ]] && alias cc=eype
 alias wa='whyp --all'
 alias ww=whyp_whyp
 
@@ -251,6 +252,8 @@ whyp_cat () {
     fi
     if runnable bat; then
         bat --language=bash --style=changes,grid,numbers "$@"
+    elif runnable kat; then
+        kat --numbers "$@"
     elif [[ $_lines > 40 ]]; then
         less "$@"
     else
