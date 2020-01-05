@@ -299,7 +299,7 @@ whyp_cat () {
         cat "$@"
     fi
     [[ $1 ]] || return 0
-    local _lines=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
+    _lines=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
     [[ $_lines == 0 ]] || return 0
     set -x
     rri "$1"
