@@ -119,6 +119,14 @@ whypped () {
     echo $(de_alias $(whyped "$@"))
 }
 
+runnable () {
+    QUIETLY type "$@"
+}
+
+whyp_executable () {
+    QUIETLY type $(whyped "$@")
+}
+
 # xxxxx*
 
 whyp_bin () {
@@ -230,11 +238,11 @@ quietly () {
     "$@" 2>/dev/null
 }
 
-Quietly () {
+quiet_out () {
     "$@" >/dev/null
 }
 
-QUietly () {
+QUIETLY () {
     "$@" >/dev/null 2>&1
 }
 
@@ -450,10 +458,6 @@ whyp_whyp_whyp () {
     ww verbose "$@"
 }
 
-whyp_executable () {
-    QUietly type $(whyped "$@")
-}
-
 _parse_function () {
     __parse_function_line_number_and_path_to_file $(_debug_declare_function "$1")
 }
@@ -575,8 +579,4 @@ is_file () {
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
     [[ "$(type -t $1)" == "" ]]
-}
-
-runnable () {
-    QUietly type "$@"
 }
