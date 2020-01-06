@@ -12,15 +12,7 @@ from bdb import BdbQuit
 from pysyte.iteration import first
 
 from whyp import arguments
-
-
-def environment_value(key):
-    """A value from the shell environment, defaults to empty string
-
-    >>> environment_value('SHELL') is not None
-    True
-    """
-    return os.environ.get(key, '')
+from whyp import shell
 
 
 class BashError(ValueError):
@@ -37,7 +29,7 @@ def pager():
     vimcat originated at https://github.com/rkitover/vimpager
         So try ../../vimpager/vimcat too
     """
-    path_to_vimcat = find_in_environment_path('vimcat')
+    path_to_vimcat = shell.which('vimcat')
     if os.path.isfile(path_to_vimcat):
         return path_to_vimcat
     parent = os.path.dirname
@@ -47,7 +39,7 @@ def pager():
         path_to_vimcat = os.path.join(path_to_hub, vimcat_dir, 'vimcat')
         if os.path.isfile(path_to_vimcat):
             return path_to_vimcat
-    return find_in_environment_path('less')
+    return shell.which('less')
 
 
 def replace_alias(command):
@@ -60,7 +52,7 @@ def replace_alias(command):
 
 def bash_executable():
     """The first executable called 'bash' in the $PATH"""
-    return find_in_environment_path('bash')
+    return shell.which('bash')
 
 
 def show_output_of_shell_command(command):
@@ -150,6 +142,10 @@ def find_alias(string):
     return get_aliases().get(string, string)
 
 
+def is_alias(string):
+    return bool(get_alias(string))
+
+
 def get_alias(string):
     return get_aliases().get(string, None)
 
@@ -186,17 +182,9 @@ def get_functions():
     return result
 
 
-def find_function(name):
-    return get_functions().get(name, None)
-
-
-def environment_paths():
-    """A list of paths in the environment's PATH
-
-    >>> '/bin' in environment_paths()
-    True
-    """
-    return environment_value('PATH').split(':')
+def is_function(name):
+    function = get_functions().get(name, None)
+    return bool(function)
 
 
 def contractuser(path):
@@ -232,58 +220,7 @@ def files_in(path):
     >>> ('bash', '/bin/bash') in files_in('/bin')
     True
     """
-    return [(f, p) for (f, p) in items_in(path) if os.path.isfile(p)]
-
-
-def is_executable(path_to_file):
-    """Whether the file has any executable bits set
-
-    >>> is_executable(sys.executable)
-    True
-    """
-    executable_bits = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
-    try:
-        return bool(os.stat(path_to_file).st_mode & executable_bits)
-    except OSError:
-        return False
-
-
-def executables_in(path):
-    """A list of all executable files in the given path"""
-    return [(f, p) for (f, p) in items_in(path) if is_executable(p)]
-
-
-@memoize
-def files_in_environment_path():
-    """Gives a dictionary of all executable files in the environment's PATH
-
-    >>> files_in_environment_path()['python'] == sys.executable or True
-    True
-    """
-    known_filenames = set()
-    result = {}
-    for path in environment_paths():
-        for filename, path_to_file in executables_in(path):
-            if filename in known_filenames:
-                continue
-            known_filenames.add(filename)
-            result[filename] = path_to_file
-    return dict(result)
-
-
-def find_in_environment_path(string):
-    """Gives the path to string, or string.exe
-
-    >>> find_in_environment_path('python') == sys.executable or True
-    True
-    """
-    try:
-        files = files_in_environment_path()
-        return files[string]
-    except KeyError:
-        if string.endswith('.exe'):
-            return ''
-        return find_in_environment_path('%s.exe' % string)
+    return [(f, p) for (f, p) in path.listdir() if p.isfile(p)]
 
 
 class Bash(object):
@@ -364,11 +301,11 @@ def script_language(path_to_file):
 
 def show_command_in_path(command):
     """Show a command which is a file in $PATH"""
-    path_to_command = find_in_environment_path(command)
-    show_path_to_command(path_to_command)
+    path_to_command = shell.which(command)
+    show_command_file(path_to_command)
 
 
-def show_path_to_command(path_to_command):
+def show_command_file(path_to_command):
     """Show a command which is a file at that path"""
     if arguments.get('ls'):
         show_output_of_shell_command('%s -l %r' % (Bash.ls, path_to_command))
@@ -393,34 +330,10 @@ def show_alias(command):
     sub_command = alias.split()[0].strip()
     if sub_command == command:
         return
-    if os.path.dirname(sub_command) in environment_paths():
+    if os.path.dirname(sub_command) in shell.paths():
         show_command(os.path.basename(sub_command))
     else:
         show_command(sub_command)
-
-
-def show_command(command):
-    """Show whatever is behind a command"""
-    if arguments.get('file'):
-        if os.path.isfile:
-            show_path_to_command(command)
-        else:
-            # show(command) :thinking_face:
-            pass
-    elif not arguments.get('quiet'):
-        methods = [
-            (get_alias, show_alias),
-            (find_function, show_function),
-            (find_in_environment_path, show_command_in_path),
-            (os.path.isfile, show_path_to_command),
-        ]
-        try:
-            show = first((show for find, show in methods if find(command)))
-            show(command)
-            return True
-        except ValueError:
-            return False
-    return False
 
 
 def nearby_file(named_file, extension):
@@ -430,3 +343,27 @@ def nearby_file(named_file, extension):
     True
     """
     return os.path.splitext(named_file)[0] + extension
+
+
+def show_command(command):
+    """Show whatever is behind a command"""
+    methods = []
+    if arguments.get('file'):
+        methods = [
+            (os.path.isfile, show_command_file),
+        ]
+    elif not arguments.get('quiet'):
+        methods = [
+            (is_alias, show_alias),
+            (is_function, show_function),
+            (shell.is_path_command, show_command_in_path),
+            (os.path.isfile, show_command_file),
+        ]
+    try:
+        for is_command, show_command in methods:
+            if is_command(command):
+                show_command(command)
+                return True
+    except ValueError as e:
+        pass
+    return False
