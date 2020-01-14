@@ -17,6 +17,8 @@ _heading_lines=13 # Text before here was copied to template scripts, YAGNI
 export WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 export WHYP_BIN=$WHYP_DIR/bin
+export WHYP_VENV=
+[[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -137,7 +139,14 @@ whyp_bin () {
 whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
     local _script=$1; shift
-    PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
+    if [[ -d $WHYP_VENV ]]; then
+        (
+            source "$WHYP_VENV/bin/activate"
+            python whyp_bin $_script "$@"
+        )
+    else
+        PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
+    fi
 }
 
 whyp_pudb_run () {
