@@ -83,17 +83,25 @@ ww_help () {
 }
 
 de_alias () {
-    echo "$@" | sed -e "s:.* is aliased to::"
+    sed -e "s:.* is aliased to::"
 }
 
-de_hash () {
-    local _command=$1; shift
+de_file () {
+    sed -e "s:[^ ]* is ::"
+}
+
+de_hashed () {
+    local _command=$1
     local _type="$@"
     if [[ $_type =~ hashed ]]; then
         local _dehash=$(echo $_type | sed -e "s:.*hashed (\([^)]*\)):\1:")
         _type="$_command is $_dehash"
     fi
     echo $_type
+}
+
+de_typed () {
+    de_hashed $(quietly whyp "$@") | de_file | de_alias
 }
 
 whyp () {
@@ -114,11 +122,11 @@ whysp () {
 }
 
 whyped () {
-    echo $(de_hash $(whysp "$@"))
+    echo $(de_hashed $(whysp "$@")) | de_alias | de_file
 }
 
 whypped () {
-    echo $(de_alias $(whyped "$@"))
+    $(whyped "$@") | de_alias | de_file
 }
 
 runnable () {
