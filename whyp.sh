@@ -236,7 +236,7 @@ whypyf () {
     local _result=1
     for arg in "$@"; do
         whypyn $arg || continue
-        python -c "import $arg; print($arg).__file__" 2>/dev/null || continue
+        python -c "import $arg; print($arg.__file__)" 2>/dev/null || continue
         _result=0
     done
     return $_result
@@ -249,6 +249,17 @@ whypyn () {
     # Python names do not have hyphens, nor code
     [[ $1 =~ [-/] ]] && return 1
     return 0
+}
+
+whypyv () {
+    local __doc__="""the installed version of that python package"""
+    local _result=1 _arg=
+    for _arg in "$@"; do
+        whypy $_arg || contine
+        python -c "import $_arg; module=$_arg; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
+        _result=0
+    done
+    return $_result
 }
 
 quietly () {
