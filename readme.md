@@ -187,15 +187,19 @@ and continues to use them many times per day.
 
 Witty
 -----
-One of the best compliments of my coding life was when [/u/andru183 called this code "witty"](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/)
+
+The best compliment of my coding life was when [reddit called](https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/) this project "witty"
+ * same project, older name
+ * current code even wittier :-)
 
 Thanks
 ------
 
+The second best was when 
 
 ![JetBrains](images/jet_brains.png)
 
-This project has been supported by [JetBrains](www.jetbrains.com), who have graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for development of this project.
+graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for [contributions](contributions.md) to this project.
 
 Version
 -------
