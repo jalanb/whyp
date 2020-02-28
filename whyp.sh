@@ -244,7 +244,11 @@ make_shebang () {
 whyp_cat () {
     local __doc__="""Choose best avalaible cat"""
     local __todo__="""Add vimcat, kat, pygments, ..."""
-    local _lines=$1; shift
+    local _lines=
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        _lines=$1
+        shift
+    fi
     if runnable bat; then
         bat --language=bash --style=changes,grid,numbers "$@"
     elif [[ $_lines > 40 ]]; then
