@@ -17,6 +17,8 @@ _heading_lines=13 # Text before here was copied to template scripts, YAGNI
 export WHYP_SOURCE=$BASH_SOURCE
 export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 export WHYP_BIN=$WHYP_DIR/bin
+export WHYP_VENV=
+[[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -26,6 +28,7 @@ alias w=whyp
 
 # xx
 
+[[ $ALIAS_CC ]] && alias cc=eype
 alias wa='whyp --all'
 alias ww=whyp_whyp
 
@@ -51,23 +54,21 @@ wat () {
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 eype () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
-    local _sought=
+    local _sought= _file=
     is_bash "$1" && return
     is_file "$1" && _edit_file "$@" && return $?
     if is_function "$1"; then
         _parse_function "$1"
         _edit_function "$@"
-    elif is_alias "$1"; then
-        _edit_alias "$1"
-    elif whypy "$1"; then
-        _sought="$1"; shift
-        whyp_edit_file $(whypyf $1) +/"$_sought" "$@"
         return 0
-    else
-        local _file="$1"; shift
-        _sought="$1"; shift
-        whyp_edit_file "$_file" +/"$_sought" "$@"_
     fi
+    if is_alias "$1"; then
+        _edit_alias "$1"
+        return 0
+    fi
+    python_will_import "$1" && _file=$(python_module "$1") || _file="$1"; shift
+    _sought="$1"; shift
+    whyp_edit_file "$_file" +/"$_sought" "$@"_
 }
 
 ww_help () {
@@ -80,11 +81,15 @@ ww_help () {
 }
 
 de_alias () {
-    echo "$@" | sed -e "s:.* is aliased to::"
+    sed -e "/is aliased to \`/s:.$::" -e "s:.* is aliased to [\`]*::"
 }
 
-de_hash () {
-    local _command=$1; shift
+de_file () {
+    sed -e "s:[^ ]* is ::"
+}
+
+de_hashed () {
+    local _command=$1
     local _type="$@"
     if [[ $_type =~ hashed ]]; then
         local _dehash=$(echo $_type | sed -e "s:.*hashed (\([^)]*\)):\1:")
@@ -93,16 +98,25 @@ de_hash () {
     echo $_type
 }
 
+de_typed () {
+    de_hashed $(quietly whyp "$@") | de_file | de_alias
+}
+
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: whyp <command>"
-    local _alls_regexp="--*[al]*\>"
-    if [[ "$@" =~ $_alls_regexp ]]; then
-        local _command=$(echo "$@" | sed -e "s:$_alls_regexp::" )
-        ( type $_command
-        which -a "$_command" )
+    local _alls_regexp="--*[al]*"
+    if [[ "$1" =~ $_alls_regexp ]]; then
+        shift
+        if is_file "$@"; then
+            type "$@"
+            echo
+            which -a "$@" 2>/dev/null
+            return 0
+        fi
+        whyp_whyp "$@"
     else
-        type "$@"
+        type "$@" 2>/dev/null || env | grep "$@"
     fi
 }
 
@@ -111,11 +125,19 @@ whysp () {
 }
 
 whyped () {
-    echo $(de_hash $(whysp "$@"))
+    echo $(de_hashed $(whysp "$@")) | de_alias | de_file
 }
 
 whypped () {
-    echo $(de_alias $(whyped "$@"))
+    $(whyped "$@") | de_alias | de_file
+}
+
+runnable () {
+    QUIETLY type "$@"
+}
+
+whyp_executable () {
+    QUIETLY type $(whyped "$@")
 }
 
 # xxxxx*
@@ -128,7 +150,14 @@ whyp_bin () {
 whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
     local _script=$1; shift
-    PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
+    if [[ -d $WHYP_VENV ]]; then
+        (
+            source "$WHYP_VENV/bin/activate"
+            python whyp_bin $_script "$@"
+        )
+    else
+        PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
+    fi
 }
 
 whyp_pudb_run () {
@@ -196,27 +225,7 @@ whyp_option () {
     return 0
 }
 
-whypy () {
-    local __doc__="""test that python will import any args"""
-    for arg in "$@"; do
-        whypyn $arg || continue
-        python -c "import $arg" >/dev/null 2>&1 || return 1
-    done
-    return 0
-}
-
-whypyf () {
-    local __doc__="""the files that python imports args as"""
-    local _result=1
-    for arg in "$@"; do
-        whypyn $arg || continue
-        python -c "import $arg; print($arg).__file__" 2>/dev/null || continue
-        _result=0
-    done
-    return $_result
-}
-
-whypyn () {
+looks_like_python_name () {
     local __doc__="""Whether arg looks like a python name"""
     # Python names do not start with numbers
     [[ $1 =~ ^[0-9] ]] && return 1
@@ -225,15 +234,46 @@ whypyn () {
     return 0
 }
 
+python_will_import () {
+    local __doc__="""test that python will import any args"""
+    for arg in "$@"; do
+        looks_like_python_name $arg || continue
+        python -c "import $arg" >/dev/null 2>&1 || return 1
+    done
+    return 0
+}
+
+python_module () {
+    local __doc__="""the files that python imports args as"""
+    local _result=1
+    for arg in "$@"; do
+        looks_like_python_name $arg || continue
+        python -c "import $arg; print($arg.__file__)" 2>/dev/null || continue
+        _result=0
+    done
+    return $_result
+}
+
+python_module_version () {
+    local __doc__="""the installed version of that python package"""
+    local _result=1 _arg=
+    for _arg in "$@"; do
+        python_will_import $_arg || continue
+        python -c "import $_arg; module=$_arg; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
+        _result=0
+    done
+    return $_result
+}
+
 quietly () {
     "$@" 2>/dev/null
 }
 
-Quietly () {
+quiet_out () {
     "$@" >/dev/null
 }
 
-QUietly () {
+QUIETLY () {
     "$@" >/dev/null 2>&1
 }
 
@@ -251,11 +291,19 @@ whyp_cat () {
     fi
     if runnable bat; then
         bat --language=bash --style=changes,grid,numbers "$@"
+    elif runnable kat; then
+        kat --numbers "$@"
     elif [[ $_lines > 40 ]]; then
         less "$@"
     else
         cat "$@"
     fi
+    [[ $1 ]] || return 0
+    local _lines=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
+    [[ $_lines == 0 ]] || return 0
+    set -x
+    rri "$1"
+    set +x
 }
 
 
@@ -271,8 +319,7 @@ whyp_function () {
     is_function "$@" || return 1
     _parse_function "$@"
     [[ -f $path_to_file ]] || return 1
-    local _lines=$(type $1 | wc -l)
-    type $1 | sed -e "/is a function$/d" | whyp_cat $_lines
+    type $1 | sed -e "/is a function$/d" | whyp_cat
     echo "'$path_to_file:$line_number' $function ()"
     echo "$EDITOR $path_to_file +$line_number"
     return 0
@@ -347,7 +394,6 @@ whyp_whyp () {
     [[ "$@" ]] || return 1
     local _whyp_options=$(whyp_option "$@")
     [[ $_whyp_options ]] && shift
-    [[ $1 ]]
     local _name="$1"; shift
     whyp_show "$_name"
     [[ $? == 0 ]] && return 0
@@ -384,8 +430,11 @@ _edit_alias () {
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
             whyp_edit_file $sourced_file +$line_number
+            return 0
         fi
     done
+    echo "Did not find a file with '$1'" >&2
+    return 1
 }
 
 _edit_function () {
@@ -450,10 +499,6 @@ alias .=source_whyp
 
 whyp_whyp_whyp () {
     ww verbose "$@"
-}
-
-whyp_executable () {
-    QUietly type $(whyped "$@")
 }
 
 _parse_function () {
@@ -525,9 +570,14 @@ _show_history_command () {
 
 _debug_declare_function () {
     local __doc__="""Find where the first argument was loaded from"""
-    shopt -s extdebug;
+    shopt -s extdebug
     declare -F "$1"
     shopt -u extdebug
+}
+
+ddf () {
+    local __doc__="""where the arg came from"""
+    ( shopt -s extdebug; declare -F "$1" )
 }
 
 __parse_function_line_number_and_path_to_file () {
@@ -577,8 +627,4 @@ is_file () {
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
     [[ "$(type -t $1)" == "" ]]
-}
-
-runnable () {
-    QUietly type "$@"
 }
