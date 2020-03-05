@@ -6,3 +6,4 @@ tags
 whyp.out
 whyp.err
 sources.yaml
+.venv
