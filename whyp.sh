@@ -19,6 +19,7 @@ export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_VENV=
 [[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
+[[ -d $WHYP_VENV ]] || WHYP_VENV=~/.virtualenvs/whyp
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -116,7 +117,7 @@ whyp () {
         fi
         whyp_whyp "$@"
     else
-        type "$@" 2>/dev/null || env | grep "$@"
+        type "$@" 2>/dev/null || env | grep --colour "$@"
     fi
 }
 
@@ -149,22 +150,22 @@ whyp_bin () {
 
 whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
-    local _script=$1; shift
+    local _script=$(whyp_bin $1); shift
     if [[ -d $WHYP_VENV ]]; then
         (
             source "$WHYP_VENV/bin/activate"
-            python whyp_bin $_script "$@"
+            PYTHONPATH=$WHYP_DIR $_script "$@"
         )
     else
-        PYTHONPATH=$WHYP_DIR $(whyp_bin $_script) "$@"
+        PYTHONPATH=$WHYP_DIR $_script "$@"
     fi
 }
 
 whyp_pudb_run () {
     local __doc__="""Debug a script in whyp/bin"""
-    local _script=$1; shift
+    local _script=$(whyp_bin $1); shift
     set -x
-    PYTHONPATH=$WHYP_DIR pudb $(whyp_bin $_script) "$@"
+    PYTHONPATH=$WHYP_DIR pudb $_script "$@"
     set +x
 }
 
@@ -423,8 +424,8 @@ whyp_debug () {
 
 _edit_alias () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    whyp_bin_run sources --any || return
-    local _whyp_sources=$(whyp_bin_run sources --all --optional)
+    _sources --any || return
+    local _whyp_sources=$(_sources --all --optional)
     for sourced_file in $_whyp_sources; do
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
@@ -479,14 +480,13 @@ whyp_source () {
 
 source_whyp () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    local _filename=$(readlink -f "$1")
+    local _filename=$(readlink -f "$1") _optional=
+    [[ $2 == "optional" ]] && _optional=1
     if [ -z "$_filename" -o ! -f "$_filename" ]; then
-        if [[ -z $2 || $2 != "optional" ]]; then
-            echo Cannot source \"$1\". It is not a file. >&2
-        fi
+        [[ $_optional ]] || echo Cannot source \"$1\". It is not a file. >&2
         return 1
     fi
-    if whyp_bin_run sources --optional --sources "$_filename"; then
+    if _sources --optional --sources "$_filename"; then
         source "$_filename"
     fi
 }
@@ -525,6 +525,10 @@ old_whyp_type () {
 # Methods starting with underscores are intended for use in this file only
 #   (another convention borrowed from Python)
 
+
+_sources () {
+    whyp_bin_run sources "$@"
+}
 
 _write_new_file () {
     local __doc__="""Copy the head of this script to file"""
