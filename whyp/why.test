@@ -1,5 +1,5 @@
-The whyp.whyp module
-====================
+The whyp.why module
+===================
 
     >>> from whyp import why
     >>> 'Show the text' in why.__doc__
@@ -42,14 +42,3 @@ Which contains some (longer) commands
     Seems safe to assume that the whyp function is defined
     As that is the recommended way to run this script
     >>> #print(functions['whyp'])
-
-Read commands
--------------
-
-And we can get files from the bash $PATH
-
-Such files will vary across machines,
-    but it is safe to assume that python is one of them
-    and that it is in a "bin" directory
-    >>> why.files_in_environment_path()['python'].endswith('bin/python')
-    True

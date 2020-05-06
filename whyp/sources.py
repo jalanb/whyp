@@ -11,7 +11,7 @@ import yaml
 import os
 from os import path as op
 
-from whyp import paths
+from pysyte.types import paths
 
 _file = '.'.join((op.splitext(__file__)[0], 'yaml'))  # static to importers
 
@@ -64,10 +64,3 @@ def any():
 
 def all():
     return _sources or ([] if optional else None)
-
-
-def split_names(string):
-
-    path = paths.as_path(string)
-    return path.directory(), path.base() if path.isfile() else path.dirname()
-

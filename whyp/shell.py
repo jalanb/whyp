@@ -1,26 +1,20 @@
 import os
 
-
 from pysyte.types.paths import path
 
 
 def value(key):
     """A value from the shell environment, defaults to empty string
 
-    >>> value('SHELL') is not None
-    True
+    >>> assert value('SHELL') is not None
     """
-    try:
-        return os.environ[key]
-    except KeyError:
-        return ''
+    return os.environ.get(key, '')
 
 
 def paths(name=None):
     """A list of paths in the environment's PATH
 
-    >>> '/bin' in paths()
-    True
+    >>> assert '/bin' in paths()
     """
     path_value = value(name or 'PATH')
     path_strings = path_value.split(':')
@@ -31,6 +25,7 @@ def paths(name=None):
 def path_commands():
     """Gives a dictionary of all executable files in the environment's PATH
 
+    >>> import sys
     >>> path_commands()['python'] == sys.executable or True
     True
     """
@@ -56,6 +51,7 @@ def which(name):
     If name is not found, look for name.exe
         If still not found, return empty string
 
+    >>> import sys
     >>> which('python') == sys.executable or True
     True
     """

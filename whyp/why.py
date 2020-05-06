@@ -10,6 +10,7 @@ from collections import defaultdict
 from bdb import BdbQuit
 
 from pysyte.iteration import first
+from pysyte.types import paths
 
 from whyp import arguments
 from whyp import shell
@@ -185,42 +186,6 @@ def get_functions():
 def is_function(name):
     function = get_functions().get(name, None)
     return bool(function)
-
-
-def contractuser(path):
-    """Replace the home directory in that path with ~
-
-    This is the opposite of os.path.expanduser()
-
-    >>> contractuser(os.path.expanduser('~/.bashrc')) == '~/.bashrc'
-    True
-    """
-    home_symbol = '~'
-    home = os.path.expanduser(home_symbol)
-    if path.startswith(home):
-        return path.replace(home, home_symbol)
-    return path
-
-
-def items_in(path):
-    """A list of all items in the given path
-
-    >>> ('local', '/usr/local') in items_in('/usr')
-    True
-    """
-    try:
-        return [(name, os.path.join(path, name)) for name in os.listdir(path)]
-    except OSError:
-        return []
-
-
-def files_in(path):
-    """A list of all files in the given path
-
-    >>> ('bash', '/bin/bash') in files_in('/bin')
-    True
-    """
-    return [(f, p) for (f, p) in path.listdir() if p.isfile(p)]
 
 
 class Bash(object):
