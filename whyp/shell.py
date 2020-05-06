@@ -36,6 +36,8 @@ def path_commands():
     """
     commands = {}
     for path_dir in paths():
+        if not path_dir.isdir():
+            continue
         for file_path in path_dir.list_files():
             if not file_path.isexec():
                 continue
