@@ -19,4 +19,5 @@ Should be some files sourced already
     ...     assert sources.any()
 
 And our shell script should be one of them
-    >>> assert 'whyp.sh' in [basename(s) for s in sources.all()]
+    >>> if platforms.name == 'darwin':
+    ...     assert 'whyp.sh' in [basename(s) for s in sources.all()]
