@@ -19,9 +19,6 @@ Bash environment
 
     >>> assert why.find_alias('bash') == 'bash'
     >>> assert why.get_alias('bash') is None
-    >>> assert why.find_function('bash') is None
-    >>> assert path.isfile(why.find_in_environment_path('bash'))
-    >>> assert why.find_in_environment_path('bash') == why.bash_executable()
 
 Read alias file
 --------------
@@ -36,13 +33,10 @@ quote handling
 
     >>> assert why.strip_quotes(None) is None
     >>> assert why.strip_quotes('') is ''
-    >>> p = '/usr/local/bin'
-    >>> assert why.contractuser(p) == p
 
 Showing paths
 -------------
 
-    >>> assert not why.items_in('/no/such/path')
     >>> assert why.showable('python')
     >>> assert why.showable('bash')
     >>> assert not why.showable('java')

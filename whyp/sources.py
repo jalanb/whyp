@@ -11,18 +11,20 @@ import yaml
 import os
 from os import path as op
 
-from whyp import paths
+from pysyte.types import paths
 
-_file = '.'.join((op.splitext(__file__)[0], 'yaml'))  # static to importers
+def _path_to_yaml():
+    return paths.path(__file__).extend_by('yaml')
+
 
 optional = False  # volatile to importers
 
 def load(optional):
     """Provide the data from a yaml file"""
-    if not op.isfile(_file):
+    if not _path_to_yaml().isfile():
         return set()
     try:
-        with open(_file) as stream:
+        with open(_path_to_yaml()) as stream:
             return set(yaml.safe_load(stream) or [])
     except FileNotFoundError:
         if optional:
@@ -36,7 +38,7 @@ _sources = load(True)
 def save():
     real_sources = sorted([s for s in _sources if op.isfile(s)])
     try:
-        with open(_file, 'w') as stream:
+        with open(_path_to_yaml(), 'w') as stream:
             yaml.safe_dump(real_sources, stream)
         return True
     except:
@@ -62,12 +64,6 @@ def source(path_to_file):
 def any():
     return bool(_sources) or optional
 
+
 def all():
     return _sources or ([] if optional else None)
-
-
-def split_names(string):
-
-    path = paths.as_path(string)
-    return path.directory(), path.base() if path.isfile() else path.dirname()
-

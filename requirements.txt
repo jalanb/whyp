@@ -5,7 +5,7 @@ nose-pudb
 nose==1.3.7
 pprintpp
 pudb
-pysyte>=0.7.30
+pysyte>=0.7.41
 pytest
 pyyaml
 requests
