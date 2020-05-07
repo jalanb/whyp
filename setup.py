@@ -34,7 +34,6 @@ setup(
         'pysyte',
         'pyyaml',
         'requests',
-        'six',
     ],
     scripts=['bin/whyp'],
 )

@@ -10,10 +10,7 @@ If a name is found more than once each is listed
 
 
 import os
-try:
-    from io import StringIO
-except ImportError:
-    from six.moves import StringIO
+from io import StringIO
 import sys
 import argparse
 import fnmatch
@@ -21,7 +18,6 @@ import importlib
 from bdb import BdbQuit
 from contextlib import contextmanager
 
-from six import StringIO
 from pysyte.types import paths
 
 from whyp import __version__

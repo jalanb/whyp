@@ -9,4 +9,3 @@ pysyte>=0.7.41
 pytest
 pyyaml
 requests
-six
