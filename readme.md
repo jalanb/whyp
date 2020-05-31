@@ -203,4 +203,19 @@ graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm
 
 Version
 -------
+
 0.7.14
+
+Build status
+------------
+
+.. image:: https://travis-ci.org/jalanb/whyp.svg?branch=master
+   :target: https://travis-ci.org/jalanb/whyp
+   :alt: Build Status
+
+Test Coverage
+-------------
+
+.. image:: https://codecov.io/gh/jalanb/whyp/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/jalanb/whyp
+   :alt: Test Coverage
