@@ -9,9 +9,9 @@ if [[ "$0" == $BASH_SOURCE ]]; then
     echo "  sh $0"
 fi
 #
-_license="This script is released under the MIT license, see accompanying LICENSE file"
+license_="This script is released under the MIT license, see accompanying LICENSE file"
 #
-_heading_lines=13 # Text before here was copied to template scripts, YAGNI
+heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 
 export WHYP_SOURCE=$BASH_SOURCE
@@ -24,36 +24,8 @@ export WHYP_PY=$WHYP_DIR/whyp
 
 # x
 
-alias e=eype
-alias w=whyp
-
-# xx
-
-[[ $ALIAS_CC ]] && alias cc=eype
-alias wa='whyp --all'
-alias ww=whyp_whyp
-
-# xxx
-
-alias wat=whyp_cat
-alias www=whyp_whyp_whyp
-
-ses () {
-    local _old="$1"; shift
-    local _new="$1"; shift
-    echo "$@" | sed -e "s:$_old:$_new:"
-}
-
-wat () {
-    local _cmd=cat
-    is_file bat && _cmd=bat
-    is_file kat && $(kat "$@" >/dev/null 2>&1) && _cmd=kat
-    $_cmd "$@"
-}
-# xxxx
-
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
-eype () {
+e () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
     local _sought= _file=
     is_bash "$1" && return
@@ -70,6 +42,83 @@ eype () {
     python_will_import "$1" && _file=$(python_module "$1") || _file="$1"; shift
     _sought="$1"; shift
     whyp_edit_file "$_file" +/"$_sought" "$@"_
+}
+
+w () {
+    local __doc__="""w extends type"""
+    [[ "$@" ]] || echo "Usage: w <command>"
+    # -a, --all
+    local _alls_regexp="--*[al]*" options_=
+    [[ "$1" =~ $_alls_regexp ]] && options_=--all
+    [[ $options_ ]] && shift
+    if is_file "$@"; then
+        type "$@"
+        echo
+        which $options_ "$@" 2>/dev/null
+        return 0
+    else
+        type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+    fi
+    ww "$@"
+}
+
+alias .=ws
+
+# xx
+
+[[ $ALIAS_CC ]] && alias cc=e
+alias .w=dot_w
+alias wa='w --all'
+
+ws () {
+    local __doc__="""Source a file (that may set some aliases) and remember that file"""
+    local _filename=$(readlink -f "$1") _optional=
+    [[ $2 == "optional" ]] && _optional=1
+    if [[ -f $_filename ]]; then
+      source $_filename
+      return 1
+    fi
+    [[ -f $_filename || $_optional ]] || echo Cannot source \"$1\". It is not a file. >&2
+    [[ -f $_filename ]] || return
+    source "$_filename"
+}
+
+wq () {
+    quietly w "$@"
+}
+
+ww () {
+    local __doc__="""ww expands type"""
+    [[ "$@" ]] || return 1
+    local _whyp_options=$(ww_option "$@")
+    [[ $_whyp_options ]] && shift
+    local _name="$1"; shift
+    ww_show "$_name"
+    [[ $? == 0 ]] && return 0
+}
+
+alias .w="ws $WHYP_SOURCE"
+
+# xxx
+
+ses () {
+    if [[ $1 == -e ]]; then
+        sed "$@"
+    else
+        sed -e "s,$1,$2",
+    fi
+}
+
+wat () {
+    local _cmd=cat
+    is_file kat && _cmd=kat
+    is_file bat && _cmd=bat
+    $_cmd "$@"
+}
+# xxxx
+
+whyp () {
+  w "$@"
 }
 
 ww_help () {
@@ -100,57 +149,40 @@ de_hashed () {
 }
 
 de_typed () {
-    de_hashed $(quietly whyp "$@") | de_file | de_alias
+    de_hashed $(quietly w "$@") | de_file | de_alias
 }
 
-whyp () {
-    local __doc__="""whyp extends type"""
-    [[ "$@" ]] || echo "Usage: whyp <command>"
-    local _alls_regexp="--*[al]*"
-    if [[ "$1" =~ $_alls_regexp ]]; then
-        shift
-        if is_file "$@"; then
-            type "$@"
-            echo
-            which -a "$@" 2>/dev/null
-            return 0
-        fi
-        whyp_whyp "$@"
-    else
-        type "$@" 2>/dev/null || env | grep --colour "$@"
-    fi
+deafened () {
+    echo $(de_hashed $(wq "$@")) | de_alias | de_file
 }
 
-whysp () {
-    quietly whyp "$@"
-}
-
-whyped () {
-    echo $(de_hashed $(whysp "$@")) | de_alias | de_file
-}
-
-whypped () {
-    $(whyped "$@") | de_alias | de_file
+defended () {
+    $( "$@") | de_alias | de_file
 }
 
 runnable () {
     QUIETLY type "$@"
 }
 
-whyp_executable () {
-    QUIETLY type $(whyped "$@")
+ww_executable () {
+    QUIETLY type $(deafened "$@")
+}
+
+# xxxxx
+dot_w () {
+    . $WHYP.sh
 }
 
 # xxxxx*
 
-whyp_bin () {
+ww_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
     echo $WHYP_BIN/"$1"
 }
 
 whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
-    local _script=$(whyp_bin $1); shift
+    local _script=$(ww_bin $1); shift
     if [[ -d $WHYP_VENV ]]; then
         (
             source "$WHYP_VENV/bin/activate"
@@ -163,18 +195,18 @@ whyp_bin_run () {
 
 whyp_pudb_run () {
     local __doc__="""Debug a script in whyp/bin"""
-    local _script=$(whyp_bin $1); shift
+    local _script=$(ww_bin $1); shift
     set -x
     PYTHONPATH=$WHYP_DIR pudb $_script "$@"
     set +x
 }
 
-whyp_py () {
-    whyp_bin_run whyp "$@"
+ww_py () {
+    python3 -m whyp "$@"
 }
 
 whyp_py_file () {
-    whyp_bin_run whyp -f "$@"
+    python3 -m whyp -f "$@"
 }
 
 whyp_edit_file () {
@@ -213,7 +245,7 @@ local_python () {
     [[ $_local_python ]] && $_local_python -c "import sys; sys.stdout.write(sys.executable)"
 }
 
-whyp_option () {
+ww_option () {
     local _options=
     [[ $1 == -q ]] && _options=quiet
     [[ $1 == -v ]] && _options=verbose
@@ -282,7 +314,7 @@ make_shebang () {
     sed -e "1s:.*:#! /bin/bash:"
 }
 
-whyp_cat () {
+wat () {
     local __doc__="""Choose best avalaible cat"""
     local __todo__="""Add vimcat, kat, pygments, ..."""
     local _lines=
@@ -308,39 +340,39 @@ whyp_cat () {
 }
 
 
-whyp_bash () {
+ww_bash () {
     local __doc__="""help on bash builtin"""
     is_bash "$@" || return 1
     help "$@"
     return 0
 }
 
-whyp_function () {
+ww_function () {
     local __doc__="""whyp a function"""
     is_function "$@" || return 1
     _parse_function "$@"
     [[ -f $path_to_file ]] || return 1
-    type $1 | sed -e "/is a function$/d" | whyp_cat
+    type $1 | sed -e "/is a function$/d" | wat
     echo "'$path_to_file:$line_number' $function ()"
     echo "$EDITOR $path_to_file +$line_number"
     return 0
 }
 
-whyp_alias () {
+ww_alias () {
     is_alias "$@" || return 1
     alias $1
     local _stdout=$(alias $1)
     if [[ $_stdout  =~ is.a.function ]]; then
-        _name=$(whypped $_name)
-        whyp_function $_name
+        _name=$(defended $_name)
+        ww_function $_name
     else
         local _suffix=${_stdout//*=\'}
         local _command=${_suffix//\'}
-        whyp $_command
+        w $_command
     fi
 }
 
-whyp_file () {
+ww_file () {
     is_file "$@" || return 1
     local _path=$(type "$1" | sed -e "s:.* is ::")
     local _command=less
@@ -357,67 +389,60 @@ is_type () {
     return 1
 }
 
-whyp_option () {
-    local _options=
-    [[ $1 == -q ]] && _options=quiet
-    [[ $1 == -v ]] && _options=verbose
-    [[ $1 == verbose ]] && _options=verbose
-    [[ $1 == quiet ]] && _options=quiet
-    [[ $_options ]] || return 1
-    echo $_options
-    return 0
+ww_args () {
+    local _arg= _option= _shifts=
+    for _arg in "$@"; do
+        [[ $_arg == -v ]] && _option=-v
+        [[ $_arg == verbose ]] && _option=-v
+        [[ $_arg == -q ]] && _option=-q
+        [[ $_arg == quiet ]] && _option=-q
+        [[ $_arg == -vv ]] && _option=-v
+        [[ $_option ]] || continue
+        WOPTS=$_option
+        echo $_arg
+    done
 }
 
 whyp_show_ () {
-    local _stream=quietly
-    local _options=$(whyp_option "$@")
-    [[ $_options ]] && shift
-    [[ $_options == verbose ]] && _stream=
-    local _name="$1"; shift
-    local _type="$_stream $1"; shift
-    $_type "$_name" || return 1
+    WOPTS=
+    local _shower=quietly _args=$(ww_args "$@") _arg= _name= _type=
+    [[ $WOPTS == -v ]] && _shower=
+    for _arg in $_args; do
+        _name="$_arg"; shift
+        _type="$_shower $_arg"; shift
+        $_type
+    done
     return 0
 }
 
-whyp_show () {
-    local _name=$1; shift
-    local _shown=
-    local _whyp=
-    for _whyp in whyp_bash whyp_function whyp_alias whyp_file ; do
-        whyp_show_ $_name $_whyp || continue
+ww_show () {
+    local _whyp_= _name="$1"
+    shift
+    for whyp_ in ww_bash ww_function ww_alias ww_file ; do
+        whyp_show_ $_name $whyp_ || continue
         return 0
     done
     return 1
 }
 
-whyp_whyp () {
-    local __doc__="""whyp_whyp expands whyp, now"""
-    [[ "$@" ]] || return 1
-    local _whyp_options=$(whyp_option "$@")
-    [[ $_whyp_options ]] && shift
-    local _name="$1"; shift
-    whyp_show "$_name"
-    [[ $? == 0 ]] && return 0
-}
-
-whyp_command () {
+ww_command () {
     local __doc__="""find what will be executed for a command string"""
     PATH_TO_ALIASES=/tmp/aliases
     PATH_TO_FUNCTIONS=/tmp/functions
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
-    whyp_py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
+    ww_py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
     # local return_value=$?
     # rm -f $PATH_TO_ALIASES
     # rm -f $PATH_TO_FUNCTIONS
     # return $return_value
 }
 
-whyp_debug () {
+ww_debug () {
     (DEBUGGING=www;
         local _command="$1"; shift
         ww $_command;
-        whyp $_command;
+        w $_command;
         (set -x; $_command "$@" 2>&1 )
     )
 }
@@ -451,18 +476,18 @@ _edit_function () {
     fi
     local _line=; [[ -n "$line_number" ]] && _line=+$line_number
     local _seek=+/$_regexp
-    [[ "$@" =~ [+][/] ]] && _seek=$(ses ".*\([+][/][^ ]*\).*" '\1' "$@")
+    [[ "$@" =~ [+][/] ]] && _seek=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
     whyp_edit_file "$path_to_file" $_line $_seek
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
-    whyp_source "$path_to_file"
+    ww_source "$path_to_file"
     [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
     return 0
 }
 
 _edit_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local _file=$(whyp_py $1)
+    local _file=$(ww_py $1)
     [[ -f $_file ]] || return 1
     if file $_file | grep -q text; then
         whyp_edit_file  $_file
@@ -472,32 +497,18 @@ _edit_file () {
     fi
 }
 
-whyp_source () {
+ww_source () {
     local __doc__="""Source optionally"""
-    source_whyp "$@" optional
+    ws "$@" optional
 }
 
-
-source_whyp () {
-    local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    local _filename=$(readlink -f "$1") _optional=
-    [[ $2 == "optional" ]] && _optional=1
-    if [ -z "$_filename" -o ! -f "$_filename" ]; then
-        [[ $_optional ]] || echo Cannot source \"$1\". It is not a file. >&2
-        return 1
-    fi
-    if _sources --optional --sources "$_filename"; then
-        source "$_filename"
-    fi
-}
 
 quietly unalias .
-alias .=source_whyp
 
 
 # _xxxxx+
 
-whyp_whyp_whyp () {
+www_ () {
     ww verbose "$@"
 }
 
