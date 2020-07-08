@@ -20,21 +20,20 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 # https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
 e () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
-    local ought_= ile_=
     is_bash "$1" && return
-    is_file "$1" && dit_file_ "$@" && return $?
+    is_file "$1" && edit_file_ "$@" && return $?
     if is_function "$1"; then
-        arse_function_ "$1"
-        dit_function_ "$@"
+        parse_function_ "$1"
+        edit_function_ "$@"
         return 0
     fi
     if is_alias "$1"; then
-        dit_alias_ "$1"
+        edit_alias_ "$1"
         return 0
     fi
-    python_will_import "$1" && ile_=$(python_module "$1") || ile_="$1"; shift
-    ought_="$1"; shift
-    whyp_edit_file "$ile_" +/"$ought_" "$@"_
+    local file_= sought_= "$1"; shift
+    python_will_import "$1" && file_=$(python_module "$1") || file_="$1"; shift
+    whyp_edit_file "$file_" +/"$sought_" "$@"_
 }
 
 alias .=whyp_source
@@ -51,8 +50,8 @@ ww () {
     [[ "$@" ]] || return 1
     local hyp_options_=$(ww_option "$@")
     [[ $hyp_options_ ]] && shift
-    local ame_="$1"; shift
-    ww_show "$ame_"
+    local name_="$1"; shift
+    ww_show "$name_"
     [[ $? == 0 ]] && return 0
 }
 
@@ -98,9 +97,9 @@ ww_help () {
     local unction_=$1; shift
     rm -f /tmp/err
     [[ $1 =~ (-h|--help) ]] && ww $unction_ 2>/tmp/err
-    local esult_=$?
+    local result_=$?
     [[ -f /tmp/err ]] && return 2
-    return $esult_
+    return $result_
 }
 
 de_alias () {
@@ -197,12 +196,14 @@ whyp_py_file () {
 
 whyp_edit_file () {
     local __doc__="""Edit the first argument if it's a file"""
-    local ile_=$1; shift
-    [[ -f $ile_ ]] || return 1
-    local ir_=$(dirname $ile_)
-    [[ -d $ir_ ]] || ir_=.
-    local ase_=$(basename $ile_)
-    (cd $ir_; $EDITOR $ase_ "$@")
+    local file_=$1; shift
+    [[ -f $file_ ]] || return 1
+    local dir_=$(dirname $file_)
+    [[ -d $dir_ ]] || dir_=.
+    local name_=$(basename $file_)
+    local editor_=$WHYPED
+    [[ $EDITOR ]] && editor_=$EDITOR
+    (cd $dir_; $editor_ $name_ "$@")
 }
 
 python_has_debugger () {
@@ -232,15 +233,15 @@ local_python () {
 }
 
 ww_option () {
-    local ptions_=
-    [[ $1 == -q ]] && ptions_=quiet
-    [[ $1 == -v ]] && ptions_=verbose
-    [[ $1 == verbose ]] && ptions_=verbose
-    [[ $1 == quiet ]] && ptions_=quiet
-    [[ $1 == -f ]] && ptions_="$ptions_ --is-function"
-    [[ $1 == -a ]] && ptions_="$ptions_ --is-alias"
-    [[ $ptions_ ]] || return 1
-    echo $ptions_
+    local options_=
+    [[ $1 == -q ]] && options_=quiet
+    [[ $1 == -v ]] && options_=verbose
+    [[ $1 == verbose ]] && options_=verbose
+    [[ $1 == quiet ]] && options_=quiet
+    [[ $1 == -f ]] && options_="$ptions_ --is-function"
+    [[ $1 == -a ]] && options_="$ptions_ --is-alias"
+    [[ $options_ ]] || return 1
+    echo $options_
     return 0
 }
 
@@ -264,24 +265,24 @@ python_will_import () {
 
 python_module () {
     local __doc__="""the files that python imports args as"""
-    local esult_=1
+    local result_=1
     for arg in "$@"; do
         looks_like_python_name $arg || continue
         python -c "import $arg; print($arg.__file__)" 2>/dev/null || continue
-        esult_=0
+        result_=0
     done
-    return $esult_
+    return $result_
 }
 
 python_module_version () {
     local __doc__="""the installed version of that python package"""
-    local esult_=1 rg_=
-    for rg_ in "$@"; do
-        python_will_import $rg_ || continue
-        python -c "import $rg_; module=$rg_; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
-        esult_=0
+    local result_=1 arg_=
+    for arg_ in "$@"; do
+        python_will_import $arg_ || continue
+        python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
+        result_=0
     done
-    return $esult_
+    return $result_
 }
 
 quietly () {
@@ -336,7 +337,7 @@ ww_bash () {
 ww_function () {
     local __doc__="""whyp a function"""
     is_function "$@" || return 1
-    arse_function_ "$@"
+    parse_function_ "$@"
     [[ -f $path_to_file ]] || return 1
     type $1 | sed -e "/is a function$/d" | wat
     echo "'$path_to_file:$line_number' $function ()"
@@ -349,8 +350,8 @@ ww_alias () {
     alias $1
     local tdout_=$(alias $1)
     if [[ $tdout_  =~ is.a.function ]]; then
-        ame_=$(defended $ame_)
-        ww_function $ame_
+        name_=$(defended $name_)
+        ww_function $name_
     else
         local uffix_=${tdout_//*=\'}
         local ommand_=${uffix_//\'}
@@ -368,44 +369,37 @@ ww_file () {
     return $ass_
 }
 
-is_type () {
-    local s_type_=$1
-    local hing_="$2"
-    $s_type_ "$hing_" && return 0
-    return 1
-}
-
 ww_args () {
-    local rg_= ption_= hifts_=
-    for rg_ in "$@"; do
-        [[ $rg_ == -v ]] && ption_=-v
-        [[ $rg_ == verbose ]] && ption_=-v
-        [[ $rg_ == -q ]] && ption_=-q
-        [[ $rg_ == quiet ]] && ption_=-q
-        [[ $rg_ == -vv ]] && ption_=-v
-        [[ $ption_ ]] || continue
-        WOPTS=$ption_
-        echo $rg_
+    local arg_= option_= hifts_=
+    for arg_ in "$@"; do
+        [[ $arg_ == -v ]] && option_=-v
+        [[ $arg_ == verbose ]] && option_=-v
+        [[ $arg_ == -q ]] && option_=-q
+        [[ $arg_ == quiet ]] && option_=-q
+        [[ $arg_ == -vv ]] && option_=-v
+        [[ $option_ ]] || continue
+        WOPTS=$option_
+        echo $arg_
     done
 }
 
 whyp_show_ () {
     WOPTS=
-    local hower_=quietly rgs_=$(ww_args "$@") rg_= ame_= ype_=
-    [[ $WOPTS == -v ]] && hower_=
-    for rg_ in $rgs_; do
-        ame_="$rg_"; shift
-        ype_="$hower_ $rg_"; shift
+    local shower_=quietly rgs_=$(ww_args "$@") arg_= name_= ype_=
+    [[ $WOPTS == -v ]] && shower_=
+    for arg_ in $rgs_; do
+        name_="$arg_"; shift
+        ype_="$shower_ $arg_"; shift
         $ype_
     done
     return 0
 }
 
 ww_show () {
-    local hyp__= ame_="$1"
+    local whyp_= name_="$1"
     shift
     for whyp_ in ww_bash ww_function ww_alias ww_file ; do
-        whyp_show_ $ame_ $whyp_ || continue
+        whyp_show_ $name_ $whyp_ || continue
         return 0
     done
     return 1
@@ -433,10 +427,10 @@ ww_debug () {
     )
 }
 
-dit_alias_ () {
+edit_alias_ () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
-    ources_ --any || return
-    local hyp_sources_=$(ources_ --all --optional)
+    sources_ --any || return
+    local hyp_sources_=$(sources_ --all --optional)
     for sourced_file in $hyp_sources_; do
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
@@ -449,10 +443,10 @@ dit_alias_ () {
     return 1
 }
 
-dit_function_ () {
+edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local ade_=
-    ake_path_to_file_exist_ && ade_=1
+    make_path_to_file_exist_ && ade_=1
     local egexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     local ew_=
     if ! grep -q $egexp_ "$path_to_file"; then
@@ -460,10 +454,10 @@ dit_function_ () {
         echo "Add $function onto $path_to_file at new line $line_number"
         set +x; return 0
     fi
-    local ine_=; [[ -n "$line_number" ]] && ine_=+$line_number
+    local line_=; [[ -n "$line_number" ]] && line_=+$line_number
     local eek_=+/$egexp_
     [[ "$@" =~ [+][/] ]] && eek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
-    whyp_edit_file "$path_to_file" $ine_ $eek_
+    whyp_edit_file "$path_to_file" $line_ $eek_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     ww_source "$path_to_file"
@@ -471,15 +465,15 @@ dit_function_ () {
     return 0
 }
 
-dit_file_ () {
+edit_file_ () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local ile_=$(ww_py $1)
-    [[ -f $ile_ ]] || return 1
-    if file $ile_ | grep -q text; then
-        whyp_edit_file  $ile_
+    local file_=$(ww_py $1)
+    [[ -f $file_ ]] || return 1
+    if file $file_ | grep -q text; then
+        whyp_edit_file  $file_
     else
-        echo $ile_ is not text >&2
-        file $ile_ >&2
+        echo $file_ is not text >&2
+        file $file_ >&2
     fi
 }
 
@@ -498,8 +492,8 @@ www_ () {
     ww verbose "$@"
 }
 
-arse_function_ () {
-    __parse_function_line_number_and_path_to_file $(ebug_declare_function_ "$1")
+parse_function_ () {
+    __parse_function_line_number_and_path_to_file $(debug_declare_function_ "$1")
 }
 
 def_executable () {
@@ -514,8 +508,9 @@ old_whyp_type () {
     elif is_function "$1"; then
         type "$1"
         echo
-        local bove_=$(( $line_number - 1 ))
-        echo "whyp_edit_file $(relpath ""$path_to_file"") +$bove_ +/'\\<$function\\zs.*'"
+        local line_above_=$(( $line_number - 1 ))
+        local sought_="'\\<$function\\zs.*'"
+        echo "whyp_edit_file $(relpath ""$path_to_file"") +$line_above_ +/$sought"
     elif def_executable "$1"; then
         real_file=$(readlink -f $(which "$1"))
         [[ $real_file != "$1" ]] && echo -n "$1 -> "
@@ -529,53 +524,47 @@ old_whyp_type () {
 #   (another convention borrowed from Python)
 
 
-ources_ () {
+sources_ () {
     whyp_bin_run sources "$@"
 }
 
-rite_new_file_ () {
+write_new_file_ () {
     local __doc__="""Copy the head of this script to file"""
     head -n $eading_lines_ $BASH_SOURCE > "$path_to_file"
 }
 
-reate_function_ () {
+create_function_ () {
     local __doc__="""Make a new function with a command in shell history"""
     local doc="copied from $(basename $SHELL) history on $(date)"
-    local history_command=$(how_history_command_)
+    local history_command=$(show_history_command_)
     quietly eval "$function() { local __doc__="""$doc"""; $history_command; }"
 }
 
-ake_path_to_file_exist_ () {
+make_path_to_file_exist_ () {
     local __doc__="""make sure the required file exists, either an existing file, a new file, or a temp file"""
     if [[ -f "$path_to_file" ]]; then
         cp "$path_to_file" "$path_to_file~"
         return 0
     fi
     [[ ! "$path_to_file" || $path_to_file == main ]] && path_to_file=$(mktemp /tmp/function.XXXXXX)
-    rite_new_file_ "$path_to_file"
+    write_new_file_ "$path_to_file"
 }
 
-im_line_ () {
-    local ile_="$1";shift
-    local ine_="$1";shift
-    whyp_edit_file  "$ile_" +$line
-}
-
-how_history_command_ () {
+show_history_command_ () {
     local __doc__="""Get a command from the end of current bash history"""
-    local line=
+    local line_=
     local words=$(fc -ln -$history_index -$history_index)
     for word in $words
     do
         if [[ ${word:0:1} != "-" ]]; then
             is_alias $word && word="\\$word"
         fi
-        [[ -z $line ]] && line=$word || line="$line $word"
+        [[ -z $line_ ]] && line_=$word || line_="$line_ $word"
     done
     echo $line
 }
 
-ebug_declare_function_ () {
+debug_declare_function_ () {
     local __doc__="""Find where the first argument was loaded from"""
     shopt -s extdebug
     declare -F "$1"
