@@ -477,6 +477,26 @@ edit_file_ () {
     fi
 }
 
+show_type () {
+    local options_=
+    [[ $1 == -a ]] && options_=-a && shift
+    type $options_ "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+}
+
+show_file () {
+    local options_=; [[ $1 == -a ]] && options_=-a && shift
+    type $options_ "$@"
+    echo
+    [[ $options_ == -a ]] && which $options_ "$@" 2>/dev/null
+}
+
+show_function () {
+    local options_=; [[ $1 == -a ]] && options_=-a && shift
+    parse_function_ $1
+    echo "$1 is a function in '$path_to_file':$line_number"
+    show_type "$@" | tail -n +2
+}
+
 ww_source () {
     local __doc__="""Source optionally"""
     whyp_source "$@" optional
@@ -590,14 +610,18 @@ source_path () {
     whyp_source "$@"
 }
 
+has_type () {
+    [[ "$(type -t $1 2>/dev/null)" =~ $2 ]]
+}
+
 is_alias () {
     local __doc__="""Whether $1 is an alias"""
-    [[ "$(type -t $1)" == "alias" ]]
+    has_type "$1" alias
 }
 
 is_function () {
     local __doc__="""Whether $1 is a function"""
-    [[ "$(type -t $1)" == "function" ]]
+    has_type "$1" function
 }
 
 is_bash () {
@@ -607,20 +631,22 @@ is_bash () {
 
 is_keyword () {
     local __doc__="""Whether $1 is a keyword"""
-    [[ "$(type -t $1)" == "keyword" ]]
+    has_type "$1" keyword
 }
 
 is_builtin () {
     local __doc__="""Whether $1 is a builtin"""
-    [[ "$(type -t $1)" == "builtin" ]]
+    has_type "$1" builtin
 }
 
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
-    [[ "$(type -t $1)" == "file" ]]
+    has_type "$1" hash && return 0
+    local path_=$(type -t $1 2>dev/null | sed -e "s,.* is ,,")
+    test -f $path_
 }
 
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
-    [[ "$(type -t $1)" == "" ]]
+    [[ "$(type -t $1 2>/dev/null)" == "" ]]
 }
