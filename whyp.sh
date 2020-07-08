@@ -512,8 +512,25 @@ www_ () {
     ww verbose "$@"
 }
 
+parse_declare_function () {
+    local __doc__="""Parse output of declaring a function"""
+    function="$1";
+    shift;
+    line_number="$1";
+    shift;
+    path_to_file="$*";
+}
+
+declare_function () {
+    local __doc__="""Declare name, line and path of a function"""
+    (
+        shopt -s extdebug
+        declare -F "$1"
+    )
+}
+
 parse_function_ () {
-    __parse_function_line_number_and_path_to_file $(debug_declare_function_ "$1")
+    parse_declare_function $(declare_function "$1")
 }
 
 def_executable () {
@@ -540,7 +557,7 @@ old_whyp_type () {
 }
 
 
-# Methods starting with underscores are intended for use in this file only
+# Methods ending with underscores are intended for use in this file only
 #   (another convention borrowed from Python)
 
 
@@ -581,28 +598,7 @@ show_history_command_ () {
         fi
         [[ -z $line_ ]] && line_=$word || line_="$line_ $word"
     done
-    echo $line
-}
-
-debug_declare_function_ () {
-    local __doc__="""Find where the first argument was loaded from"""
-    shopt -s extdebug
-    declare -F "$1"
-    shopt -u extdebug
-}
-
-ddf () {
-    local __doc__="""where the arg came from"""
-    ( shopt -s extdebug; declare -F "$1" )
-}
-
-__parse_function_line_number_and_path_to_file () {
-    local __doc__="""extract the ordered arguments from a debug declare"""
-    function="$1";
-    shift;
-    line_number="$1";
-    shift;
-    path_to_file="$*";
+    echo $line_
 }
 
 source_path () {
