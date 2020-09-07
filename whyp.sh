@@ -44,48 +44,14 @@ e () {
     whyp_edit_file "$ile_" +/"$ought_" "$@"_
 }
 
-w () {
-    local __doc__="""w extends type"""
-    [[ "$@" ]] || echo "Usage: w <command>"
-    # -a, --all
-    local lls_regexp_="--*[al]*" options_=
-    [[ "$1" =~ $lls_regexp_ ]] && options_=--all
-    [[ $options_ ]] && shift
-    if is_file "$@"; then
-        type "$@"
-        echo
-        which $options_ "$@" 2>/dev/null
-        return 0
-    else
-        type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
-    fi
-    ww "$@"
-}
-
-alias .=ws
+alias .=whyp_source
+alias w=whyp
 
 # xx
 
-[[ $ALIAS_CC ]] && alias cc=e
-alias .w=dot_w
-alias wa='w --all'
-
-ws () {
-    local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    local ilename_=$(readlink -f "$1") ptional_=
-    [[ $2 == "optional" ]] && ptional_=1
-    if [[ -f $ilename_ ]]; then
-      source $ilename_
-      return 1
-    fi
-    [[ -f $ilename_ || $ptional_ ]] || echo Cannot source \"$1\". It is not a file. >&2
-    [[ -f $ilename_ ]] || return
-    source "$ilename_"
-}
-
-wq () {
-    quietly w "$@"
-}
+alias .w=source_whyp_source
+alias wa="whyp --all"
+alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww expands type"""
@@ -97,7 +63,7 @@ ww () {
     [[ $? == 0 ]] && return 0
 }
 
-alias .w="ws $WHYP_SOURCE"
+alias .w="whyp_source $WHYP_SOURCE"
 
 # xxx
 
@@ -118,7 +84,21 @@ wat () {
 # xxxx
 
 whyp () {
-  w "$@"
+    local __doc__="""whyp extends type"""
+    [[ "$@" ]] || echo "Usage: w <command>"
+    # -a, --all
+    local lls_regexp_="--*[al]*" options_=
+    [[ "$1" =~ $lls_regexp_ ]] && options_=--all
+    [[ $options_ ]] && shift
+    if is_file "$@"; then
+        type "$@"
+        echo
+        which $options_ "$@" 2>/dev/null
+        return 0
+    else
+        type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+    fi
+    ww "$@"
 }
 
 ww_help () {
@@ -164,12 +144,25 @@ runnable () {
     QUIETLY type "$@"
 }
 
+whyp_source () {
+    local __doc__="""Source a file (that may set some aliases) and remember that file"""
+    local filename_=$(readlink -f "$1") expected=1
+    [[ $2 == "optional" ]] && expected=
+    if [[ -f $filename_ ]]; then
+      source $filename_
+      return 1
+    elif [[ $expected ]]; then
+        echo Cannot source \"$filename_\". It is not a file. >&2
+    fi
+}
+
 ww_executable () {
     QUIETLY type $(deafened "$@")
 }
 
 # xxxxx
-dot_w () {
+
+source_whyp_source () {
     . $WHYP.sh
 }
 
@@ -499,7 +492,7 @@ dit_file_ () {
 
 ww_source () {
     local __doc__="""Source optionally"""
-    ws "$@" optional
+    whyp_source "$@" optional
 }
 
 
