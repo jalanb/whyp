@@ -14,8 +14,8 @@ license_="This script is released under the MIT license, see accompanying LICENS
 heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 
-export WHYP_SOURCE=$BASH_SOURCE
-export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
+export WHYP_SOURCE=(readlink -f $BASH_SOURCE)
+export WHYP_DIR=$(dirname $WHYP_SOURCE)
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_VENV=
 [[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
@@ -82,18 +82,26 @@ wat () {
 }
 # xxxx
 
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
+}
+
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: w <command>"
     # -a, --all
     local lls_regexp_="--*[al]*" options_=
-    [[ "$1" =~ $lls_regexp_ ]] && options_=--all
-    [[ $options_ ]] && shift
-    if is_file "$@"; then
-        type "$@"
+    [[ "$1" =~ $lls_regexp_ ]] && options_=--all && shift
+    if is_file "$1"; then
+        type "$1"
+        parse_function_ "$1"
+        echo "$EDITOR $path_to_file +$line_number"
         echo
-        which $options_ "$@" 2>/dev/null
+        which $options_ "$1" 2>/dev/null
         return 0
+    elif is_alias $1; then
+        alias $1
+        whyp $(dealias $1)
     else
         type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
     fi
@@ -457,9 +465,11 @@ edit_function_ () {
     local egexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     local ew_=
     if ! grep -q $egexp_ "$path_to_file"; then
+        ( set -x
         line_number=$(wc -l "$path_to_file")
-        echo "Add $function onto $path_to_file at new line $line_number"
-        set +x; return 0
+        echo "Add '$function () {}'onto $path_to_file at new line $line_number"
+        )
+        return 0
     fi
     local line_=; [[ -n "$line_number" ]] && line_=+$line_number
     local eek_=+/$egexp_
