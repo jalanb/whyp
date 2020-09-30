@@ -14,8 +14,8 @@ license_="This script is released under the MIT license, see accompanying LICENS
 heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 
-export WHYP_SOURCE=$BASH_SOURCE
-export WHYP_DIR=$(dirname $(readlink -f $WHYP_SOURCE))
+export WHYP_SOURCE=(readlink -f $BASH_SOURCE)
+export WHYP_DIR=$(dirname $WHYP_SOURCE)
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_VENV=
 [[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
@@ -55,8 +55,8 @@ alias wq="quietly whyp "
 ww () {
     local __doc__="""ww expands type"""
     [[ "$@" ]] || return 1
-    local hyp_options_=$(ww_option "$@")
-    [[ $hyp_options_ ]] && shift
+    local whyp_options_=$(ww_option "$@")
+    [[ $whyp_options_ ]] && shift
     local name_="$1"; shift
     ww_show "$name_"
     [[ $? == 0 ]] && return 0
@@ -67,33 +67,40 @@ alias .w="whyp_source $WHYP_SOURCE"
 # xxx
 
 ses () {
-    if [[ $1 == -e ]]; then
-        sed "$@"
-    else
-        sed -e "s,$1,$2",
-    fi
+    local __doc__="""Substitute $2 for $1"
+    sed -e "s,$1,$2",
 }
 
 wat () {
-    local md_=cat
-    is_file kat && md_=kat
-    is_file bat && md_=bat
-    $md_ "$@"
+    local cmd_=cat
+    is_file kat && cmd_=kat
+    is_file bat && cmd_=bat
+    $cmd_ "$@"
 }
 # xxxx
+
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
+}
 
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: w <command>"
     # -a, --all
     local lls_regexp_="--*[al]*" options_=
-    [[ "$1" =~ $lls_regexp_ ]] && options_=--all
-    [[ $options_ ]] && shift
-    if is_file "$@"; then
-        type "$@"
-        echo
-        which $options_ "$@" 2>/dev/null
+    [[ "$1" =~ $lls_regexp_ ]] && options_=--all && shift
+    if is_file "$1"; then
+        type "$1"
+        which $options_ "$1" 2>/dev/null
         return 0
+    elif is_function "$1"; then
+        type "$1"
+        parse_function_ "$1"
+        echo "$EDITOR $path_to_file +$line_number"
+        echo
+    elif is_alias $1; then
+        alias $1
+        whyp $(dealias $1)
     else
         type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
     fi
@@ -457,9 +464,11 @@ edit_function_ () {
     local egexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     local ew_=
     if ! grep -q $egexp_ "$path_to_file"; then
+        ( set -x
         line_number=$(wc -l "$path_to_file")
-        echo "Add $function onto $path_to_file at new line $line_number"
-        set +x; return 0
+        echo "Add '$function () {}'onto $path_to_file at new line $line_number"
+        )
+        return 0
     fi
     local line_=; [[ -n "$line_number" ]] && line_=+$line_number
     local eek_=+/$egexp_
@@ -645,7 +654,7 @@ is_builtin () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     has_type "$1" hash && return 0
-    local path_=$(type -t $1 2>dev/null | sed -e "s,.* is ,,")
+    local path_=$(type -t $1 2>/dev/null | sed -e "s,.* is ,,")
     test -f $path_
 }
 
