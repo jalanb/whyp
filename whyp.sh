@@ -94,11 +94,13 @@ whyp () {
     [[ "$1" =~ $lls_regexp_ ]] && options_=--all && shift
     if is_file "$1"; then
         type "$1"
+        which $options_ "$1" 2>/dev/null
+        return 0
+    elif is_function "$1"; then
+        type "$1"
         parse_function_ "$1"
         echo "$EDITOR $path_to_file +$line_number"
         echo
-        which $options_ "$1" 2>/dev/null
-        return 0
     elif is_alias $1; then
         alias $1
         whyp $(dealias $1)
@@ -655,7 +657,7 @@ is_builtin () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     has_type "$1" hash && return 0
-    local path_=$(type -t $1 2>dev/null | sed -e "s,.* is ,,")
+    local path_=$(type -t $1 2>/dev/null | sed -e "s,.* is ,,")
     test -f $path_
 }
 
