@@ -55,8 +55,8 @@ alias wq="quietly whyp "
 ww () {
     local __doc__="""ww expands type"""
     [[ "$@" ]] || return 1
-    local hyp_options_=$(ww_option "$@")
-    [[ $hyp_options_ ]] && shift
+    local whyp_options_=$(ww_option "$@")
+    [[ $whyp_options_ ]] && shift
     local name_="$1"; shift
     ww_show "$name_"
     [[ $? == 0 ]] && return 0
@@ -67,18 +67,15 @@ alias .w="whyp_source $WHYP_SOURCE"
 # xxx
 
 ses () {
-    if [[ $1 == -e ]]; then
-        sed "$@"
-    else
-        sed -e "s,$1,$2",
-    fi
+    local __doc__="""Substitute $2 for $1"
+    sed -e "s,$1,$2",
 }
 
 wat () {
-    local md_=cat
-    is_file kat && md_=kat
-    is_file bat && md_=bat
-    $md_ "$@"
+    local cmd_=cat
+    is_file kat && cmd_=kat
+    is_file bat && cmd_=bat
+    $cmd_ "$@"
 }
 # xxxx
 
