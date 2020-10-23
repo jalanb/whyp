@@ -199,7 +199,7 @@ The second best was when
 
 ![JetBrains](images/jet_brains.png)
 
-graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for [contributions](contributions.md) to this project.
+graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm/) for [contributions](CONTRIBUTIONS.md) to this project.
 
 Version
 -------
