@@ -15,9 +15,9 @@ import argparse
 from whyp import sources
 from whyp import arguments
 
-def parse_args():
+def add_args():
     """Look for options from user on the command line for this script"""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = arguments.parser(description=__doc__.splitlines()[0])
     pa = parser.add_argument
     pa('--sources', help='Try to source these', nargs='*')
     pa('--files', action='store_true', help='Show files in those')
@@ -26,24 +26,27 @@ def parse_args():
     pa('--clear', action='store_true', help='Forget all sources')
     pa('--found', action='store', help='Whether that was sourced')
     pa('-o', '--optional', action='store_true', help='sources may be empty')
+
+def parse_args():
     arguments = parser.parse_args()
-    return arguments
+    if arguments.clear:
+        sources.clear()
+    elif arguments.any:
+        sources.any()
+    else:
+        return arguments
+    sys.exit(0)
 
 
 def main():
     """Run the program"""
     args = parse_args()
-    if args.clear:
-        return sources.clear()
-    if args.any:
-        return sources.any()
     files = []
     errors = []
     sources.load(args.optional)
     alll = sources.all() or []
     if args.found:
-        return args.found in alll
-    for source in args.sources or alll:
+        return args.found in loaded
         items = files if sources.source(source) else errors
         items.append(source)
     words = []

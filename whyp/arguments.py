@@ -13,7 +13,7 @@ def parser(doc):
 def parse_args():
     global _args
     _args = _parser.parse_args()
-
+    return _args
 
 def get(name):
     """The values of arguments set by user on command line
