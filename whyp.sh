@@ -14,10 +14,11 @@ license_="This script is released under the MIT license, see accompanying LICENS
 heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 
-export WHYP_SOURCE=(readlink -f $BASH_SOURCE)
+export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
 export WHYP_BIN=$WHYP_DIR/bin
 export WHYP_VENV=
+export WHYP_EDITOR=vim
 [[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
 [[ -d $WHYP_VENV ]] || WHYP_VENV=~/.virtualenvs/whyp
 export WHYP_PY=$WHYP_DIR/whyp
@@ -87,11 +88,13 @@ whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: w <command>"
     # -a, --all
-    local lls_regexp_="--*[al]*" options_=
-    [[ "$1" =~ $lls_regexp_ ]] && options_=--all && shift
-    if is_file "$1"; then
-        type "$1"
-        which $options_ "$1" 2>/dev/null
+    if is_file "$1" 2>/dev/null ; then
+        local file_=$(which "$1" 2>/dev/null)
+        [[ $file_ ]] || return 1
+        local real_=$(readlink -f "$file_")
+        echo $file_
+        [[ "$file_" == "$real_" ]] || echo $real_
+        [[ $2 == -v ]] && echo "$EDITOR $file_"
         return 0
     elif is_function "$1"; then
         type "$1"
@@ -104,7 +107,6 @@ whyp () {
     else
         type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
     fi
-    ww "$@"
 }
 
 ww_help () {
@@ -150,16 +152,18 @@ runnable () {
     QUIETLY type "$@"
 }
 
+whyp_optional () {
+    [[ $1 == -o ]] && return 0
+    [[ $1 == --optional ]] && return 0
+    [[ $1 == optional ]] && return 0
+    return 1
+}
+
 whyp_source () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    local filename_=$(readlink -f "$1") expected=1
-    [[ $2 == "optional" ]] && expected=
-    if [[ -f $filename_ ]]; then
-      source $filename_
-      return 1
-    elif [[ $expected ]]; then
-        echo Cannot source \"$filename_\". It is not a file. >&2
-    fi
+    [[ -f "$1" ]] && quietly source "$1" && return 0
+    whyp_optional $2 || echo 'Cannot source "'"$filename_"'". It is not a file.' >&2
+    return 1
 }
 
 ww_executable () {
@@ -210,14 +214,14 @@ whyp_py_file () {
 
 whyp_edit_file () {
     local __doc__="""Edit the first argument if it's a file"""
-    local file_=$1; shift
-    [[ -f $file_ ]] || return 1
-    local dir_=$(dirname $file_)
-    [[ -d $dir_ ]] || dir_=.
-    local name_=$(basename $file_)
-    local editor_=$WHYPED
-    [[ $EDITOR ]] && editor_=$EDITOR
-    (cd $dir_; $editor_ $name_ "$@")
+    local file_="$1"; shift
+    [[ -f "$file_" ]] || return 1
+    local dir_=$(dirname "$file_")
+    [[ -d "$dir_" ]] || dir_=.
+    local name_=$(basename "$file_")
+    local editor_="${WHYP_EDITOR:-vim}"
+    [[ -x $EDITOR ]] && editor_=$EDITOR
+    (cd "$dir_"; "$editor_" "$name_" "$@")
 }
 
 python_has_debugger () {
@@ -468,15 +472,10 @@ edit_alias_ () {
 
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
-    local ade_=
-    make_path_to_file_exist_ && ade_=1
-    local egexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     local ew_=
-    if ! grep -q $egexp_ "$path_to_file"; then
-        ( set -x
-        line_number=$(wc -l "$path_to_file")
-        echo "Add '$function () {}'onto $path_to_file at new line $line_number"
-        )
+    if ! grep -q $regexp_ "$path_to_file"; then
+        printf "$function () {}" >> "$path_to_file"
         return 0
     fi
     local line_=; [[ -n "$line_number" ]] && line_=+$line_number

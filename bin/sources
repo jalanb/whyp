@@ -43,10 +43,11 @@ def main():
     args = parse_args()
     files = []
     errors = []
-    sources.load(args.optional)
-    alll = sources.all() or []
+    loaded = sources.load(args.optional)
     if args.found:
         return args.found in loaded
+    files = [_ for _ in loaded if _.isfile()]
+    for source in args.sources or files:
         items = files if sources.source(source) else errors
         items.append(source)
     words = []
