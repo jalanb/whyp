@@ -49,21 +49,18 @@ alias w=whyp
 
 # xx
 
-alias .w=source_whyp_source
-alias wa="whyp --all"
+alias .w="whyp_source $WHYP_SOURCE"
 alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww expands type"""
     [[ "$@" ]] || return 1
-    local whyp_options_=$(ww_option "$@")
+    local whyp_options_=$(whyp_option "$@" 2> /dev/null)
     [[ $whyp_options_ ]] && shift
     local name_="$1"; shift
-    ww_show "$name_"
-    [[ $? == 0 ]] && return 0
+    ww_show $name_
 }
 
-alias .w="whyp_source $WHYP_SOURCE"
 
 # xxx
 
@@ -97,9 +94,9 @@ whyp () {
         [[ $2 == -v ]] && echo "$EDITOR $file_"
         return 0
     elif is_function "$1"; then
-        type "$1"
+        type "$1" | grep -v ' is a '
         parse_function_ "$1"
-        echo "$EDITOR $path_to_file +$line_number"
+        [[ $2 == -v ]] && echo "$EDITOR $path_to_file +$line_number"
         echo
     elif is_alias $1; then
         alias $1
@@ -171,10 +168,6 @@ ww_executable () {
 }
 
 # xxxxx
-
-source_whyp_source () {
-    . $WHYP.sh
-}
 
 # xxxxx*
 
@@ -250,7 +243,7 @@ local_python () {
     [[ $ocal_python_ ]] && $ocal_python_ -c "import sys; sys.stdout.write(sys.executable)"
 }
 
-ww_option () {
+whyp_option () {
     local options_=
     [[ $1 == -q ]] && options_=quiet
     [[ $1 == -v ]] && options_=verbose
@@ -363,12 +356,11 @@ ww_bash () {
 
 ww_function () {
     local __doc__="""whyp a function"""
-    is_function "$@" || return 1
-    parse_function_ "$@"
+    is_function "$@" 2>/dev/null || return 1
+    parse_function_ "$@" 2>/dev/null
     [[ -f $path_to_file ]] || return 1
     type $1 | sed -e "/is a function$/d" | wat
-    echo "'$path_to_file:$line_number' $function ()"
-    echo "$EDITOR $path_to_file +$line_number"
+    echo "$EDITOR $path_to_file +$(( $line_number - 1 )) +/$1"
     return 0
 }
 
@@ -412,22 +404,20 @@ ww_args () {
 
 whyp_show_ () {
     WOPTS=
-    local shower_=quietly rgs_=$(ww_args "$@") arg_= name_= ype_=
+    local shower_=quietly args_=$(ww_args "$@") arg_= name_= ype_=
     [[ $WOPTS == -v ]] && shower_=
-    for arg_ in $rgs_; do
+    for arg_ in $args_; do
         name_="$arg_"; shift
-        ype_="$shower_ $arg_"; shift
-        $ype_
+        show_="$shower_ $arg_"; shift
+        $show_
     done
     return 0
 }
 
 ww_show () {
     local whyp_= name_="$1"
-    shift
     for whyp_ in ww_bash ww_function ww_alias ww_file ; do
-        whyp_show_ $name_ $whyp_ || continue
-        return 0
+        $whyp_ $name_ 2> /dev/null && return 0
     done
     return 1
 }
@@ -457,8 +447,8 @@ ww_debug () {
 edit_alias_ () {
     local __doc__="""Edit an alias in the file $ALIASES, if that file exists"""
     sources_ --any || return
-    local hyp_sources_=$(sources_ --all --optional)
-    for sourced_file in $hyp_sources_; do
+    local whyp_sources_=$(sources_ --all --optional)
+    for sourced_file in $whyp_sources_; do
         [[ -f $sourced_file ]] || continue
         line_number=$(grep -nF "alias $1=" $sourced_file | cut -d ':' -f1)
         if [[ -n "$line_number" ]]; then
@@ -479,7 +469,7 @@ edit_function_ () {
         return 0
     fi
     local line_=; [[ -n "$line_number" ]] && line_=+$line_number
-    local eek_=+/$egexp_
+    local eek_=+/"^$function.*().{$"
     [[ "$@" =~ [+][/] ]] && eek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
     whyp_edit_file "$path_to_file" $line_ $eek_
     test -f "$path_to_file" || return 0
@@ -523,7 +513,7 @@ show_function () {
 
 ww_source () {
     local __doc__="""Source optionally"""
-    whyp_source "$@" optional
+    whyp_source "$@" --optional
 }
 
 
@@ -662,7 +652,8 @@ is_builtin () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     has_type "$1" hash && return 0
-    local path_=$(type -t $1 2>/dev/null | sed -e "s,.* is ,,")
+    local path_=$(type -P $1 2>/dev/null | sed -e "s,.* is ,,")
+    [[ $path_ ]] || return 1
     test -f $path_
 }
 
