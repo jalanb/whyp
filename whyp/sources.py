@@ -10,6 +10,7 @@ This module provides a source() method to recognise aliases / functions
 import yaml
 import os
 from os import path as op
+from typing import List
 
 from pysyte.types import paths
 
