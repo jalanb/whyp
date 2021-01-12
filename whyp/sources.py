@@ -20,7 +20,7 @@ def _path_to_yaml():
 
 optional = False  # volatile to importers
 
-def load(path: paths.FilePath) -> List[str]
+def load(path: paths.FilePath) -> List[str]:
     """Provide the data from a yaml file"""
     try:
         with open(path) as stream:
@@ -34,7 +34,9 @@ def load(path: paths.FilePath) -> List[str]
 
 def load_files(path: paths.FilePath) -> List[paths.FilePath]:
     """Provide the files from a yaml file"""
-    return [_ for _ in load(path) if f.isfile()]
+    if not path.isfile():
+        return []
+    return [_ for _ in load(path)]
 
 
 _sources = load_files(_path_to_yaml())

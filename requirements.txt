@@ -9,3 +9,4 @@ pysyte>=0.7.44
 pytest
 pyyaml
 requests
+stackprinter
