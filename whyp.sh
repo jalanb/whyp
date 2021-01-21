@@ -277,6 +277,15 @@ python_will_import () {
     return 0
 }
 
+python_executable () {
+    local __doc__="""Executable in used by python"""
+    local python_=
+    [[ -x "$1" ]] && python_="$1"
+    [[ $python_ ]] && shift
+    [[ $python_ ]] || python_=python
+    $python_ -c "import sys; sys.stdout.write(sys.executable)"
+}
+
 python_module () {
     local __doc__="""the files that python imports args as"""
     local result_=1
