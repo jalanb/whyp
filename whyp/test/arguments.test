@@ -17,7 +17,7 @@ Parse sys.argv
 
     >>> parser = arguments.parser('doc')
     >>> _ = parser.add_argument('-l', '--long', action='store')
-    >>> arguments.parse_args()
+    >>> _ = arguments.parse_args()
 
 args are now available from the module
 

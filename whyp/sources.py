@@ -7,10 +7,11 @@ This module provides a source() method to recognise aliases / functions
     and tag them for later use
 """
 
-import yaml
 import os
 from os import path as op
+from typing import List
 
+import yaml
 from pysyte.types import paths
 
 def _path_to_yaml():
@@ -19,20 +20,26 @@ def _path_to_yaml():
 
 optional = False  # volatile to importers
 
-def load(optional):
+def load(path: paths.FilePath) -> List[str]:
     """Provide the data from a yaml file"""
-    if not _path_to_yaml().isfile():
-        return set()
     try:
-        with open(_path_to_yaml()) as stream:
-            return set(yaml.safe_load(stream) or [])
+        with open(path) as stream:
+            loaded = set(yaml.safe_load(stream) or [])
+            return sorted(loaded)
     except FileNotFoundError:
-        if optional:
-            return set()
-        raise
+        if not optional:
+            raise
+    return []
 
 
-_sources = load(True)
+def load_files(path: paths.FilePath) -> List[paths.FilePath]:
+    """Provide the files from a yaml file"""
+    if not path.isfile():
+        return []
+    return [_ for _ in load(path)]
+
+
+_sources = load_files(_path_to_yaml())
 
 
 def save():

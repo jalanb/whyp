@@ -1,0 +1,6 @@
+
+pprintpp
+pysyte>=0.7.44
+pyyaml
+requests
+stackprinter
