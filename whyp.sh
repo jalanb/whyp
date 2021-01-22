@@ -85,7 +85,15 @@ whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: w <command>"
     # -a, --all
-    if is_file "$1" 2>/dev/null ; then
+    if is_alias $1; then
+        alias $1
+        whyp $(dealias $1)
+    elif is_function "$1"; then
+        type "$1" | grep -v ' is a '
+        parse_function_ "$1"
+        [[ $2 == -v ]] && echo "$EDITOR $path_to_file +$line_number"
+        echo
+    elif is_file "$1" 2>/dev/null ; then
         local file_=$(which "$1" 2>/dev/null)
         [[ $file_ ]] || return 1
         local real_=$(readlink -f "$file_")
@@ -93,14 +101,6 @@ whyp () {
         [[ "$file_" == "$real_" ]] || echo $real_
         [[ $2 == -v ]] && echo "$EDITOR $file_"
         return 0
-    elif is_function "$1"; then
-        type "$1" | grep -v ' is a '
-        parse_function_ "$1"
-        [[ $2 == -v ]] && echo "$EDITOR $path_to_file +$line_number"
-        echo
-    elif is_alias $1; then
-        alias $1
-        whyp $(dealias $1)
     else
         type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
     fi
