@@ -7,11 +7,11 @@ This module provides a source() method to recognise aliases / functions
     and tag them for later use
 """
 
-import yaml
 import os
 from os import path as op
 from typing import List
 
+import yaml
 from pysyte.types import paths
 
 def _path_to_yaml():
