@@ -204,7 +204,7 @@ graciously licensed use of their [PyCharm IDE](https://www.jetbrains.com/pycharm
 Version
 -------
 
-0.7.21
+0.7.22
 
 Build status
 ------------
