@@ -7,8 +7,7 @@ It assumes aliases and functions have been written to files before starting
     (because this script cannot reliably get them from sub-shells)
 """
 
-
-
+import os
 import sys
 import argparse
 
@@ -66,5 +65,4 @@ def main():
 
 
 if __name__ == '__main__':
-    error = 0 if main() else 1
-    sys.exit(error)
+    sys.exit(os.EX_OK if main() else no os.EX_OK)
