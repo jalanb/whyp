@@ -8,20 +8,39 @@ This module provides a source() method to recognise aliases / functions
 """
 
 import os
-from os import path as op
 from typing import List
 
-import yaml
+
+import sys
+
+class YamlNotFoundError(ModuleNotFoundError):
+    def __init__(self):
+        command = ' '.join(sys.argv)
+        super().__init__(
+            f'''$ {command}
+            {sys.executable} cannot import yaml
+            ''')
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    raise YamlNotFoundError()
+
 from pysyte.types import paths
 
 def _path_to_yaml():
     return paths.path(__file__).extend_by('yaml')
 
+# static to importers
+_file = '.'.join((os.path.splitext(__file__)[0], 'yaml'))
 
-optional = False  # volatile to importers
+# volatile to importers
+optional = False
 
 def load(path: paths.FilePath) -> List[str]:
     """Provide the data from a yaml file"""
+    if not os.path.isfile(_file):
+        return list()
     try:
         with open(path) as stream:
             loaded = set(yaml.safe_load(stream) or [])
@@ -43,7 +62,7 @@ _sources = load_files(_path_to_yaml())
 
 
 def save():
-    real_sources = sorted([s for s in _sources if op.isfile(s)])
+    real_sources = sorted([s for s in _sources if os.path.isfile(s)])
     try:
         with open(_path_to_yaml(), 'w') as stream:
             yaml.safe_dump(real_sources, stream)
@@ -59,7 +78,7 @@ def clear():
 
 
 def source(path_to_file):
-    if op.isfile(path_to_file):
+    if os.path.isfile(path_to_file):
         if path_to_file in _sources:
             return True
         _sources.add(path_to_file)
