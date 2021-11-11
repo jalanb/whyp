@@ -171,6 +171,10 @@ whyp_optional () {
 
 whyp_source () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
+    if [[ ! "$@" ]]; then
+        echo "Usage: whyp_source <filename>" >&2
+        return 1
+    fi
     if [[ -f "$1" ]]; then
         # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
         quietly source "$@"
