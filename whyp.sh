@@ -78,26 +78,31 @@ wat () {
 
 whyp () {
     local __doc__="""whyp extends type"""
-    [[ "$@" ]] || echo "Usage: w <command>"
-    # -a, --all
-    if is_alias $1; then
-        alias $1
-        whyp $(dealias $1)
-    elif is_function "$1"; then
-        type "$1" | grep -v ' is a '
-        parse_function_ "$1"
-        [[ $2 == -v ]] && echo "$EDITOR $path_to_file +$line_number"
-        echo
-    elif is_file "$1" 2>/dev/null ; then
-        local file_=$(which "$1" 2>/dev/null)
+    [[ "$@" ]] || echo "Usage: whyp <command>"
+    [[ "$@" ]] || return 1
+
+    local verbose_= name_="$1"; shift
+    if [[ $1 == -v ]]; then verbose_=1; shift; fi
+    if is_alias $name_; then
+        alias $name_
+        whyp $(dealias $name_)
+    elif is_function "$name_"; then
+        type "$name_" | grep -v ' is a '
+        parse_function_ "$name_"
+        [[ $verbose_ ]] && echo "$EDITOR $path_to_file +$line_number" && echo
+    elif is_file "$name_" ; then
+        local typed_=$(type "$name_")
+        local file_=$(quietly which "$name_")
+        [[ ! $file_ || $verbose_ ]] && echo $typed_
         [[ $file_ ]] || return 1
         local real_=$(readlink -f "$file_")
-        echo $file_
-        [[ "$file_" == "$real_" ]] || echo $real_
-        [[ $2 == -v ]] && echo "$EDITOR $file_"
+        local out_="$file_"
+        [[ "$file_" == "$real_" ]] || out_="$file_ -> $real_"
+        echo "$out_"
+        [[ $verbose_ ]] && echo "$EDITOR $file_"
         return 0
     else
-        type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+        runnable "$@" || /usr/bin/env | grep --colour "$@"
     fi
 }
 
@@ -127,8 +132,8 @@ ww_help () {
 
 # xxxxxxx+
 
-de_alias () {
-    sed -e "/is aliased to \`/s:.$::" -e "s:.* is aliased to [\`]*::"
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
 de_file () {
@@ -232,23 +237,6 @@ looks_versiony () {
     [[ $1 =~ [0-9](.[0-9])* ]]
 }
 
-local_python () {
-    local ocal_python_name_=python
-    if looks_versiony $1; then
-        if python_has_debugger $1; then
-            ocal_python_name_=python$1
-        else
-            ocal_python_name_=python2
-            echo "Requested python version too old" >&2
-        fi
-        shift
-    else
-        ocal_python_name_=python3
-    fi
-    local ocal_python_=$(PATH=/usr/local/bin:/usr/bin/:/bin which $ocal_python_name_ 2>/dev/null)
-    [[ $ocal_python_ ]] && $ocal_python_ -c "import sys; sys.stdout.write(sys.executable)"
-}
-
 whyp_option () {
     local options_=
     [[ $1 == -q ]] && options_=quiet
@@ -266,8 +254,8 @@ looks_like_python_name () {
     local __doc__="""Whether arg looks like a python name"""
     # Python names do not start with numbers
     [[ $1 =~ ^[0-9] ]] && return 1
-    # Python names do not have hyphens, nor code
-    [[ $1 =~ [-/] ]] && return 1
+    # Python names do not have hyphens, nor slashes
+    [[ $1 =~ [-/\\] ]] && return 1
     return 0
 }
 
@@ -280,13 +268,31 @@ python_will_import () {
     return 0
 }
 
+which_python_executable () {
+    local python_name_=python
+    if looks_versiony $1; then
+        if python_has_debugger $1; then
+            python_name_=python$1
+        else
+            python_name_=python2
+            echo "Requested python version too old" >&2
+        fi
+        shift
+    else
+        python_name_=python3
+    fi
+    local which_python_=$(which $python_name_ 2>/dev/null)
+    [[ -x "$which_python_" ]] || which_python_=$(PATH=/usr/local/bin:/usr/bin/:/bin which $python_name_ 2>/dev/null)
+    [[ -x "$which_python_" ]] && "$which_python_" -c "import sys; sys.stdout.write(sys.executable)"
+}
+
 python_executable () {
-    local __doc__="""Executable in used by python"""
-    local python_=
-    [[ -x "$1" ]] && python_="$1"
-    [[ $python_ ]] && shift
-    [[ $python_ ]] || python_=python
-    $python_ -c "import sys; sys.stdout.write(sys.executable)"
+    local __doc__="""Executable used by python"""
+    if [[ -x "$1" ]]; then
+        "$1" -c "import sys; sys.stdout.write(sys.executable)"
+    else
+        which_python_executable "$@"
+    fi
 }
 
 python_module () {
@@ -309,10 +315,6 @@ python_module_version () {
         result_=0
     done
     return $result_
-}
-
-dealias () {
-    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
 quietly () {
@@ -530,7 +532,6 @@ ww_source () {
     local __doc__="""Source optionally"""
     whyp_source "$@" --optional
 }
-
 
 parse_declare_function () {
     local __doc__="""Parse output of declaring a function"""
