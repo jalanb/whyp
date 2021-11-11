@@ -16,11 +16,7 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_BIN=$WHYP_DIR/bin
-export WHYP_VENV=
 export WHYP_EDITOR=vim
-[[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
-[[ -d $WHYP_VENV ]] || WHYP_VENV=~/.virtualenvs/whyp
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -190,7 +186,14 @@ ww_executable () {
 
 ww_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
-    echo $WHYP_BIN/"$1"
+    echo "$WHYP_DIR/bin/$1"
+}
+
+whyp_venv_app () {
+    local app_="$1" venv_dir_=$WHYP_DIR/.venv 
+    [[ -d $venv_dir_ ]] || venv_dir_=~/.virtualenvs/whyp
+    [[ -f "$venv_dir_/bin/$1" ]] && app_="$venv_dir_/bin/$1"
+    echo $app_
 }
 
 whyp_bin_run () {
