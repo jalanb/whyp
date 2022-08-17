@@ -667,3 +667,7 @@ is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
     [[ "$(type -t $1 2>/dev/null)" == "" ]]
 }
+
+is_python_module () {
+    python_will_import "$@"
+}
