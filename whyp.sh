@@ -55,11 +55,9 @@ alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww expands type"""
-    [[ "$@" ]] || return 1
-    local whyp_options_=$(whyp_option "$@" 2> /dev/null)
+    local whyp_options_=$(whyp_option "$1")
     [[ $whyp_options_ ]] && shift
-    local name_="$1"; shift
-    ww_show $name_
+    ww_show ${@:-ww}
 }
 
 
