@@ -366,9 +366,11 @@ ww_function () {
     local __doc__="""whyp a function"""
     is_function "$@" 2>/dev/null || return 1
     parse_function_ "$@" 2>/dev/null
-    [[ -f $path_to_file ]] || return 1
+    if [[ $path_to_file != "main" ]]; then
+        [[ -f $path_to_file ]] || return 1
+    fi
     type $1 | sed -e "/is a function$/d" | wat
-    echo "$EDITOR $path_to_file +$(( $line_number - 1 )) +/$1"
+    [[ $path_to_file == "main" ]] || echo "$EDITOR $path_to_file +$(( $line_number - 1 )) +/$1"
     return 0
 }
 
