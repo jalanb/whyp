@@ -204,9 +204,7 @@ whyp_bin_run () {
 whyp_pudb_run () {
     local __doc__="""Debug a script in whyp/bin"""
     local script_=$(ww_bin $1); shift
-    set -x
     PYTHONPATH=$WHYP_DIR pudb3 $script_ "$@"
-    set +x
 }
 
 whyp_py_file () {
@@ -353,9 +351,7 @@ wat () {
     [[ $1 ]] || return 0
     ines_=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
     [[ $ines_ == 0 ]] || return 0
-    set -x
     rri "$1"
-    set +x
 }
 
 
