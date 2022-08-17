@@ -170,8 +170,12 @@ whyp_optional () {
 
 whyp_source () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    [[ -f "$1" ]] && quietly source "$1" && return 0
-    whyp_optional $2 || echo 'Cannot source "'"$filename_"'". It is not a file.' >&2
+    if [[ -f "$1" ]]; then
+        # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
+        quietly source "$@"
+        return 0
+    fi
+    whyp_optional $2 || echo 'Cannot source "'"$2"'". It is not a file.' >&2
     return 1
 }
 
