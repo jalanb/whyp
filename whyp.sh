@@ -432,11 +432,14 @@ whyp_show_ () {
 }
 
 ww_show () {
-    local whyp_= name_="$1"
-    for whyp_ in ww_bash ww_function ww_alias ww_file ; do
-        $whyp_ $name_ 2> /dev/null && return 0
+    local whyp_= name_= result_=1
+    for name_ in "$@"; do
+        for whyp_ in ww_bash ww_alias ww_function ww_file ; do
+            $whyp_ $name_ 2> /dev/null || continue
+            result_=0
+        done
     done
-    return 1
+    return $result_
 }
 
 ww_command () {
