@@ -25,23 +25,26 @@ export WHYP_PY=$WHYP_DIR/whyp
 
 # x
 
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/
 e () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
-    is_bash "$1" && return
-    is_file "$1" && edit_file_ "$@" && return $?
+    if is_alias "$1"; then
+        edit_alias_ "$1"
+        return 0
+    fi
     if is_function "$1"; then
         parse_function_ "$1"
         edit_function_ "$@"
         return 0
     fi
-    if is_alias "$1"; then
-        edit_alias_ "$1"
-        return 0
-    fi
-    local file_= sought_= "$1"; shift
-    python_will_import "$1" && file_=$(python_module "$1") || file_="$1"; shift
-    whyp_edit_file "$file_" +/"$sought_" "$@"_
+    is_file "$1" && edit_file_ "$@" && return $?
+    is_bash "$1" && return 1
+    local file_="$1"
+    is_python_module "$1" && file_=$(python_module "$1")
+    shift
+    local search_=
+    [[ "$@" ]] && search_='+/'"$@"
+    whyp_edit_file "$file_" "$search_"
 }
 
 alias .=whyp_source
