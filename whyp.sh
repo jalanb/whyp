@@ -479,15 +479,14 @@ edit_alias_ () {
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    local ew_=
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
         return 0
     fi
-    local line_=; [[ -n "$line_number" ]] && line_=+$line_number
-    local eek_=+/"^$function.*().{$"
-    [[ "$@" =~ [+][/] ]] && eek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
-    whyp_edit_file "$path_to_file" $line_ $eek_
+    local line_=1; [[ -n "$line_number" ]] && line_=+$(( $line_number - 1 ))
+    local seek_=+/"^$function "
+    [[ "$@" =~ [+][/] ]] && seek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
+    whyp_edit_file "$path_to_file" $line_ $seek_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     ww_source "$path_to_file"
