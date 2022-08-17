@@ -107,12 +107,21 @@ ww_py () {
     whyp_bin_run whyp "$@"
 }
 
+# xxxxxx
+
 ww_help () {
-    local unction_=$1; shift
-    rm -f /tmp/err
-    [[ $1 =~ (-h|--help) ]] && ww $unction_ 2>/tmp/err
+    local command_=$1; shift
+    rm -f /tmp/out /tmp/err
+    [[ $command_ =~ (-w|--ww) ]] && ww $function_ 2>/tmp/err
+    if [[ $command_ =~ (-h|--help) ]]; then 
+        if is_builtin $command_; then help $comand_
+        elif is_file  $command_; then $command_ --help
+        elif is_function $command_; then ww $command_
+        elif is_alias $command_; then ww $command_
+        fi
+    fi >/tmp/out 2>/tmp/err
     local result_=$?
-    [[ -f /tmp/err ]] && return 2
+    [[ -f /tmp/err ]] && return 1
     return $result_
 }
 
