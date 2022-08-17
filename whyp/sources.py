@@ -31,15 +31,16 @@ from pysyte.types import paths
 def _path_to_yaml():
     return paths.path(__file__).extend_by('yaml')
 
-# static to importers
-_file = '.'.join((os.path.splitext(__file__)[0], 'yaml'))
 
 # volatile to importers
 optional = False
 
-def load(path: paths.FilePath) -> List[str]:
+def load(optional_: bool) -> List[str]:
     """Provide the data from a yaml file"""
-    if not os.path.isfile(_file):
+    global optional
+    optional = optional_
+    path = _path_to_yaml()
+    if not path.isfile():
         return list()
     try:
         with open(path) as stream:

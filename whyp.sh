@@ -25,40 +25,39 @@ export WHYP_PY=$WHYP_DIR/whyp
 
 # x
 
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/
+# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/
 e () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
-    is_bash "$1" && return
-    is_file "$1" && edit_file_ "$@" && return $?
+    if is_alias "$1"; then
+        edit_alias_ "$1"
+        return 0
+    fi
     if is_function "$1"; then
         parse_function_ "$1"
         edit_function_ "$@"
         return 0
     fi
-    if is_alias "$1"; then
-        edit_alias_ "$1"
-        return 0
-    fi
-    local file_= sought_= "$1"; shift
-    python_will_import "$1" && file_=$(python_module "$1") || file_="$1"; shift
-    whyp_edit_file "$file_" +/"$sought_" "$@"_
+    is_file "$1" && edit_file_ "$@" && return $?
+    is_bash "$1" && return 1
+    local file_="$1"
+    is_python_module "$1" && file_=$(python_module "$1")
+    shift
+    local search_=
+    [[ "$@" ]] && search_='+/'"$@"
+    whyp_edit_file "$file_" "$search_"
 }
 
-alias .=whyp_source
 alias w=whyp
 
 # xx
 
-alias .w="whyp_source $WHYP_SOURCE"
 alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww expands type"""
-    [[ "$@" ]] || return 1
-    local whyp_options_=$(whyp_option "$@" 2> /dev/null)
+    local whyp_options_=$(whyp_option "$1")
     [[ $whyp_options_ ]] && shift
-    local name_="$1"; shift
-    ww_show $name_
+    ww_show ${@:-ww}
 }
 
 
@@ -76,10 +75,6 @@ wat () {
     $cmd_ "$@"
 }
 # xxxx
-
-dealias () {
-    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
-}
 
 whyp () {
     local __doc__="""whyp extends type"""
@@ -106,14 +101,31 @@ whyp () {
     fi
 }
 
+# xxxxx
+
+ww_py () {
+    whyp_bin_run whyp "$@"
+}
+
+# xxxxxx
+
 ww_help () {
-    local unction_=$1; shift
-    rm -f /tmp/err
-    [[ $1 =~ (-h|--help) ]] && ww $unction_ 2>/tmp/err
+    local command_=$1; shift
+    rm -f /tmp/out /tmp/err
+    [[ $command_ =~ (-w|--ww) ]] && ww $function_ 2>/tmp/err
+    if [[ $command_ =~ (-h|--help) ]]; then 
+        if is_builtin $command_; then help $comand_
+        elif is_file  $command_; then $command_ --help
+        elif is_function $command_; then ww $command_
+        elif is_alias $command_; then ww $command_
+        fi
+    fi >/tmp/out 2>/tmp/err
     local result_=$?
-    [[ -f /tmp/err ]] && return 2
+    [[ -f /tmp/err ]] && return 1
     return $result_
 }
+
+# xxxxxxx+
 
 de_alias () {
     sed -e "/is aliased to \`/s:.$::" -e "s:.* is aliased to [\`]*::"
@@ -124,13 +136,13 @@ de_file () {
 }
 
 de_hashed () {
-    local ommand_=$1
-    local ype_="$@"
-    if [[ $ype_ =~ hashed ]]; then
-        local ehash_=$(echo $ype_ | sed -e "s:.*hashed (\([^)]*\)):\1:")
-        ype_="$ommand_ is $ehash_"
+    local command_=$1; shift
+    local type_="$(quietly type $command_)"
+    if [[ $type_ =~ hashed ]]; then
+        local dehash_=$(echo $type_ | sed -e "s:.*hashed (\([^)]*\)):\1:")
+        type_="$command_ is $dehash_"
     fi
-    echo $ype_
+    echo $type_
 }
 
 de_typed () {
@@ -158,18 +170,18 @@ whyp_optional () {
 
 whyp_source () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
-    [[ -f "$1" ]] && quietly source "$1" && return 0
-    whyp_optional $2 || echo 'Cannot source "'"$filename_"'". It is not a file.' >&2
+    if [[ -f "$1" ]]; then
+        # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
+        quietly source "$@"
+        return 0
+    fi
+    whyp_optional $2 || echo 'Cannot source "'"$2"'". It is not a file.' >&2
     return 1
 }
 
 ww_executable () {
     QUIETLY type $(deafened "$@")
 }
-
-# xxxxx
-
-# xxxxx*
 
 ww_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
@@ -178,27 +190,21 @@ ww_bin () {
 
 whyp_bin_run () {
     local __doc__="""Run a script in whyp/bin"""
-    local cript_=$(ww_bin $1); shift
+    local script_=$(ww_bin $1); shift
     if [[ -d $WHYP_VENV ]]; then
         (
             source "$WHYP_VENV/bin/activate"
-            PYTHONPATH=$WHYP_DIR $cript_ "$@"
+            PYTHONPATH=$WHYP_DIR $script_ "$@"
         )
     else
-        PYTHONPATH=$WHYP_DIR $cript_ "$@"
+        PYTHONPATH=$WHYP_DIR $script_ "$@"
     fi
 }
 
 whyp_pudb_run () {
     local __doc__="""Debug a script in whyp/bin"""
-    local cript_=$(ww_bin $1); shift
-    set -x
-    PYTHONPATH=$WHYP_DIR pudb $cript_ "$@"
-    set +x
-}
-
-ww_py () {
-    python3 -m whyp "$@"
+    local script_=$(ww_bin $1); shift
+    PYTHONPATH=$WHYP_DIR pudb3 $script_ "$@"
 }
 
 whyp_py_file () {
@@ -211,10 +217,10 @@ whyp_edit_file () {
     [[ -f "$file_" ]] || return 1
     local dir_=$(dirname "$file_")
     [[ -d "$dir_" ]] || dir_=.
-    local name_=$(basename "$file_")
+    local filename_=$(basename "$file_")
     local editor_="${WHYP_EDITOR:-vim}"
     [[ -x $EDITOR ]] && editor_=$EDITOR
-    (cd "$dir_"; "$editor_" "$name_" "$@")
+    (cd "$dir_"; "$editor_" "$filename_" "$@")
 }
 
 python_has_debugger () {
@@ -249,8 +255,8 @@ whyp_option () {
     [[ $1 == -v ]] && options_=verbose
     [[ $1 == verbose ]] && options_=verbose
     [[ $1 == quiet ]] && options_=quiet
-    [[ $1 == -f ]] && options_="$ptions_ --is-function"
-    [[ $1 == -a ]] && options_="$ptions_ --is-alias"
+    [[ $1 == -f ]] && options_="$options_ --is-function"
+    [[ $1 == -a ]] && options_="$options_ --is-alias"
     [[ $options_ ]] || return 1
     echo $options_
     return 0
@@ -305,6 +311,10 @@ python_module_version () {
     return $result_
 }
 
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
+}
+
 quietly () {
     "$@" 2>/dev/null
 }
@@ -341,9 +351,7 @@ wat () {
     [[ $1 ]] || return 0
     ines_=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
     [[ $ines_ == 0 ]] || return 0
-    set -x
     rri "$1"
-    set +x
 }
 
 
@@ -358,9 +366,11 @@ ww_function () {
     local __doc__="""whyp a function"""
     is_function "$@" 2>/dev/null || return 1
     parse_function_ "$@" 2>/dev/null
-    [[ -f $path_to_file ]] || return 1
+    if [[ $path_to_file != "main" ]]; then
+        [[ -f $path_to_file ]] || return 1
+    fi
     type $1 | sed -e "/is a function$/d" | wat
-    echo "$EDITOR $path_to_file +$(( $line_number - 1 )) +/$1"
+    [[ $path_to_file == "main" ]] || echo "$EDITOR $path_to_file +$(( $line_number - 1 )) +/$1"
     return 0
 }
 
@@ -373,19 +383,26 @@ ww_alias () {
         ww_function $name_
     else
         local uffix_=${tdout_//*=\'}
-        local ommand_=${uffix_//\'}
-        w $ommand_
+        local command_=${uffix_//\'}
+        w $command_
     fi
 }
 
 ww_file () {
-    is_file "$@" || return 1
-    local ath_=$(type "$1" | sed -e "s:.* is ::")
-    local ommand_=less
-    runnable bat && ommand_=bat
-    $ommand_ $ath_
-    ls -l $ath_
-    return $ass_
+    is_file "$1" || return 1
+    runnable "$1" || return 2
+
+    local path_=$(type "$1" | sed -e "s:.* is ::")
+    local text_=1
+    quietly file "$path_" | grep -q text || text_=
+    if [[ $text_ ]]; then
+        local command_=head
+        runnable bat && command_=bat
+        $command_ $path_ 
+        echo
+    fi
+    ls -l $path_
+    echo
 }
 
 ww_args () {
@@ -404,7 +421,7 @@ ww_args () {
 
 whyp_show_ () {
     WOPTS=
-    local shower_=quietly args_=$(ww_args "$@") arg_= name_= ype_=
+    local shower_=quietly args_=$(ww_args "$@") arg_= name_= type_=
     [[ $WOPTS == -v ]] && shower_=
     for arg_ in $args_; do
         name_="$arg_"; shift
@@ -415,11 +432,14 @@ whyp_show_ () {
 }
 
 ww_show () {
-    local whyp_= name_="$1"
-    for whyp_ in ww_bash ww_function ww_alias ww_file ; do
-        $whyp_ $name_ 2> /dev/null && return 0
+    local whyp_= name_= result_=1
+    for name_ in "$@"; do
+        for whyp_ in ww_bash ww_alias ww_function ww_file ; do
+            $whyp_ $name_ 2> /dev/null || continue
+            result_=0
+        done
     done
-    return 1
+    return $result_
 }
 
 ww_command () {
@@ -429,18 +449,14 @@ ww_command () {
     alias > $PATH_TO_ALIASES
     declare -f > $PATH_TO_FUNCTIONS
     ww_py --aliases=$PATH_TO_ALIASES --functions=$PATH_TO_FUNCTIONS "$@";
-    # local return_value=$?
-    # rm -f $PATH_TO_ALIASES
-    # rm -f $PATH_TO_FUNCTIONS
-    # return $return_value
 }
 
 ww_debug () {
     (DEBUGGING=www;
-        local ommand_="$1"; shift
-        ww $ommand_;
-        w $ommand_;
-        (set -x; $ommand_ "$@" 2>&1 )
+        local command_="$1"; shift
+        ww $command_;
+        w $command_;
+        (set -x; $command_ "$@" 2>&1 )
     )
 }
 
@@ -463,15 +479,14 @@ edit_alias_ () {
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    local ew_=
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
         return 0
     fi
-    local line_=; [[ -n "$line_number" ]] && line_=+$line_number
-    local eek_=+/"^$function.*().{$"
-    [[ "$@" =~ [+][/] ]] && eek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
-    whyp_edit_file "$path_to_file" $line_ $eek_
+    local line_=1; [[ -n "$line_number" ]] && line_=+$(( $line_number - 1 ))
+    local seek_=+/"^$function "
+    [[ "$@" =~ [+][/] ]] && seek_=$(echo "$@" | ses ".*\([+][/][^ ]*\).*" "\1")
+    whyp_edit_file "$path_to_file" $line_ $seek_
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     ww_source "$path_to_file"
@@ -516,15 +531,6 @@ ww_source () {
     whyp_source "$@" --optional
 }
 
-
-quietly unalias .
-
-
-# xxxx_+
-
-www_ () {
-    ww verbose "$@"
-}
 
 parse_declare_function () {
     local __doc__="""Parse output of declaring a function"""
@@ -660,4 +666,8 @@ is_file () {
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
     [[ "$(type -t $1 2>/dev/null)" == "" ]]
+}
+
+is_python_module () {
+    python_will_import "$@"
 }

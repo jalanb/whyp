@@ -14,9 +14,10 @@ import argparse
 from whyp import sources
 from whyp import arguments
 
+
 def add_args():
     """Look for options from user on the command line for this script"""
-    parser = arguments.parser(description=__doc__.splitlines()[0])
+    parser = arguments.parser(__doc__)
     pa = parser.add_argument
     pa('--sources', help='Try to source these', nargs='*')
     pa('--files', action='store_true', help='Show files in those')
@@ -26,29 +27,31 @@ def add_args():
     pa('--found', action='store', help='Whether that was sourced')
     pa('-o', '--optional', action='store_true', help='sources may be empty')
 
+
 def parse_args():
-    arguments = parser.parse_args()
-    if arguments.clear:
+    args = arguments.parse_args()
+    if args.clear:
         sources.clear()
-    elif arguments.any:
-        sources.any()
-    else:
-        return arguments
-    sys.exit(0)
+        sys.exit(os.EX_OK)
+    if args.any:
+        result = os.EX_OK if sources.any() else 1
+        sys.exit(result)
+    return args
 
 
 def main():
     """Run the program"""
+    add_args()
     args = parse_args()
     files = []
     errors = []
     loaded = sources.load(args.optional)
     if args.found:
         return args.found in loaded
-    files = [_ for _ in loaded if _.isfile()]
-    for source in args.sources or files:
-        items = files if sources.source(source) else errors
-        items.append(source)
+    if args.sources:
+        loaded = args.sources
+    files = [_ for _ in loaded if os.path.isfile(_)]
+    errors = [_ for _ in loaded if _ not in files]
     words = []
     if args.files:
         words = files
@@ -65,4 +68,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(os.EX_OK if main() else no os.EX_OK)
+    sys.exit(os.EX_OK if main() else not os.EX_OK)
