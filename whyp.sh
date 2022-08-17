@@ -76,10 +76,6 @@ wat () {
 }
 # xxxx
 
-dealias () {
-    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
-}
-
 whyp () {
     local __doc__="""whyp extends type"""
     [[ "$@" ]] || echo "Usage: w <command>"
@@ -105,6 +101,12 @@ whyp () {
     fi
 }
 
+# xxxxx
+
+ww_py () {
+    whyp_bin_run whyp "$@"
+}
+
 ww_help () {
     local unction_=$1; shift
     rm -f /tmp/err
@@ -113,6 +115,8 @@ ww_help () {
     [[ -f /tmp/err ]] && return 2
     return $result_
 }
+
+# xxxxxxx+
 
 de_alias () {
     sed -e "/is aliased to \`/s:.$::" -e "s:.* is aliased to [\`]*::"
@@ -190,10 +194,6 @@ whyp_pudb_run () {
     set -x
     PYTHONPATH=$WHYP_DIR pudb $cript_ "$@"
     set +x
-}
-
-ww_py () {
-    python3 -m whyp "$@"
 }
 
 whyp_py_file () {
@@ -298,6 +298,10 @@ python_module_version () {
         result_=0
     done
     return $result_
+}
+
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
 quietly () {
