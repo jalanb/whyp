@@ -47,12 +47,10 @@ e () {
     whyp_edit_file "$file_" "$search_"
 }
 
-alias .=whyp_source
 alias w=whyp
 
 # xx
 
-alias .w="whyp_source $WHYP_SOURCE"
 alias wq="quietly whyp "
 
 ww () {
@@ -169,10 +167,6 @@ whyp_source () {
 ww_executable () {
     QUIETLY type $(deafened "$@")
 }
-
-# xxxxx
-
-# xxxxx*
 
 ww_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
@@ -519,15 +513,6 @@ ww_source () {
     whyp_source "$@" --optional
 }
 
-
-quietly unalias .
-
-
-# xxxx_+
-
-www_ () {
-    ww verbose "$@"
-}
 
 parse_declare_function () {
     local __doc__="""Parse output of declaring a function"""
