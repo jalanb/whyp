@@ -145,6 +145,18 @@ ww_help () {
 
 # xxxxxxx+
 
+Quietly () {
+    "$@" > /dev/null
+}
+
+quietly () {
+    "$@" 2>/dev/null
+}
+
+QUIETLY () {
+    "$@" > /dev/null 2>/dev/null
+}
+
 dealias () {
     alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
@@ -287,7 +299,7 @@ python_will_import () {
     local __doc__="""test that python will import any args"""
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        python -c "import $arg" >/dev/null 2>&1 || return 1
+        QUIETLY python -c "import $arg" || return 1
     done
     return 0
 }
@@ -305,8 +317,8 @@ which_python_executable () {
     else
         python_name_=python3
     fi
-    local which_python_=$(which $python_name_ 2>/dev/null)
-    [[ -x "$which_python_" ]] || which_python_=$(PATH=/usr/local/bin:/usr/bin/:/bin which $python_name_ 2>/dev/null)
+    local which_python_=$(quietly which $python_name_)
+    [[ -x "$which_python_" ]] || which_python_=$(quietly PATH=/usr/local/bin:/usr/bin/:/bin which $python_name_)
     [[ -x "$which_python_" ]] && "$which_python_" -c "import sys; sys.stdout.write(sys.executable)"
 }
 
@@ -324,7 +336,7 @@ python_module () {
     local result_=1
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        python -c "import $arg; print($arg.__file__)" 2>/dev/null || continue
+        quietly python -c "import $arg; print($arg.__file__)" || continue
         result_=0
     done
     return $result_
@@ -335,22 +347,10 @@ python_module_version () {
     local result_=1 arg_=
     for arg_ in "$@"; do
         python_will_import $arg_ || continue
-        python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
+        quietly python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')"  || continue
         result_=0
     done
     return $result_
-}
-
-quietly () {
-    "$@" 2>/dev/null
-}
-
-quiet_out () {
-    "$@" >/dev/null
-}
-
-QUIETLY () {
-    "$@" >/dev/null 2>&1
 }
 
 make_shebang () {
@@ -367,8 +367,8 @@ ww_bash () {
 
 ww_function () {
     local __doc__="""whyp a function"""
-    is_function "$@" 2>/dev/null || return 1
-    parse_function_ "$@" 2>/dev/null
+    quietly is_function "$@"  || return 1
+    quietly parse_function_ "$@" 
     if [[ $path_to_file != "main" ]]; then
         [[ -f $path_to_file ]] || return 1
     fi
@@ -435,10 +435,10 @@ whyp_show_ () {
 }
 
 ww_show () {
-    local whyp_= name_= result_=1
+    local ww_= name_= result_=1
     for name_ in "$@"; do
-        for whyp_ in ww_bash ww_alias ww_function ww_file ; do
-            $whyp_ $name_ 2> /dev/null || continue
+        for ww_ in ww_bash ww_alias ww_function ww_file ; do
+            quietly $ww_ $name_ l || continue
             result_=0
         done
     done
@@ -512,14 +512,14 @@ edit_file_ () {
 show_type () {
     local options_=
     [[ $1 == -a ]] && options_=-a && shift
-    type $options_ "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+    quietly type $options_ "$@"  || /usr/bin/env | grep --colour "$@"
 }
 
 show_file () {
     local options_=; [[ $1 == -a ]] && options_=-a && shift
     type $options_ "$@"
     echo
-    [[ $options_ == -a ]] && which $options_ "$@" 2>/dev/null
+    [[ $options_ == -a ]] && quietly which $options_ "$@" 
 }
 
 show_function () {
@@ -544,7 +544,6 @@ parse_declare_function () {
 }
 
 declare_function () {
-    local __doc__="""Declare name, line and path of a function"""
     (
         shopt -s extdebug
         declare -F "$1"
@@ -629,7 +628,7 @@ source_path () {
 }
 
 has_type () {
-    [[ "$(type -t $1 2>/dev/null)" =~ $2 ]]
+    [[ "$(quietly type -t $1 )" =~ $2 ]]
 }
 
 is_alias () {
@@ -660,16 +659,17 @@ is_builtin () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     has_type "$1" hash && return 0
-    local path_=$(type -P $1 2>/dev/null | sed -e "s,.* is ,,")
+    local path_=$(quietly type -P $1  | sed -e "s,.* is ,,")
     [[ $path_ ]] || return 1
     test -f $path_
 }
 
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
-    [[ "$(type -t $1 2>/dev/null)" == "" ]]
+    [[ "$(quietly type -t $1 )" == "" ]]
 }
 
 is_python_module () {
     python_will_import "$@"
 }
+
