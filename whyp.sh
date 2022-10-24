@@ -65,11 +65,28 @@ ses () {
 }
 
 wat () {
-    local cmd_=cat
-    is_file kat && cmd_=kat
-    is_file bat && cmd_=bat
-    $cmd_ "$@"
+    local __doc__="""Choose best avalaible cat"""
+    local __todo__="""Add vimcat, kat, pygments, ..."""
+    local lines_=
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        lines_=$1
+        shift
+    fi
+    if runnable bat; then
+        bat --language=bash --style=changes,grid,numbers "$@"
+    elif runnable kat; then
+        kat --numbers "$@"
+    elif [[ $lines_ > 40 ]]; then
+        less "$@"
+    else
+        cat "$@"
+    fi
+    [[ $1 ]] || return 0
+    lines_=$(quietly wc -l "$1" | sed -e "s, .*,," )
+    [[ $lines_ == 0 ]] || return 0
+    what_no_args_are you_mad
 }
+
 # xxxx
 
 whyp () {
@@ -338,29 +355,6 @@ QUIETLY () {
 
 make_shebang () {
     sed -e "1s:.*:#! /bin/bash:"
-}
-
-wat () {
-    local __doc__="""Choose best avalaible cat"""
-    local __todo__="""Add vimcat, kat, pygments, ..."""
-    local ines_=
-    if [[ $1 =~ ^[0-9]+$ ]]; then
-        ines_=$1
-        shift
-    fi
-    if runnable bat; then
-        bat --language=bash --style=changes,grid,numbers "$@"
-    elif runnable kat; then
-        kat --numbers "$@"
-    elif [[ $ines_ > 40 ]]; then
-        less "$@"
-    else
-        cat "$@"
-    fi
-    [[ $1 ]] || return 0
-    ines_=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
-    [[ $ines_ == 0 ]] || return 0
-    rri "$1"
 }
 
 
