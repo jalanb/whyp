@@ -36,17 +36,16 @@ Make sure your Python is "the Python when you log in"
 
 Install `whyp` to Python
 
-    $ pip install -r requirements.txt
-    $ python setup.py develop
+    $ python setup.py install
     $ python
     >>> from whyp import ls
     >>> assert ls == '/bin/ls'
     # YMMV
 
-commands are provided for `bash`
+Commands are provided for `bash`
     which can be added to your current shell like this
 
-    $ source __init__.sh
+    $ source whyp.sh
 
 Now you can use `whyp` as a replacement for `type` in current shell
 
@@ -56,11 +55,12 @@ Now you can use `whyp` as a replacement for `type` in current shell
     ls is /bin/ls
 
 
-If you want to keep `whyp` for bash, then
+If you want to keep `whyp` for `bash`, then
     Stay in the `whyp/` directory and
 
     $ echo ""  >> ~/.bashrc
-    $ echo "source $(readlink -f __init__.sh)" >> ~/.bashrc
+    $ echo "# Added whyp at $(date)" >> ~/.bashrc
+    $ echo "source $(readlink -f whyp.sh)" >> ~/.bashrc
 
 Daily use
 ---------

@@ -26,6 +26,7 @@ def add_args():
     pa('--clear', action='store_true', help='Forget all sources')
     pa('--found', action='store', help='Whether that was sourced')
     pa('-o', '--optional', action='store_true', help='sources may be empty')
+    return parser
 
 
 def parse_args():
@@ -68,4 +69,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(os.EX_OK if main() else not os.EX_OK)
+    sys.exit(os.EX_OK if main() else 1)

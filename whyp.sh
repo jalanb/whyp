@@ -16,11 +16,7 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_BIN=$WHYP_DIR/bin
-export WHYP_VENV=
 export WHYP_EDITOR=vim
-[[ -d $WHYP_DIR/.venv ]] && WHYP_VENV=$WHYP_DIR/.venv
-[[ -d $WHYP_VENV ]] || WHYP_VENV=~/.virtualenvs/whyp
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -69,35 +65,57 @@ ses () {
 }
 
 wat () {
-    local cmd_=cat
-    is_file kat && cmd_=kat
-    is_file bat && cmd_=bat
-    $cmd_ "$@"
+    local __doc__="""Choose best avalaible cat"""
+    local __todo__="""Add vimcat, kat, pygments, ..."""
+    local lines_=
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        lines_=$1
+        shift
+    fi
+    if runnable bat; then
+        bat --language=bash --style=changes,grid,numbers "$@"
+    elif runnable kat; then
+        kat --numbers "$@"
+    elif [[ $lines_ > 40 ]]; then
+        less "$@"
+    else
+        cat "$@"
+    fi
+    [[ $1 ]] || return 0
+    lines_=$(quietly wc -l "$1" | sed -e "s, .*,," )
+    [[ $lines_ == 0 ]] || return 0
+    what_no_args_are you_mad
 }
+
 # xxxx
 
 whyp () {
     local __doc__="""whyp extends type"""
-    [[ "$@" ]] || echo "Usage: w <command>"
-    # -a, --all
-    if is_alias $1; then
-        alias $1
-        whyp $(dealias $1)
-    elif is_function "$1"; then
-        type "$1" | grep -v ' is a '
-        parse_function_ "$1"
-        [[ $2 == -v ]] && echo "$EDITOR $path_to_file +$line_number"
-        echo
-    elif is_file "$1" 2>/dev/null ; then
-        local file_=$(which "$1" 2>/dev/null)
+    [[ "$@" ]] || echo "Usage: whyp <command>"
+    [[ "$@" ]] || return 1
+
+    local verbose_= name_="$1"; shift
+    if [[ $1 == -v ]]; then verbose_=1; shift; fi
+    if is_alias $name_; then
+        alias $name_
+        whyp $(dealias $name_)
+    elif is_function "$name_"; then
+        type "$name_" | grep -v ' is a '
+        parse_function_ "$name_"
+        [[ $verbose_ ]] && echo "$EDITOR $path_to_file +$line_number" && echo
+    elif is_file "$name_" ; then
+        local typed_=$(type "$name_")
+        local file_=$(quietly which "$name_")
+        [[ ! $file_ || $verbose_ ]] && echo $typed_
         [[ $file_ ]] || return 1
         local real_=$(readlink -f "$file_")
-        echo $file_
-        [[ "$file_" == "$real_" ]] || echo $real_
-        [[ $2 == -v ]] && echo "$EDITOR $file_"
+        local out_="$file_"
+        [[ "$file_" == "$real_" ]] || out_="$file_ -> $real_"
+        echo "$out_"
+        [[ $verbose_ ]] && echo "$EDITOR $file_"
         return 0
     else
-        type "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+        runnable "$@" || /usr/bin/env | grep --colour "$@"
     fi
 }
 
@@ -127,8 +145,20 @@ ww_help () {
 
 # xxxxxxx+
 
-de_alias () {
-    sed -e "/is aliased to \`/s:.$::" -e "s:.* is aliased to [\`]*::"
+Quietly () {
+    "$@" > /dev/null
+}
+
+quietly () {
+    "$@" 2>/dev/null
+}
+
+QUIETLY () {
+    "$@" > /dev/null 2>/dev/null
+}
+
+dealias () {
+    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
 de_file () {
@@ -170,6 +200,10 @@ whyp_optional () {
 
 whyp_source () {
     local __doc__="""Source a file (that may set some aliases) and remember that file"""
+    if [[ ! "$@" ]]; then
+        echo "Usage: whyp_source <filename>" >&2
+        return 1
+    fi
     if [[ -f "$1" ]]; then
         # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
         quietly source "$@"
@@ -185,7 +219,14 @@ ww_executable () {
 
 ww_bin () {
     local __doc__="""Full path to a script in whyp/bin"""
-    echo $WHYP_BIN/"$1"
+    echo "$WHYP_DIR/bin/$1"
+}
+
+whyp_venv_app () {
+    local app_="$1" venv_dir_=$WHYP_DIR/.venv 
+    [[ -d $venv_dir_ ]] || venv_dir_=~/.virtualenvs/whyp
+    [[ -f "$venv_dir_/bin/$1" ]] && app_="$venv_dir_/bin/$1"
+    echo $app_
 }
 
 whyp_bin_run () {
@@ -232,23 +273,6 @@ looks_versiony () {
     [[ $1 =~ [0-9](.[0-9])* ]]
 }
 
-local_python () {
-    local ocal_python_name_=python
-    if looks_versiony $1; then
-        if python_has_debugger $1; then
-            ocal_python_name_=python$1
-        else
-            ocal_python_name_=python2
-            echo "Requested python version too old" >&2
-        fi
-        shift
-    else
-        ocal_python_name_=python3
-    fi
-    local ocal_python_=$(PATH=/usr/local/bin:/usr/bin/:/bin which $ocal_python_name_ 2>/dev/null)
-    [[ $ocal_python_ ]] && $ocal_python_ -c "import sys; sys.stdout.write(sys.executable)"
-}
-
 whyp_option () {
     local options_=
     [[ $1 == -q ]] && options_=quiet
@@ -266,8 +290,8 @@ looks_like_python_name () {
     local __doc__="""Whether arg looks like a python name"""
     # Python names do not start with numbers
     [[ $1 =~ ^[0-9] ]] && return 1
-    # Python names do not have hyphens, nor code
-    [[ $1 =~ [-/] ]] && return 1
+    # Python names do not have hyphens, nor slashes
+    [[ $1 =~ [-/\\] ]] && return 1
     return 0
 }
 
@@ -275,18 +299,36 @@ python_will_import () {
     local __doc__="""test that python will import any args"""
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        python -c "import $arg" >/dev/null 2>&1 || return 1
+        QUIETLY python -c "import $arg" || return 1
     done
     return 0
 }
 
+which_python_executable () {
+    local python_name_=python
+    if looks_versiony $1; then
+        if python_has_debugger $1; then
+            python_name_=python$1
+        else
+            python_name_=python2
+            echo "Requested python version too old" >&2
+        fi
+        shift
+    else
+        python_name_=python3
+    fi
+    local which_python_=$(quietly which $python_name_)
+    [[ -x "$which_python_" ]] || which_python_=$(quietly PATH=/usr/local/bin:/usr/bin/:/bin which $python_name_)
+    [[ -x "$which_python_" ]] && "$which_python_" -c "import sys; sys.stdout.write(sys.executable)"
+}
+
 python_executable () {
-    local __doc__="""Executable in used by python"""
-    local python_=
-    [[ -x "$1" ]] && python_="$1"
-    [[ $python_ ]] && shift
-    [[ $python_ ]] || python_=python
-    $python_ -c "import sys; sys.stdout.write(sys.executable)"
+    local __doc__="""Executable used by python"""
+    if [[ -x "$1" ]]; then
+        "$1" -c "import sys; sys.stdout.write(sys.executable)"
+    else
+        which_python_executable "$@"
+    fi
 }
 
 python_module () {
@@ -294,7 +336,7 @@ python_module () {
     local result_=1
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        python -c "import $arg; print($arg.__file__)" 2>/dev/null || continue
+        quietly python -c "import $arg; print($arg.__file__)" || continue
         result_=0
     done
     return $result_
@@ -305,53 +347,14 @@ python_module_version () {
     local result_=1 arg_=
     for arg_ in "$@"; do
         python_will_import $arg_ || continue
-        python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')" 2>/dev/null || continue
+        quietly python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')"  || continue
         result_=0
     done
     return $result_
 }
 
-dealias () {
-    alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
-}
-
-quietly () {
-    "$@" 2>/dev/null
-}
-
-quiet_out () {
-    "$@" >/dev/null
-}
-
-QUIETLY () {
-    "$@" >/dev/null 2>&1
-}
-
 make_shebang () {
     sed -e "1s:.*:#! /bin/bash:"
-}
-
-wat () {
-    local __doc__="""Choose best avalaible cat"""
-    local __todo__="""Add vimcat, kat, pygments, ..."""
-    local ines_=
-    if [[ $1 =~ ^[0-9]+$ ]]; then
-        ines_=$1
-        shift
-    fi
-    if runnable bat; then
-        bat --language=bash --style=changes,grid,numbers "$@"
-    elif runnable kat; then
-        kat --numbers "$@"
-    elif [[ $ines_ > 40 ]]; then
-        less "$@"
-    else
-        cat "$@"
-    fi
-    [[ $1 ]] || return 0
-    ines_=$(wc -l "$1" | sed -e "s, .*,," 2>/dev/null)
-    [[ $ines_ == 0 ]] || return 0
-    rri "$1"
 }
 
 
@@ -364,8 +367,8 @@ ww_bash () {
 
 ww_function () {
     local __doc__="""whyp a function"""
-    is_function "$@" 2>/dev/null || return 1
-    parse_function_ "$@" 2>/dev/null
+    quietly is_function "$@"  || return 1
+    quietly parse_function_ "$@" 
     if [[ $path_to_file != "main" ]]; then
         [[ -f $path_to_file ]] || return 1
     fi
@@ -432,10 +435,10 @@ whyp_show_ () {
 }
 
 ww_show () {
-    local whyp_= name_= result_=1
+    local ww_= name_= result_=1
     for name_ in "$@"; do
-        for whyp_ in ww_bash ww_alias ww_function ww_file ; do
-            $whyp_ $name_ 2> /dev/null || continue
+        for ww_ in ww_bash ww_alias ww_function ww_file ; do
+            quietly $ww_ $name_ l || continue
             result_=0
         done
     done
@@ -509,14 +512,14 @@ edit_file_ () {
 show_type () {
     local options_=
     [[ $1 == -a ]] && options_=-a && shift
-    type $options_ "$@" 2>/dev/null || /usr/bin/env | grep --colour "$@"
+    quietly type $options_ "$@"  || /usr/bin/env | grep --colour "$@"
 }
 
 show_file () {
     local options_=; [[ $1 == -a ]] && options_=-a && shift
     type $options_ "$@"
     echo
-    [[ $options_ == -a ]] && which $options_ "$@" 2>/dev/null
+    [[ $options_ == -a ]] && quietly which $options_ "$@" 
 }
 
 show_function () {
@@ -531,7 +534,6 @@ ww_source () {
     whyp_source "$@" --optional
 }
 
-
 parse_declare_function () {
     local __doc__="""Parse output of declaring a function"""
     function="$1";
@@ -542,7 +544,6 @@ parse_declare_function () {
 }
 
 declare_function () {
-    local __doc__="""Declare name, line and path of a function"""
     (
         shopt -s extdebug
         declare -F "$1"
@@ -627,7 +628,7 @@ source_path () {
 }
 
 has_type () {
-    [[ "$(type -t $1 2>/dev/null)" =~ $2 ]]
+    [[ "$(quietly type -t $1 )" =~ $2 ]]
 }
 
 is_alias () {
@@ -658,16 +659,17 @@ is_builtin () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     has_type "$1" hash && return 0
-    local path_=$(type -P $1 2>/dev/null | sed -e "s,.* is ,,")
+    local path_=$(quietly type -P $1  | sed -e "s,.* is ,,")
     [[ $path_ ]] || return 1
     test -f $path_
 }
 
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
-    [[ "$(type -t $1 2>/dev/null)" == "" ]]
+    [[ "$(quietly type -t $1 )" == "" ]]
 }
 
 is_python_module () {
     python_will_import "$@"
 }
+
