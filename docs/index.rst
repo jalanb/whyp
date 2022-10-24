@@ -202,9 +202,9 @@ One of the best compliments of my coding life was when [/u/andru183 called this 
 
 Version
 -------
-0.7.24
+0.7.25
 Version:
-0.7.24
+0.7.25
 
 Contents:
 
