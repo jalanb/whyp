@@ -6,7 +6,7 @@ __copyright__ = '''
     See http://jalanb.mit-license.org/ for more information
 '''
 
-__version__ = '0.7.25'
+__version__ = '0.7.26'
 
 
 
