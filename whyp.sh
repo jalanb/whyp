@@ -297,9 +297,10 @@ looks_like_python_name () {
 
 python_will_import () {
     local __doc__="""test that python will import any args"""
+    local python_=${PYTHON:-python}
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        QUIETLY python -c "import $arg" || return 1
+        QUIETLY $python_ -c "import $arg" || return 1
     done
     return 0
 }
@@ -334,9 +335,10 @@ python_executable () {
 python_module () {
     local __doc__="""the files that python imports args as"""
     local result_=1
+    local python_=${PYTHON:-python}
     for arg in "$@"; do
         looks_like_python_name $arg || continue
-        quietly python -c "import $arg; print($arg.__file__)" || continue
+        quietly $python_ -c "import $arg; print($arg.__file__)" || continue
         result_=0
     done
     return $result_
@@ -345,9 +347,10 @@ python_module () {
 python_module_version () {
     local __doc__="""the installed version of that python package"""
     local result_=1 arg_=
+    local python_=${PYTHON:-python}
     for arg_ in "$@"; do
         python_will_import $arg_ || continue
-        quietly python -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')"  || continue
+        quietly $python_ -c "import $arg_; module=$arg_; print(f'{module.__file__}: {module.__version__}')"  || continue
         result_=0
     done
     return $result_
