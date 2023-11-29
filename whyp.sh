@@ -701,7 +701,7 @@ is_hash () {
 }
 
 is_types () {
-    quietly (
+    (
         local cmd_=$1
         shift
         local arg_type_= cmd_type_=$(qype -t $cmd_)
@@ -709,7 +709,7 @@ is_types () {
             [[ $cmd_type_ =~ $arg_type_ ]] && return 0
         done
         return 1
-    )
+    ) 2>/dev/null
 }
 
 is_alias () {
