@@ -444,7 +444,11 @@ ww_file () {
     quietly file "$path_" | grep -q text || text_=
     if [[ $text_ ]]; then
         local command_=head
-        runnable bat && command_=bat
+        if runnable tldr; then
+            command_=tldr
+        elif runnable bat; then
+            command_=bat
+        fi
         $command_ $path_
         echo
     fi
