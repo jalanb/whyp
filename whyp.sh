@@ -16,7 +16,7 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_EDITOR=vim
+export WHYP_EDITOR=
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
@@ -43,17 +43,30 @@ e () {
     whyp_edit_file "$file_" "$search_"
 }
 
-alias w=whyp
+w () {
+    local __doc__="""whyp args or w"""
+    [[ "$@" ]] || ww w
+    whyp "${@}"
+}
+
+alias .=whyp_source
 
 # xx
 
 alias wq="quietly whyp "
 
 ww () {
-    local __doc__="""ww expands type"""
-    local whyp_options_=$(whyp_option "$1")
-    [[ $whyp_options_ ]] && shift
-    ww_show ${@:-ww}
+    local __doc__="""ww extends whyp"""
+    [[ "$@" ]] || ww ww
+    local options_=$(quietly whyp_option "$@")
+    [[ $options_ ]] && shift
+    local name_=$1
+    while [[ "$name_" ]]; do
+        [[ $options_ =~ -v ]] && w $name_
+        ww_show $name_
+        shift
+        name_=$1
+    done
 }
 
 
@@ -89,25 +102,53 @@ wat () {
 
 # xxxx
 
+QYPE () {
+    QUIETLY type "$@"
+}
+
+Qype () {
+    Quietly type "$@"
+}
+
+qype () {
+    quietly type "$@"
+}
+
+qich () {
+    quietly which "$@"
+}
+
+west () {
+    QUIETLY test "$@"
+}
+
 whyp () {
     local __doc__="""whyp extends type"""
-    [[ "$@" ]] || echo "Usage: whyp <command>"
-    [[ "$@" ]] || return 1
+    if [[ ! "$@" ]]; then
+        ww whyp
+        echo
+        echo "Usage: whyp [-v] <command>"
+        return 1
+    fi
 
-    local verbose_= name_="$1"; shift
-    if [[ $1 == -v ]]; then verbose_=1; shift; fi
+    local name_="$1" verbose_=
+    shift
+    if [[ $name_ == -v ]]; then verbose_=1; shift; fi
     if is_alias $name_; then
         alias $name_
         whyp $(dealias $name_)
     elif is_function "$name_"; then
-        type "$name_" | grep -v ' is a '
+        qype "$name_" | grep -v ' is a '
         parse_function_ "$name_"
+        echo
         [[ $verbose_ ]] && echo "$EDITOR $path_to_file +$line_number" && echo
-    elif is_file "$name_" ; then
-        local typed_=$(type "$name_")
-        local file_=$(quietly which "$name_")
-        [[ ! $file_ || $verbose_ ]] && echo $typed_
-        [[ $file_ ]] || return 1
+    elif is_file "$name_"; then
+        local typed_=$(qype "$name_")
+        local file_=$(qich "$name_")
+        if [[ ! $file_ ]]; then
+            [[ $verbose_ ]] && echo $typed_
+            return 1
+        fi
         local real_=$(readlink -f "$file_")
         local out_="$file_"
         [[ "$file_" == "$real_" ]] || out_="$file_ -> $real_"
@@ -115,7 +156,7 @@ whyp () {
         [[ $verbose_ ]] && echo "$EDITOR $file_"
         return 0
     else
-        runnable "$@" || /usr/bin/env | grep --colour "$@"
+        runnable "$@" || /usr/bin/env | grep --colour "$@.*="
     fi
 }
 
@@ -131,7 +172,7 @@ ww_help () {
     local command_=$1; shift
     rm -f /tmp/out /tmp/err
     [[ $command_ =~ (-w|--ww) ]] && ww $function_ 2>/tmp/err
-    if [[ $command_ =~ (-h|--help) ]]; then 
+    if [[ $command_ =~ (-h|--help) ]]; then
         if is_builtin $command_; then help $comand_
         elif is_file  $command_; then $command_ --help
         elif is_function $command_; then ww $command_
@@ -167,7 +208,7 @@ de_file () {
 
 de_hashed () {
     local command_=$1; shift
-    local type_="$(quietly type $command_)"
+    local type_="$(qype $command_)"
     if [[ $type_ =~ hashed ]]; then
         local dehash_=$(echo $type_ | sed -e "s:.*hashed (\([^)]*\)):\1:")
         type_="$command_ is $dehash_"
@@ -188,7 +229,7 @@ defended () {
 }
 
 runnable () {
-    QUIETLY type "$@"
+    QYPE "$@"
 }
 
 whyp_optional () {
@@ -223,7 +264,7 @@ ww_bin () {
 }
 
 whyp_venv_app () {
-    local app_="$1" venv_dir_=$WHYP_DIR/.venv 
+    local app_="$1" venv_dir_=$WHYP_DIR/.venv
     [[ -d $venv_dir_ ]] || venv_dir_=~/.virtualenvs/whyp
     [[ -f "$venv_dir_/bin/$1" ]] && app_="$venv_dir_/bin/$1"
     echo $app_
@@ -318,7 +359,7 @@ which_python_executable () {
     else
         python_name_=python3
     fi
-    local which_python_=$(quietly which $python_name_)
+    local which_python_=$(qich $python_name_)
     [[ -x "$which_python_" ]] || which_python_=$(quietly PATH=/usr/local/bin:/usr/bin/:/bin which $python_name_)
     [[ -x "$which_python_" ]] && "$which_python_" -c "import sys; sys.stdout.write(sys.executable)"
 }
@@ -371,7 +412,7 @@ ww_bash () {
 ww_function () {
     local __doc__="""whyp a function"""
     quietly is_function "$@"  || return 1
-    quietly parse_function_ "$@" 
+    quietly parse_function_ "$@"
     if [[ $path_to_file != "main" ]]; then
         [[ -f $path_to_file ]] || return 1
     fi
@@ -403,8 +444,12 @@ ww_file () {
     quietly file "$path_" | grep -q text || text_=
     if [[ $text_ ]]; then
         local command_=head
-        runnable bat && command_=bat
-        $command_ $path_ 
+        if runnable tldr; then
+            command_=tldr
+        elif runnable bat; then
+            command_=bat
+        fi
+        $command_ $path_
         echo
     fi
     ls -l $path_
@@ -485,6 +530,12 @@ edit_alias_ () {
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
+    if test -f $path_to_file; then
+        [[ $path_to_file == "(null)" ]] || return 1
+        path_to_file=$WHYP_DIR/edit_functiontmp.sh
+        qype "$1" | grep -v "is a function" | sed -e "s/) *$/) {/" -e "/^{ *$/d" > $path_to_file
+        line_number=1
+    fi
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
         return 0
@@ -515,14 +566,14 @@ edit_file_ () {
 show_type () {
     local options_=
     [[ $1 == -a ]] && options_=-a && shift
-    quietly type $options_ "$@"  || /usr/bin/env | grep --colour "$@"
+    qype $options_ "$@" || /usr/bin/env | grep --colour "$@"
 }
 
 show_file () {
     local options_=; [[ $1 == -a ]] && options_=-a && shift
-    type $options_ "$@"
+    qype $options_ "$@"
     echo
-    [[ $options_ == -a ]] && quietly which $options_ "$@" 
+    [[ $options_ == -a ]] && qich $options_ "$@"
 }
 
 show_function () {
@@ -631,7 +682,38 @@ source_path () {
 }
 
 has_type () {
-    [[ "$(quietly type -t $1 )" =~ $2 ]]
+    [[ "$(qype -t $1 )" =~ $2 ]]
+}
+
+# is_xxxx
+
+is_bash () {
+    local __doc__="""Whether the first argument is a keyword or builtin"""
+    is_types "$1" keyword builtin
+}
+
+is_file () {
+    local __doc__="""Whether $1 is an executable file"""
+    is_hash "$1" && return 0
+    local path_=$(qype -P $1 | sed -e "s,.* is ,,")
+    [[ $path_ ]] || return 1
+    west -x $path_
+}
+
+is_hash () {
+    is_types "$1" hash
+}
+
+is_types () {
+    (
+        local cmd_=$1
+        shift
+        local arg_type_= cmd_type_=$(qype -t $cmd_)
+        for arg_type_ in "$@"; do
+            [[ $cmd_type_ =~ $arg_type_ ]] && return 0
+        done
+        return 1
+    ) 2>/dev/null
 }
 
 is_alias () {
@@ -644,11 +726,6 @@ is_function () {
     has_type "$1" function
 }
 
-is_bash () {
-    local __doc__="""Whether the first argument is a keyword or builtin"""
-    is_keyword $1 || is_builtin $1
-}
-
 is_keyword () {
     local __doc__="""Whether $1 is a keyword"""
     has_type "$1" keyword
@@ -659,17 +736,9 @@ is_builtin () {
     has_type "$1" builtin
 }
 
-is_file () {
-    local __doc__="""Whether $1 is an executable file"""
-    has_type "$1" hash && return 0
-    local path_=$(quietly type -P $1  | sed -e "s,.* is ,,")
-    [[ $path_ ]] || return 1
-    test -f $path_
-}
-
 is_unrecognised () {
     local __doc__="""Whether $1 is unrecognised"""
-    [[ "$(quietly type -t $1 )" == "" ]]
+    [[ "$(qype -t $1 )" == "" ]]
 }
 
 is_python_module () {
