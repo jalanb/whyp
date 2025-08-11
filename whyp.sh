@@ -16,12 +16,11 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_EDITOR=
 export WHYP_PY=$WHYP_DIR/whyp
 
 # x
 
-# https://www.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/
+# https://old.reddit.com/r/commandline/comments/2kq8oa/the_most_productive_function_i_have_written/clo0gh2/
 e () {
     local __doc__="""Edit the first argument as if it's a type, pass on $@ to editor"""
     if is_alias "$1"; then
@@ -55,6 +54,10 @@ alias .=whyp_source
 
 alias wq="quietly whyp "
 
+.w () {
+    source "$WHYP_SOURCE"
+}
+
 ww () {
     local __doc__="""ww extends whyp"""
     [[ "$@" ]] || ww ww
@@ -62,8 +65,10 @@ ww () {
     [[ $options_ ]] && shift
     local name_=$1
     while [[ "$name_" ]]; do
-        [[ $options_ =~ -v ]] && w $name_
-        ww_show $name_
+        if [[ $name_ != -* ]]; then
+            [[ $options_ =~ --verbose ]] && w $name_
+            [[ $options_ =~ --edit ]] && e $name_ || ww_show $name_
+        fi
         shift
         name_=$1
     done
@@ -130,34 +135,11 @@ whyp () {
         echo "Usage: whyp [-v] <command>"
         return 1
     fi
-
-    local name_="$1" verbose_=
-    shift
-    if [[ $name_ == -v ]]; then verbose_=1; shift; fi
-    if is_alias $name_; then
-        alias $name_
-        whyp $(dealias $name_)
-    elif is_function "$name_"; then
-        qype "$name_" | grep -v ' is a '
-        parse_function_ "$name_"
-        echo
-        [[ $verbose_ ]] && echo "$EDITOR $path_to_file +$line_number" && echo
-    elif is_file "$name_"; then
-        local typed_=$(qype "$name_")
-        local file_=$(qich "$name_")
-        if [[ ! $file_ ]]; then
-            [[ $verbose_ ]] && echo $typed_
-            return 1
-        fi
-        local real_=$(readlink -f "$file_")
-        local out_="$file_"
-        [[ "$file_" == "$real_" ]] || out_="$file_ -> $real_"
-        echo "$out_"
-        [[ $verbose_ ]] && echo "$EDITOR $file_"
-        return 0
-    else
-        runnable "$@" || /usr/bin/env | grep --colour "$@.*="
-    fi
+    local result_=1
+    for arg in "$@"; do
+        whyp_arg "$arg" && result_=0
+    done
+    return $result_
 }
 
 # xxxxx
@@ -232,6 +214,38 @@ runnable () {
     QYPE "$@"
 }
 
+whyp_arg () {
+    local name_="$1" verbose_=
+    if [[ $name_ == -v ]]; then verbose_=1; shift; fi
+    if is_alias $name_; then
+        alias $name_
+        whyp $(dealias $name_)
+    elif is_function "$name_"; then
+        qype "$name_" | grep -v ' is a '
+        parse_function_ "$name_"
+        echo
+        [[ $verbose_ ]] && echo "$EDITOR $path_to_file +$line_number" && echo
+        return 0
+    elif is_file "$name_"; then
+        local typed_=$(qype "$name_")
+        local file_=$(qich "$name_")
+        if [[ ! $file_ ]]; then
+            [[ $verbose_ ]] && echo $typed_
+            return 1
+        fi
+        local real_=$(readlink -f "$file_")
+        local out_="$file_"
+        [[ "$file_" == "$real_" ]] || out_="$file_ -> $real_"
+        echo "$out_"
+        [[ $verbose_ ]] && echo "$EDITOR $file_"
+        return 0
+    elif runnable "$name_"; then
+        return 0
+    else
+        /usr/bin/env | grep --colour "${name_}.*="
+    fi
+}
+
 whyp_optional () {
     [[ $1 == -o ]] && return 0
     [[ $1 == --optional ]] && return 0
@@ -247,7 +261,8 @@ whyp_source () {
     fi
     if [[ -f "$1" ]]; then
         # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
-        quietly source "$@"
+        source "$@"
+        # quietly source "$@"
         return 0
     fi
     whyp_optional $2 || echo 'Cannot source "'"$2"'". It is not a file.' >&2
@@ -293,6 +308,13 @@ whyp_py_file () {
     python3 -m whyp -f "$@"
 }
 
+whyp_edit_dir () {
+    local __doc__="""Edit the first argument if it's a dir"""
+    local dir_="$1"; shift
+    [[ -d "$dir_" ]] || return 1
+    vifm "$dir_"
+}
+
 whyp_edit_file () {
     local __doc__="""Edit the first argument if it's a file"""
     local file_="$1"; shift
@@ -300,9 +322,7 @@ whyp_edit_file () {
     local dir_=$(dirname "$file_")
     [[ -d "$dir_" ]] || dir_=.
     local filename_=$(basename "$file_")
-    local editor_="${WHYP_EDITOR:-vim}"
-    [[ -x $EDITOR ]] && editor_=$EDITOR
-    (cd "$dir_"; "$editor_" "$filename_" "$@")
+    (cd "$dir_"; "${EDITOR:-vim}" "$filename_" "$@")
 }
 
 python_has_debugger () {
@@ -316,12 +336,13 @@ looks_versiony () {
 
 whyp_option () {
     local options_=
-    [[ $1 == -q ]] && options_=quiet
-    [[ $1 == -v ]] && options_=verbose
-    [[ $1 == verbose ]] && options_=verbose
-    [[ $1 == quiet ]] && options_=quiet
+    [[ $1 == -q ]] && options_="--quiet"
+    [[ $1 == -v ]] && options_="--verbose"
+    [[ $1 == verbose ]] && options_="--verbose"
+    [[ $1 == quiet ]] && options_="--quiet"
     [[ $1 == -f ]] && options_="$options_ --is-function"
     [[ $1 == -a ]] && options_="$options_ --is-alias"
+    [[ $1 == -e ]] && options_="$options_ --edit"
     [[ $options_ ]] || return 1
     echo $options_
     return 0
@@ -745,3 +766,59 @@ is_python_module () {
     python_will_import "$@"
 }
 
+# Suggested by Claude
+
+looks_like_path () {
+   [[ "$1" == */* ]] && [[ -e "$1" ]]
+}
+
+looks_like_file () {
+   [[ "$1" == */* ]] && [[ -f "$1" ]]
+}
+
+looks_like_directory () {
+   [[ "$1" == */* ]] && [[ -d "$1" ]]
+}
+
+autopsy_edit () {
+    local exit_code=$?
+    local failed_cmd="$BASH_COMMAND"
+    local script_file="${BASH_SOURCE[1]}"
+    local line_number="${BASH_LINENO[0]}"
+    [[ $exit_code -eq 0 ]] && return
+    [[ -z "$script_file" ]] && return
+    [[ "$script_file" == *bash* ]] && return
+    lred "Command failed (exit $exit_code): $failed_cmd\n"
+    local cmd_word="${failed_cmd%% *}"
+    if is_function "$cmd_word" || is_alias "$cmd_word"; then
+        lred "Opening definition of '$cmd_word'\n"
+        e "$cmd_word"
+    elif [[ -f "$script_file" ]]; then
+        lred "Opening $script_file at line $line_number\n"
+        whyp_edit_file "$script_file" "+$line_number"
+    fi
+    return $exit_code
+}
+
+command_redirect () {
+    local fred_="${BASH_COMMAND%% *}"
+    if looks_like_directory "$fred_"; then
+        lred "Directory detected, editing:\n"
+        whyp_edit_dir  "$fred_"
+        return 0
+    elif looks_like_file "$fred_"; then
+        lred "File detected, editing:\n"
+        whyp_edit_file "$fred_"
+        return 0
+    fi
+    if is_unrecognised "$fred_"; then
+        lred "Unknown command '$fred_'\n"
+        # Could add fuzzy matching here using your module patterns
+    fi
+    return 1
+}
+
+On errors:
+# If command_redirect succeeds we're done
+# Else run autopsy_edit to dump user into vim at right place
+trap 'command_redirect || autopsy_edit' ERR
