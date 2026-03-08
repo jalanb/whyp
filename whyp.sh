@@ -177,7 +177,7 @@ QUIETLY () {
     "$@" > /dev/null 2>/dev/null
 }
 
-dealias () {
+de_alias () {
     alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
@@ -216,7 +216,7 @@ whyp_arg () {
     if [[ $name_ == -v ]]; then verbose_=1; shift; fi
     if is_alias $name_; then
         alias $name_
-        whyp $(dealias $name_)
+        whyp $(de_alias $name_)
     elif is_function "$name_"; then
         qype "$name_" | grep -v ' is a '
         parse_function_ "$name_"
@@ -259,10 +259,9 @@ whyp_source () {
     if [[ -f "$1" ]]; then
         # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
         source "$@"
-        # quietly source "$@"
         return 0
     fi
-    whyp_optional $2 || echo 'Cannot source "'"$2"'". It is not a file.' >&2
+    whyp_optional $2 || echo 'Cannot source "'"$1"'". It is not a file.' >&2
     return 1
 }
 
@@ -664,7 +663,7 @@ sources_ () {
 
 write_new_file_ () {
     local __doc__="""Copy the head of this script to file"""
-    head -n $eading_lines_ $BASH_SOURCE > "$path_to_file"
+    head -n $heading_lines_ $BASH_SOURCE > "$path_to_file"
 }
 
 create_function_ () {
