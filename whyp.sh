@@ -330,20 +330,6 @@ looks_versiony () {
     [[ $1 =~ [0-9](.[0-9])* ]]
 }
 
-whyp_option () {
-    local options_=
-    [[ $1 == -q ]] && options_="--quiet"
-    [[ $1 == -v ]] && options_="--verbose"
-    [[ $1 == verbose ]] && options_="--verbose"
-    [[ $1 == quiet ]] && options_="--quiet"
-    [[ $1 == -f ]] && options_="$options_ --is-function"
-    [[ $1 == -a ]] && options_="$options_ --is-alias"
-    [[ $1 == -e ]] && options_="$options_ --edit"
-    [[ $options_ ]] || return 1
-    echo $options_
-    return 0
-}
-
 looks_like_python_name () {
     local __doc__="""Whether arg looks like a python name"""
     # Python names do not start with numbers
