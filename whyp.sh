@@ -16,7 +16,8 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_PY=$WHYP_DIR/whyp
+export WHYP_TEMP="$WHYP_DIR/tmp"
+export WHYP_PY="$WHYP_DIR/whyp"
 
 # x
 
@@ -544,14 +545,18 @@ edit_alias_ () {
     return 1
 }
 
+whyp_temp_file () {
+    [[ -d "$WHYP_TEMP" ]] || mkdir -p "$WHYP_TEMP"
+    echo "$WHYP_TEMP/$1.sh"
+}
+
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    if test -f $path_to_file; then
-        [[ $path_to_file == "(null)" ]] || return 1
-        path_to_file=$WHYP_DIR/edit_functiontmp.sh
-        qype "$1" | grep -v "is a function" | sed -e "s/) *$/) {/" -e "/^{ *$/d" > $path_to_file
+    if ! test -f $path_to_file; then
+        path_to_file=$(whyp_temp_file $function)
         line_number=1
+        declare -f $function | sed '1{N;s/\n//}' > $path_to_file
     fi
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
@@ -564,7 +569,7 @@ edit_function_ () {
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     ww_source "$path_to_file"
-    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
+    [[ $(dirname "$path_to_file") == "$WHYP_TEMP" ]] && rm -f "$path_to_file"
     return 0
 }
 
