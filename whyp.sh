@@ -538,10 +538,10 @@ whyp_temp_file () {
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    if ! test -f $path_to_file; then
+    if ! test -f "$path_to_file"; then
         path_to_file=$(whyp_temp_file $function)
         line_number=1
-        declare -f $function | sed '1{N;s/\n//}' > $path_to_file
+        declare -f $function | sed '1{N;s/\n//}' > "$path_to_file"
     fi
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
