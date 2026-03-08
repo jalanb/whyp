@@ -60,18 +60,14 @@ alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww extends whyp"""
-    [[ "$@" ]] || ww ww
-    local options_=$(quietly whyp_option "$@")
-    [[ $options_ ]] && shift
-    local name_=$1
-    while [[ "$name_" ]]; do
-        if [[ $name_ != -* ]]; then
-            [[ $options_ =~ --verbose ]] && w $name_
-            [[ $options_ =~ --edit ]] && e $name_ || ww_show $name_
-        fi
-        shift
-        name_=$1
-    done
+    if [[ "$@" ]]; then
+        while [[ "$1" ]]; do
+            ww_show $1
+            shift
+        done
+    else
+        ww ww
+    fi
 }
 
 
