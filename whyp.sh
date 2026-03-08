@@ -16,7 +16,8 @@ heading_lines_=13 # Text before here was copied to template scripts, YAGNI
 
 export WHYP_SOURCE=$(readlink -f $BASH_SOURCE)
 export WHYP_DIR=$(dirname $WHYP_SOURCE)
-export WHYP_PY=$WHYP_DIR/whyp
+export WHYP_TEMP="$WHYP_DIR/tmp"
+export WHYP_PY="$WHYP_DIR/whyp"
 
 # x
 
@@ -60,18 +61,14 @@ alias wq="quietly whyp "
 
 ww () {
     local __doc__="""ww extends whyp"""
-    [[ "$@" ]] || ww ww
-    local options_=$(quietly whyp_option "$@")
-    [[ $options_ ]] && shift
-    local name_=$1
-    while [[ "$name_" ]]; do
-        if [[ $name_ != -* ]]; then
-            [[ $options_ =~ --verbose ]] && w $name_
-            [[ $options_ =~ --edit ]] && e $name_ || ww_show $name_
-        fi
-        shift
-        name_=$1
-    done
+    if [[ "$@" ]]; then
+        while [[ "$1" ]]; do
+            ww_show $1
+            shift
+        done
+    else
+        ww ww
+    fi
 }
 
 
@@ -180,7 +177,7 @@ QUIETLY () {
     "$@" > /dev/null 2>/dev/null
 }
 
-dealias () {
+de_alias () {
     alias $1 | sed -e "s,alias \([a-z][a-z_]*\)='\(.*\).$,\2,"
 }
 
@@ -219,7 +216,7 @@ whyp_arg () {
     if [[ $name_ == -v ]]; then verbose_=1; shift; fi
     if is_alias $name_; then
         alias $name_
-        whyp $(dealias $name_)
+        whyp $(de_alias $name_)
     elif is_function "$name_"; then
         qype "$name_" | grep -v ' is a '
         parse_function_ "$name_"
@@ -262,10 +259,9 @@ whyp_source () {
     if [[ -f "$1" ]]; then
         # Note - DO NOT change the "$@" back to "$1" here - source CAN pass on args
         source "$@"
-        # quietly source "$@"
         return 0
     fi
-    whyp_optional $2 || echo 'Cannot source "'"$2"'". It is not a file.' >&2
+    whyp_optional $2 || echo 'Cannot source "'"$1"'". It is not a file.' >&2
     return 1
 }
 
@@ -332,20 +328,6 @@ python_has_debugger () {
 looks_versiony () {
     [[ ! $1 ]] && return 1
     [[ $1 =~ [0-9](.[0-9])* ]]
-}
-
-whyp_option () {
-    local options_=
-    [[ $1 == -q ]] && options_="--quiet"
-    [[ $1 == -v ]] && options_="--verbose"
-    [[ $1 == verbose ]] && options_="--verbose"
-    [[ $1 == quiet ]] && options_="--quiet"
-    [[ $1 == -f ]] && options_="$options_ --is-function"
-    [[ $1 == -a ]] && options_="$options_ --is-alias"
-    [[ $1 == -e ]] && options_="$options_ --edit"
-    [[ $options_ ]] || return 1
-    echo $options_
-    return 0
 }
 
 looks_like_python_name () {
@@ -548,14 +530,18 @@ edit_alias_ () {
     return 1
 }
 
+whyp_temp_file () {
+    [[ -d "$WHYP_TEMP" ]] || mkdir -p "$WHYP_TEMP"
+    echo "$WHYP_TEMP/$1.sh"
+}
+
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
-    if test -f $path_to_file; then
-        [[ $path_to_file == "(null)" ]] || return 1
-        path_to_file=$WHYP_DIR/edit_functiontmp.sh
-        qype "$1" | grep -v "is a function" | sed -e "s/) *$/) {/" -e "/^{ *$/d" > $path_to_file
+    if ! test -f "$path_to_file"; then
+        path_to_file=$(whyp_temp_file $function)
         line_number=1
+        declare -f $function | sed '1{N;s/\n//}' > "$path_to_file"
     fi
     if ! grep -q $regexp_ "$path_to_file"; then
         printf "$function () {}" >> "$path_to_file"
@@ -568,7 +554,7 @@ edit_function_ () {
     test -f "$path_to_file" || return 0
     ls -l "$path_to_file"
     ww_source "$path_to_file"
-    [[ $(basename $(dirname "$path_to_file")) == tmp ]] && rm -f "$path_to_file"
+    [[ $(dirname "$path_to_file") == "$WHYP_TEMP" ]] && rm -f "$path_to_file"
     return 0
 }
 
@@ -663,7 +649,7 @@ sources_ () {
 
 write_new_file_ () {
     local __doc__="""Copy the head of this script to file"""
-    head -n $eading_lines_ $BASH_SOURCE > "$path_to_file"
+    head -n $heading_lines_ $BASH_SOURCE > "$path_to_file"
 }
 
 create_function_ () {
@@ -765,60 +751,3 @@ is_unrecognised () {
 is_python_module () {
     python_will_import "$@"
 }
-
-# Suggested by Claude
-
-looks_like_path () {
-   [[ "$1" == */* ]] && [[ -e "$1" ]]
-}
-
-looks_like_file () {
-   [[ "$1" == */* ]] && [[ -f "$1" ]]
-}
-
-looks_like_directory () {
-   [[ "$1" == */* ]] && [[ -d "$1" ]]
-}
-
-autopsy_edit () {
-    local exit_code=$?
-    local failed_cmd="$BASH_COMMAND"
-    local script_file="${BASH_SOURCE[1]}"
-    local line_number="${BASH_LINENO[0]}"
-    [[ $exit_code -eq 0 ]] && return
-    [[ -z "$script_file" ]] && return
-    [[ "$script_file" == *bash* ]] && return
-    lred "Command failed (exit $exit_code): $failed_cmd\n"
-    local cmd_word="${failed_cmd%% *}"
-    if is_function "$cmd_word" || is_alias "$cmd_word"; then
-        lred "Opening definition of '$cmd_word'\n"
-        e "$cmd_word"
-    elif [[ -f "$script_file" ]]; then
-        lred "Opening $script_file at line $line_number\n"
-        whyp_edit_file "$script_file" "+$line_number"
-    fi
-    return $exit_code
-}
-
-command_redirect () {
-    local fred_="${BASH_COMMAND%% *}"
-    if looks_like_directory "$fred_"; then
-        lred "Directory detected, editing:\n"
-        whyp_edit_dir  "$fred_"
-        return 0
-    elif looks_like_file "$fred_"; then
-        lred "File detected, editing:\n"
-        whyp_edit_file "$fred_"
-        return 0
-    fi
-    if is_unrecognised "$fred_"; then
-        lred "Unknown command '$fred_'\n"
-        # Could add fuzzy matching here using your module patterns
-    fi
-    return 1
-}
-
-On errors:
-# If command_redirect succeeds we're done
-# Else run autopsy_edit to dump user into vim at right place
-trap 'command_redirect || autopsy_edit' ERR
