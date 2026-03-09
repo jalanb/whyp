@@ -32,7 +32,7 @@ e () {
         edit_function_ "$@"
         return 0
     fi
-    is_file "$1" && edit_file_ "$@" && return $?
+    is_file "$1" && edit_text_file "$@" && return $?
     is_bash "$1" && return 1
     local file_="$1"
     is_python_module "$1" && file_=$(python_module "$1")
@@ -558,7 +558,7 @@ edit_function_ () {
     return 0
 }
 
-edit_file_ () {
+edit_text_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
     local file_=$(qype -P "$1")
     [[ -f "$file_" ]] || return 1
