@@ -560,13 +560,19 @@ edit_function_ () {
 
 edit_file_ () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local file_=$(ww_py $1)
-    [[ -f $file_ ]] || return 1
-    if file $file_ | grep -q text; then
-        whyp_edit_file  $file_
+    local file_=$(qype -P "$1")
+    [[ -f "$file_" ]] || return 1
+    if file "$file_" | grep -q text; then
+        whyp_edit_file  "$file_"
     else
         echo $file_ is not text >&2
-        file $file_ >&2
+        local real_=$(readlink -f "$file_")
+        if [[ "$file_" != "$real_" ]]; then
+            echo "$file_ -> $real_"
+        fi
+        local prefix_=$(printf '%*s' $(( ${#file_} + 4 )) '')
+        file "$real_" | sed "s|$real_: |$prefix_|"
+        return 1
     fi
 }
 
@@ -702,7 +708,7 @@ is_bash () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     is_hash "$1" && return 0
-    local path_=$(qype -P $1 | sed -e "s,.* is ,,")
+    local path_=$(qype -P $1)
     [[ $path_ ]] || return 1
     west -x $path_
 }
