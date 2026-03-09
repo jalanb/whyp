@@ -567,11 +567,13 @@ edit_text_file () {
     else
         echo $file_ is not text >&2
         local real_=$(readlink -f "$file_")
-        if [[ "$file_" != "$real_" ]]; then
+        if [[ "$file_" == "$real_" ]]; then
+            file "$file_" | sed "s/:/ is/"
+        else
             echo "$file_ -> $real_"
+            local prefix_=$(printf '%*s' $(( ${#file_} + 4 )) '')
+            file "$real_" | sed "s|$real_: |$prefix_|"
         fi
-        local prefix_=$(printf '%*s' $(( ${#file_} + 4 )) '')
-        file "$real_" | sed "s|$real_: |$prefix_|"
         return 1
     fi
 }
