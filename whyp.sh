@@ -29,7 +29,6 @@ e () {
         return 0
     fi
     if is_function "$1"; then
-        parse_function_ "$1"
         edit_function_ "$@"
         return 0
     fi
@@ -537,6 +536,7 @@ whyp_temp_file () {
 
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
+    parse_function_ "$1"
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     if ! test -f "$path_to_file"; then
         path_to_file=$(whyp_temp_file $function)
