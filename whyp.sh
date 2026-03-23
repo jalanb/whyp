@@ -428,13 +428,15 @@ ww_function () {
 ww_alias () {
     is_alias "$@" || return 1
     alias $1
-    local tdout_=$(alias $1)
-    if [[ $tdout_  =~ is.a.function ]]; then
+    local alias_out_=$(alias $1)
+    if [[ $alias_out_  =~ is.a.function ]]; then
         name_=$(defended $name_)
         ww_function $name_
     else
-        local uffix_=${tdout_//*=\'}
-        local command_=${uffix_//\'}
+        local suffix_=${alias_out_//*=\'}
+        [[ $suffix_ ]] || return 1
+        local command_=${suffix_//\'}
+        [[ $command_ ]] || return 2
         w $command_
     fi
 }
