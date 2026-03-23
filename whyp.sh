@@ -29,11 +29,10 @@ e () {
         return 0
     fi
     if is_function "$1"; then
-        parse_function_ "$1"
         edit_function_ "$@"
         return 0
     fi
-    is_file "$1" && edit_file_ "$@" && return $?
+    is_file "$1" && edit_text_file "$@" && return $?
     is_bash "$1" && return 1
     local file_="$1"
     is_python_module "$1" && file_=$(python_module "$1")
@@ -216,7 +215,9 @@ whyp_arg () {
     if [[ $name_ == -v ]]; then verbose_=1; shift; fi
     if is_alias $name_; then
         alias $name_
-        whyp $(de_alias $name_)
+        local expansion_=$(de_alias $name_)
+        local first_word_=${expansion_%% *}
+        [[ "$first_word_" != "$name_" ]] && whyp "$first_word_"
     elif is_function "$name_"; then
         qype "$name_" | grep -v ' is a '
         parse_function_ "$name_"
@@ -427,13 +428,15 @@ ww_function () {
 ww_alias () {
     is_alias "$@" || return 1
     alias $1
-    local tdout_=$(alias $1)
-    if [[ $tdout_  =~ is.a.function ]]; then
+    local alias_out_=$(alias $1)
+    if [[ $alias_out_  =~ is.a.function ]]; then
         name_=$(defended $name_)
         ww_function $name_
     else
-        local uffix_=${tdout_//*=\'}
-        local command_=${uffix_//\'}
+        local suffix_=${alias_out_//*=\'}
+        [[ $suffix_ ]] || return 1
+        local command_=${suffix_//\'}
+        [[ $command_ ]] || return 2
         w $command_
     fi
 }
@@ -537,6 +540,7 @@ whyp_temp_file () {
 
 edit_function_ () {
     local __doc__="""Edit a function in a file"""
+    parse_function_ "$1"
     local regexp_="^$function[[:space:]]*()[[:space:]]*{[[:space:]]*$"
     if ! test -f "$path_to_file"; then
         path_to_file=$(whyp_temp_file $function)
@@ -558,15 +562,23 @@ edit_function_ () {
     return 0
 }
 
-edit_file_ () {
+edit_text_file () {
     local __doc__="""Edit a file, it is seems to be text, otherwise tell user why not"""
-    local file_=$(ww_py $1)
-    [[ -f $file_ ]] || return 1
-    if file $file_ | grep -q text; then
-        whyp_edit_file  $file_
+    local file_=$(qype -P "$1")
+    [[ -f "$file_" ]] || return 1
+    if file "$file_" | grep -q text; then
+        whyp_edit_file  "$file_"
     else
         echo $file_ is not text >&2
-        file $file_ >&2
+        local real_=$(readlink -f "$file_")
+        if [[ "$file_" == "$real_" ]]; then
+            file "$file_" | sed "s/:/ is/"
+        else
+            echo "$file_ -> $real_"
+            local prefix_=$(printf '%*s' $(( ${#file_} + 4 )) '')
+            file "$real_" | sed "s|$real_: |$prefix_|"
+        fi
+        return 1
     fi
 }
 
@@ -702,7 +714,7 @@ is_bash () {
 is_file () {
     local __doc__="""Whether $1 is an executable file"""
     is_hash "$1" && return 0
-    local path_=$(qype -P $1 | sed -e "s,.* is ,,")
+    local path_=$(qype -P $1)
     [[ $path_ ]] || return 1
     west -x $path_
 }
