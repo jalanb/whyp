@@ -215,7 +215,9 @@ whyp_arg () {
     if [[ $name_ == -v ]]; then verbose_=1; shift; fi
     if is_alias $name_; then
         alias $name_
-        whyp $(de_alias $name_)
+        local expansion_=$(de_alias $name_)
+        local first_word_=${expansion_%% *}
+        [[ "$first_word_" != "$name_" ]] && whyp "$first_word_"
     elif is_function "$name_"; then
         qype "$name_" | grep -v ' is a '
         parse_function_ "$name_"
